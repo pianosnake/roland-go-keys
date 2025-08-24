@@ -1,0 +1,25 @@
+CC,Control
+1,Modulation
+5,Portamento Time
+7,Volume
+10,Pan
+11,Expression
+65,Portamento On/Off
+66,Sostenuto
+71,Resonance
+72,Release Time
+73,Attack Time
+74,Cutoff
+75,Decay Time
+76,Vibrato Rate
+77,Vibrato Depth
+78,Vibrato Delay
+84,Portamento Control
+91,Reverb Send
+93,Chorus Send
+120,All Sounds Off
+121,Reset All Controllers
+123,Omni Off
+124,Omni On
+126,Mono Operation
+127,Poly Operation

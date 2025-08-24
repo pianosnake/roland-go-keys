@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Go:Keys MIDI</title>
+  <script src="./script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+  <header>Roland GO:KEYS MIDI Explorer</header>
+  <div class="content" x-data="app">
+
+    <h2>Tone list</h2>
+    <div class="columns">
+      <div class="left-column">
+        <ul class="scrollable-tone-list" id="tones-list">
+          <template x-for="group in filteredTones" :key="group.category">
+            <!-- Category header -->
+            <li>
+              <h4 x-text="group.category"></h4>
+              <!-- Tones in this category -->
+              <ul class="sub-list">
+                <template x-for="tone in group.tones" :key="tone.Num">
+                  <li :data-num="tone.Num" 
+                   :data-midi="`${tone.MSB},${tone.LSB},${tone.PC}`"
+                  :class="{'selected-tone': selectedToneNum === tone.Num}"
+                    @click="onToneClick">
+                    <code x-text="tone.Num"></code>
+                    <span x-text="tone.Name"></span>
+                  </li>
+                </template>
+              </ul>
+            </li>
+          </template>
+        </ul>
+
+        <div class="tone-input-div">
+          <input type="text" id="tone-input" placeholder="Search..." autocomplete="off" x-model="userFilter">
+          <button @click="onXbtnClick" class="clear-x-btn" type="button">
+            <svg width="18" height="18" viewBox="0 0 18 18" style="display:block;margin:auto;"
+              xmlns="http://www.w3.org/2000/svg">
+              <line x1="4" y1="4" x2="14" y2="14" stroke="#c2c4c6" stroke-width="2" stroke-linecap="round" />
+              <line x1="14" y1="4" x2="4" y2="14" stroke="#c2c4c6" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="right-column">
+        <p>Enable Bluetooth on your Roland Go:Keys and connect to it from your computer. On a Mac use the built-in Audio
+          MIDI Setup app.</p>
+        <button id="connect-midi">Connect MIDI</button>
+        <p>As of firmware <code>1.11</code> the Go:Keys only receives MIDI messages on channel 4 to change the UPPER voice.
+          Hopefully, future firmware will allow changing the LOWER voice, as well as the favorites and arranger voices.
+        </p>
+        <label for="midi-channel">MIDI Channel:</label>
+        <select id="midi-channel" x-model="midiChannel">
+          <template x-for="ch in 16" :key="ch">
+            <option :value="ch" x-text="ch" :selected="ch === 4"></option>
+          </template>
+        </select>
+      </div>
+    </div>
+    <h2>CC Controls</h2>
+    <template x-if="ccList.length > 0">
+      <div id="cc-knobs" class="cc-knobs-rail-layout">
+        <div class="cc-rail">
+          <template x-for="cc in ccList" :key="cc.CC">
+            <div class="cc-rail-item">
+              <input type="checkbox" :id="'cc-checkbox-' + cc.CC" :value="cc.CC" x-model="selectedCCs">
+              <label :for="'cc-checkbox-' + cc.CC"
+                x-text="`${cc.CC} - ${cc.Control} ${cc.value ? '(' + cc.value + ')' : ''}`"></label>
+            </div>
+          </template>
+        </div>
+        <div class="cc-knobs-panel">
+          <template x-for="cc in selectedCCObjects" :key="cc.CC">
+            <div class="cc-knob">
+              <label class="cc-label" x-text="`CC${cc.CC}`"></label>
+              <div class="cc-sublabel" x-text="cc.Control"></div>
+              <div>
+                <input type="range" min="0" max="127" x-model="cc.value"
+                  @input="sendCC(midiChannel, cc.CC, cc.value)" />
+              </div>
+              <span class="cc-value" x-text="cc.value"></span>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <script>
+    // Show debug console if ?debug=true in URL. useful for seeing console logs on phones, ipads, etc...
+    if (new URLSearchParams(window.location.search).get('debug') === 'true') {
+      (function () {
+        const box = document.createElement('pre');
+        box.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:45%;overflow:auto;background:#111;color:#0f0;padding:8px;margin:0;font:12px/1.3 monospace;z-index:99999;white-space:pre-wrap;';
+        box.textContent = '📟 Log console ready…\n';
+        document.addEventListener('click', () => box.style.pointerEvents = 'none', { once: true });
+        document.body.appendChild(box);
+
+        const print = (...args) => {
+          box.textContent += args.map(a => {
+            try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+            catch { return String(a); }
+          }).join(' ') + '\n';
+          box.scrollTop = box.scrollHeight;
+        };
+
+        ['log', 'warn', 'error'].forEach(k => {
+          const orig = console[k].bind(console);
+          console[k] = (...a) => { orig(...a); print(`[${k}]`, ...a); };
+        });
+      })();
+    }
+  </script>
+</body>
+</html>

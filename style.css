@@ -1,0 +1,217 @@
+/* general layout */
+
+body {
+  font-family: Arial, sans-serif;
+  padding: 0;
+  margin: 0;
+}
+header {
+  background-color: #873742;
+  color: #ebecec;
+  padding: 24px 0;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+.content {
+  padding: 10px 40px;
+}
+.columns {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+.left-column {
+  flex: 1 1 0;
+  min-width: 250px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.right-column {
+  flex: 1 1 0;
+  min-width: 200px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* midi connect button */
+
+#connect-midi {
+  background-color: #873742;
+  color: #ebecec;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 12px 0;
+  transition: background 0.2s;
+}
+#connect-midi:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* tone list */
+ul{
+  list-style: none;
+  padding: 0;
+}
+.scrollable-tone-list {
+  margin: 0 0 10px 0;
+  max-height: 300px;
+  height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  touch-action: pan-y;
+}
+.scrollable-tone-list > li h4 {
+  padding: 5px;
+  margin: 0;
+  background: #873742;
+  color: #ebecec;
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.sub-list > li {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+}
+code {
+  background: #f3f3f3;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 1em;
+}
+.selected-tone {
+  background: #ffe9a7;
+}
+.tone-li:last-child {
+  border-bottom: none;
+}
+
+/* tone input */
+
+.tone-input-div {
+  position: relative;
+  max-width: none;
+  width: 100%;
+  margin: 0 0 10px 0;
+}
+#tone-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 38px 8px 8px; /* leave space for the X button */
+  font-size: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+.tone-input-div input {
+  width: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-sizing: border-box;
+  padding-right: 38px; /* space for the X button */
+}
+.clear-x-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+  z-index: 2;
+}
+.clear-x-btn svg {
+  display: block;
+}
+
+
+/* CC panel */
+
+.cc-value {
+  font-size: 1.2em;
+  margin: 8px 0;
+  text-align: center;
+}
+.cc-knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+  padding: 8px 8px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  align-self: flex-start;
+  height: auto;
+}
+.cc-label {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.cc-sublabel {
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+#cc-knobs.cc-knobs-rail-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  margin-top: 32px;
+  padding: 32px;
+  background: #f8f8f8;
+  border-radius: 16px;
+  user-select: none;
+}
+.cc-rail {
+  min-width: 220px;
+  max-width: 260px;
+  border-right: 1px solid #ddd;
+  padding-right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cc-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.cc-knobs-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+  align-content: flex-start;
+}
+input[type="range"] {
+  margin: 8px 0 0 0;
+  width: 90px;
+}
+

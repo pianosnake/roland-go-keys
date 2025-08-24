@@ -1,0 +1,1229 @@
+Category,Num,Name,MSB,LSB,PC
+Ac.Piano,PR001,Concert Piano,71,96,1
+Ac.Piano,PR002,Mellow Grand,71,96,2
+Ac.Piano,PR003,Grand XV,71,96,3
+Ac.Piano,PR004,Nice Piano,71,96,4
+Ac.Piano,PR005,Rocker Piano,71,96,5
+Ac.Piano,PR006,Piano Thang,71,96,6
+Ac.Piano,PR007,Magical Piano,71,96,7
+Ac.Piano,PR008,Piano+Str Layer,71,96,8
+Ac.Piano,PR009,WarmVoxPiano,71,96,9
+Ac.Piano,PR010,Bright Honkey,71,96,10
+Ac.Piano,PR011,Power Octs,71,96,11
+Ac.Piano,PR012,Tape MellowGrand,71,96,12
+Ac.Piano,PR013,Tiny Piano,71,96,13
+Ac.Piano,PR014,LoFi Ac.Piano,71,96,14
+Ac.Piano,PR015,Nostalgic Piano,71,96,15
+Ac.Piano,PR016,Dynamic JD-Piano,71,96,16
+Ac.Piano,PR017,Reverse Piano 1,71,96,17
+Ac.Piano,CM001,Piano 1,87,85,1
+Ac.Piano,CM002,Piano 1 w,87,85,2
+Ac.Piano,CM003,Piano 1 d,87,85,3
+Ac.Piano,CM004,Piano 1 Bright,87,85,4
+Ac.Piano,CM005,Piano 1 Amp,87,85,5
+Ac.Piano,CM006,Piano 1 w 2,87,85,6
+Ac.Piano,CM007,Piano + Str 1,87,85,7
+Ac.Piano,CM008,Piano + Str 2,87,85,8
+Ac.Piano,CM009,Piano + Choir 1,87,85,9
+Ac.Piano,CM010,Piano + Choir 2,87,85,10
+Ac.Piano,CM011,Piano + Pad 1,87,85,11
+Ac.Piano,CM012,Piano + Pad 2,87,85,12
+Ac.Piano,CM013,Healing Piano,87,85,13
+Ac.Piano,CM014,Piano Vib,87,85,14
+Ac.Piano,CM015,Piano Dly,87,85,15
+Ac.Piano,CM016,Piano 2,87,85,16
+Ac.Piano,CM017,Piano 2 w,87,85,17
+Ac.Piano,CM018,JD Piano,87,85,18
+Ac.Piano,CM019,JD Piano w,87,85,19
+Pop Piano,PR018,SA Piano,71,96,18
+Pop Piano,PR019,Mixture Piano,71,96,19
+Pop Piano,PR020,Pop Toy,71,96,20
+Pop Piano,CM023,Honky-tonk,87,85,23
+Pop Piano,CM024,Honky-tonk w,87,85,24
+Pop Piano,CM025,Honky-tonk w 2,87,85,25
+E.Grand Piano,PR021,70s E.Grand,71,96,21
+E.Grand Piano,CM020,Piano 3,87,85,20
+E.Grand Piano,CM021,Piano 3 w,87,85,21
+E.Grand Piano,CM022,Piano 3 w 2,87,85,22
+E.Piano1,PR022,70s Suitcase,71,96,22
+E.Piano1,PR023,Lite Tine EP,71,96,23
+E.Piano1,PR024,Lite Pop EP,71,96,24
+E.Piano1,PR025,Soft Stage EP,71,96,25
+E.Piano1,PR026,Wurly Vibrato,71,96,26
+E.Piano1,PR027,Vintage Phase EP,71,96,27
+E.Piano1,PR028,Phase EP Mix,71,96,28
+E.Piano1,PR029,EP 90 Phaser,71,96,29
+E.Piano1,PR030,Vortex EP,71,96,30
+E.Piano1,PR031,Flicker Piano,71,96,31
+E.Piano1,PR032,Suitcase EP OD,71,96,32
+E.Piano1,PR033,EP Wah,71,96,33
+E.Piano1,PR034,LoFi E.Piano,71,96,34
+E.Piano1,CM026,E.Piano 1,87,85,26
+E.Piano1,CM027,E.Piano 1 w,87,85,27
+E.Piano1,CM028,E.Piano 1 Trem,87,85,28
+E.Piano1,CM029,Detuned EP 1,87,85,29
+E.Piano1,CM030,Vintage EP,87,85,30
+E.Piano1,CM031,60s E.Piano,87,85,31
+E.Piano1,CM032,60s E.Piano w,87,85,32
+E.Piano1,CM033,60s E.Piano Trem,87,85,33
+E.Piano1,CM034,Tremolo EP,87,85,34
+E.Piano1,CM035,Tremolo EP w,87,85,35
+E.Piano1,CM036,Curly Wurly,87,85,36
+E.Piano1,CM037,Sinus EP,87,85,37
+E.Piano2,PR035,More Tine EP,71,96,35
+E.Piano2,PR036,80s FM EP,71,96,36
+E.Piano2,PR037,MK-80 Bright EP,71,96,37
+E.Piano2,PR038,Mood Azure,71,96,38
+E.Piano2,PR039,Mixture EP,71,96,39
+E.Piano2,CM038,E.Piano 2,87,85,38
+E.Piano2,CM039,E.Piano 2 w,87,85,39
+E.Piano2,CM040,Detuned EP 2,87,85,40
+E.Piano2,CM041,St.FM EP,87,85,41
+E.Piano2,CM042,St.FM EP w,87,85,42
+E.Piano2,CM043,EP Legend,87,85,43
+E.Piano2,CM044,EP Legend w,87,85,44
+E.Piano2,CM045,EP Phaser 1,87,85,45
+E.Piano2,CM046,EP Phaser 2,87,85,46
+E.Piano2,CM047,EP Phaser 3,87,85,47
+E.Piano2,CM048,EP Belle,87,85,48
+Ensemble Strings,PR040,Rich Strings,71,96,40
+Ensemble Strings,PR041,Full Strings,71,96,41
+Ensemble Strings,PR042,Decay Strings,71,96,42
+Ensemble Strings,PR043,Strings/Pizz,71,96,43
+Ensemble Strings,PR044,CharacterStrings,71,96,44
+Ensemble Strings,PR045,Chamber Strings,71,96,45
+Ensemble Strings,PR046,LoFi Strings,71,96,46
+Ensemble Strings,PR047,Phono Strings,71,96,47
+Ensemble Strings,PR048,Ending Scene,71,96,48
+Ensemble Strings,CM317,Tremolo Str,87,87,61
+Ensemble Strings,CM318,Pizzicato Str,87,87,62
+Ensemble Strings,CM319,Pizzicato Str w,87,87,63
+Ensemble Strings,CM320,Pizz,87,87,64
+Ensemble Strings,CM321,Pops Seq 4,87,87,65
+Ensemble Strings,CM322,Pops Seq 4 w,87,87,66
+Ensemble Strings,CM331,Strings,87,87,75
+Ensemble Strings,CM332,Orchestra,87,87,76
+Ensemble Strings,CM333,60s Strings,87,87,77
+Ensemble Strings,CM334,Small Strings,87,87,78
+Ensemble Strings,CM335,Hybrid Strings,87,87,79
+Ensemble Strings,CM336,Small Str Stacc,87,87,80
+Ensemble Strings,CM337,Strings Stacc,87,87,81
+Ensemble Strings,CM338,Strings Stacc w,87,87,82
+Ensemble Strings,CM339,Strings Amp,87,87,83
+Ensemble Strings,CM340,Slow Strings,87,87,84
+Ensemble Strings,CM341,Mood Strings,87,87,85
+Solo Strings,PR049,Pop Violin,71,96,49
+Solo Strings,PR050,Pop Viola,71,96,50
+Solo Strings,PR051,Pop Cello,71,96,51
+Solo Strings,PR052,Pop Contrabass,71,96,52
+Solo Strings,PR053,String Solo,71,96,53
+Solo Strings,CM307,Violin,87,87,51
+Solo Strings,CM308,Slow Violin,87,87,52
+Solo Strings,CM309,Violin w,87,87,53
+Solo Strings,CM310,Violin Amp,87,87,54
+Solo Strings,CM311,Viola,87,87,55
+Solo Strings,CM312,Viola Amp,87,87,56
+Solo Strings,CM313,Cello,87,87,57
+Solo Strings,CM314,Cello Amp,87,87,58
+Solo Strings,CM315,Contrabass,87,87,59
+Solo Strings,CM316,Contrabass Amp,87,87,60
+Solo Strings,CM750,Fiddle,87,90,110
+Solo Strings,CM751,Fiddle w,87,90,111
+Synth Lead,PR054,Clear Dual Saws,71,96,54
+Synth Lead,PR055,FXM Saw Lead,71,96,55
+Synth Lead,PR056,Tight Saw Lead,71,96,56
+Synth Lead,PR057,Mild Saw Lead,71,96,57
+Synth Lead,PR058,Wind Syn Lead,71,96,58
+Synth Lead,PR059,Dual SuperSaw Ld,71,96,59
+Synth Lead,PR060,NSoul Synth Lead,71,96,60
+Synth Lead,PR061,Windy Synth,71,96,61
+Synth Lead,PR062,Textured Touch,71,96,62
+Synth Lead,PR063,Driven OB,71,96,63
+Synth Lead,PR064,Dual Sqr Lead,71,96,64
+Synth Lead,PR065,Next Sqr Lead,71,96,65
+Synth Lead,PR066,Blow Lead,71,96,66
+Synth Lead,PR067,LqFunk Syn Lead,71,96,67
+Synth Lead,PR068,Pale Sine,71,96,68
+Synth Lead,PR069,Modern Vintage,71,96,69
+Synth Lead,PR070,Organic Lead,71,96,70
+Synth Lead,PR071,Linear Lead,71,96,71
+Synth Lead,PR072,Synth Hero,71,96,72
+Synth Lead,PR073,Be Happy OctLead,71,96,73
+Synth Lead,PR074,SpkPop Syn Lead,71,96,74
+Synth Lead,PR075,Irish Finite Ld,71,96,75
+Synth Lead,PR076,Billa-Lead,71,96,76
+Synth Lead,PR077,Rind Mod Lead,71,96,77
+Synth Lead,PR078,ZenoPoly,71,96,78
+Synth Lead,PR079,ZenoLead 8000,71,96,79
+Synth Lead,PR080,Big Room Lead,71,96,80
+Synth Lead,PR081,3 Analog OSC,71,96,81
+Synth Lead,PR082,X-MOD Lead,71,96,82
+Synth Lead,PR083,HiPitch Buzz Ld,71,96,83
+Synth Lead,PR084,Buzz Sucker,71,96,84
+Synth Lead,PR085,Sync Ld Mono,71,96,85
+Synth Lead,PR086,SyncModulate,71,96,86
+Synth Lead,CM475,Square Lead 1,87,88,91
+Synth Lead,CM476,Square Lead 2,87,88,92
+Synth Lead,CM477,Sine Lead,87,88,93
+Synth Lead,CM478,Porta Sine Lead,87,88,94
+Synth Lead,CM479,Pure Lead Dly,87,88,95
+Synth Lead,CM480,Dist Flt TB 2,87,88,96
+Synth Lead,CM481,Dist Flt TB 1,87,88,97
+Synth Lead,CM482,DistFlt TB 1 Dly,87,88,98
+Synth Lead,CM483,80’s Tech Lead,87,88,99
+Synth Lead,CM484,Sqr Buzz Lead,87,88,100
+Synth Lead,CM485,Ana Vox Lead,87,88,101
+Synth Lead,CM486,CS Lead,87,88,102
+Synth Lead,CM487,Classic GR,87,88,103
+Synth Lead,CM488,Therasaw,87,88,104
+Synth Lead,CM489,Bell Lead,87,88,105
+Synth Lead,CM490,Bell Lead w,87,88,106
+Synth Lead,CM491,Simple Tri,87,88,107
+Synth Lead,CM492,Spooky Lead,87,88,108
+Synth Lead,CM493,Soft Lead,87,88,109
+Synth Lead,CM494,Sqr Lead 1,87,88,110
+Synth Lead,CM495,Sqr Lead 2,87,88,111
+Synth Lead,CM496,Sqr Lead 3,87,88,112
+Synth Lead,CM497,Saw Lead 1,87,88,113
+Synth Lead,CM498,Saw Lead 1 w,87,88,114
+Synth Lead,CM499,Saw Lead 2,87,88,115
+Synth Lead,CM500,Doctor Solo,87,88,116
+Synth Lead,CM501,Natural Lead,87,88,117
+Synth Lead,CM502,Sequenced Saw,87,88,118
+Synth Lead,CM503,Sequenced Saw w,87,88,119
+Synth Lead,CM504,Ah Super Saw,87,88,120
+Synth Lead,CM505,Ah SuperSaw Dst1,87,88,121
+Synth Lead,CM506,Ah SuperSaw Dst2,87,88,122
+Synth Lead,CM507,Porta Super Saw,87,88,123
+Synth Lead,CM508,S-Saw Stac Ld,87,88,124
+Synth Lead,CM509,S-Saw Stac Ld w,87,88,125
+Synth Lead,CM510,Tekno Lead 1 Atk,87,88,126
+Synth Lead,CM511,Tekno Lead 1 Bit,87,88,127
+Synth Lead,CM512,OSC-Sync Ld 1,87,88,128
+Synth Lead,CM513,Wave Shape Ld,87,89,1
+Synth Lead,CM514,Wave Shape Ld w,87,89,2
+Synth Lead,CM515,Legato Tkno,87,89,3
+Synth Lead,CM516,Legato Tkno w,87,89,4
+Synth Lead,CM517,Tekno Lead 2,87,89,5
+Synth Lead,CM518,Buzz Lead,87,89,6
+Synth Lead,CM519,Buzz Lead Dist,87,89,7
+Synth Lead,CM520,Saw Buzz Ld,87,89,8
+Synth Lead,CM521,Saw Buzz Ld w,87,89,9
+Synth Lead,CM522,Saw Lead 3,87,89,10
+Synth Lead,CM523,Saw Lead 4,87,89,11
+Synth Lead,CM524,Classic Lead,87,89,12
+Synth Lead,CM525,Ramp Lead,87,89,13
+Synth Lead,CM526,Saw Lead 5,87,89,14
+Synth Lead,CM527,Jupiter Lead 1,87,89,15
+Synth Lead,CM528,JupiterLead1 Atk,87,89,16
+Synth Lead,CM529,Jupiter Lead 2,87,89,17
+Synth Lead,CM530,Saw Lead 6,87,89,18
+Synth Lead,CM531,On Air,87,89,19
+Synth Lead,CM532,Saw Lead 7,87,89,20
+Synth Lead,CM533,Saw Lead 8,87,89,21
+Synth Lead,CM534,Warm Lead,87,89,22
+Synth Lead,CM535,Saw Lead 9,87,89,23
+Synth Lead,CM536,Saw Lead 10,87,89,24
+Synth Lead,CM537,EQ Lead,87,89,25
+Synth Lead,CM538,Saw Lead 11,87,89,26
+Synth Lead,CM539,Saw Lead 12,87,89,27
+Synth Lead,CM540,Waspy Lead,87,89,28
+Synth Lead,CM541,Octa Square,87,89,29
+Synth Lead,CM542,Octa Juice,87,89,30
+Synth Lead,CM543,Fat GR Lead,87,89,31
+Synth Lead,CM544,Octa Saw,87,89,32
+Synth Lead,CM545,Juicy Lead,87,89,33
+Synth Lead,CM546,OSC-Sync Ld 2,87,89,34
+Synth Lead,CM547,OSC-Sync Ld 3,87,89,35
+Synth Lead,CM548,Syn.Calliope,87,89,36
+Synth Lead,CM549,Syn.Calliope w,87,89,37
+Synth Lead,CM550,Syn.Calliope Dly,87,89,38
+Synth Lead,CM551,Chiffer Lead,87,89,39
+Synth Lead,CM552,Chiffer Lead w,87,89,40
+Synth Lead,CM553,Charang,87,89,41
+Synth Lead,CM554,Wire Lead,87,89,42
+Synth Lead,CM555,Wire Lead Cho,87,89,43
+Synth Lead,CM556,Solo Vox,87,89,44
+Synth Lead,CM557,Solo Vox w,87,89,45
+Synth Lead,CM558,Solo Vox Cho,87,89,46
+Synth Lead,CM559,OB Lead,87,89,47
+Synth Lead,CM560,5th Saw Lead,87,89,48
+Synth Lead,CM561,5th Saw Lead Dly,87,89,49
+Synth Lead,CM562,Housechord,87,89,50
+Synth Lead,CM563,Ju-D Fifths,87,89,51
+Synth Lead,CM564,Major 7,87,89,52
+Synth Lead,CM565,Dance Saws 1,87,89,53
+Synth Lead,CM566,Bass+Lead,87,89,54
+Synth Lead,CM567,Bass+Lead w,87,89,55
+Synth Lead,CM568,Delayed Lead,87,89,56
+Synth Lead,CM569,Delayed Lead w,87,89,57
+Synth Lead,CM570,Delayed Lead Cho,87,89,58
+Synth Brass,PR087,SawsSynBrass,71,96,87
+Synth Brass,PR088,DetuneSawBrs,71,96,88
+Synth Brass,PR089,Mild SynBrass,71,96,89
+Synth Brass,PR090,Silky JP,71,96,90
+Synth Brass,PR091,FatSynBrass,71,96,91
+Synth Brass,PR092,Soft Center,71,96,92
+Synth Brass,PR093,Trad Syn Brass,71,96,93
+Synth Brass,PR094,J-Pop Brass,71,96,94
+Synth Brass,PR095,Brash!,71,96,95
+Synth Brass,PR096,J-Brass For KY,71,96,96
+Synth Brass,PR097,Neo SuperBrs,71,96,97
+Synth Brass,PR098,Large Rave,71,96,98
+Synth Brass,PR099,Invite Big Brass,71,96,99
+Synth Brass,PR100,Horn Blast,71,96,100
+Synth Brass,CM408,Synth Brass 1,87,88,24
+Synth Brass,CM409,Synth Brass 3,87,88,25
+Synth Brass,CM410,Synth Brass 3 w,87,88,26
+Synth Brass,CM411,Analog Brass 1,87,88,27
+Synth Brass,CM412,Analog Brass 1 w,87,88,28
+Synth Brass,CM413,Analog Brs 1 w 2,87,88,29
+Synth Brass,CM414,Jump Brass,87,88,30
+Synth Brass,CM415,Jump Brass Amp,87,88,31
+Synth Brass,CM416,JP8 Brass 1,87,88,32
+Synth Brass,CM417,JP8 Brass 1 w,87,88,33
+Synth Brass,CM418,Syn Brass,87,88,34
+Synth Brass,CM419,Syn Brass w,87,88,35
+Synth Brass,CM420,JP8 Brass 2,87,88,36
+Synth Brass,CM421,80’s Brass 1,87,88,37
+Synth Brass,CM422,80’s Brass 2,87,88,38
+Synth Brass,CM423,Synth Brass 2,87,88,39
+Synth Brass,CM424,Synth Brass 4,87,88,40
+Synth Brass,CM425,Analog Brass 2,87,88,41
+Synth Brass,CM426,Analog Brass 3,87,88,42
+Synth Brass,CM427,Analog Brass 3 w,87,88,43
+Synth Brass,CM428,Reso Brass,87,88,44
+Synth Brass,CM429,Poly Brass,87,88,45
+Synth Brass,CM430,Soft Brass,87,88,46
+Synth Brass,CM431,FM Brass,87,88,47
+Synth Brass,CM432,Warm Syn Brass,87,88,48
+Synth Brass,CM433,Dual Saw Brass,87,88,49
+Synth Brass,CM434,Soft Syn Brass,87,88,50
+Synth Brass,CM435,Vintage Brass,87,88,51
+Synth Brass,CM436,Vintage Brass w,87,88,52
+Synth Brass,CM437,Euro Express,87,88,53
+Synth Brass,CM438,Mix Brass,87,88,54
+Synth Brass,CM439,Brite Syn Brass,87,88,55
+Synth Brass,CM440,JP8 Brass 3,87,88,56
+Synth Brass,CM441,Synth Brass 5,87,88,57
+Synth Brass,CM442,80’s Brass 3,87,88,58
+Synth Brass,CM443,80’s Brass 4,87,88,59
+Synth Pad/Str,PR101,Legend Pad,71,96,101
+Synth Pad/Str,PR102,New Jupiter,71,96,102
+Synth Pad/Str,PR103,Chord Of Canada,71,96,103
+Synth Pad/Str,PR104,Underscore BPF,71,96,104
+Synth Pad/Str,PR105,Super SynPad,71,96,105
+Synth Pad/Str,PR106,JP8 Slow Strings,71,96,106
+Synth Pad/Str,PR107,Soft Warm Pad,71,96,107
+Synth Pad/Str,PR108,Boreal Pad,71,96,108
+Synth Pad/Str,PR109,Air Pad,71,96,109
+Synth Pad/Str,PR110,Voice Heaven,71,96,110
+Synth Pad/Str,PR111,Retro ChoirPad,71,96,111
+Synth Pad/Str,PR112,Long Breath,71,96,112
+Synth Pad/Str,PR113,SynthChord01 MC,71,96,113
+Synth Pad/Str,PR114,Bright Counter,71,96,114
+Synth Pad/Str,PR115,ReverseSweep,71,96,115
+Synth Pad/Str,CM342,Syn Strings 1,87,87,86
+Synth Pad/Str,CM343,Syn Strings 1 w,87,87,87
+Synth Pad/Str,CM344,Syn Strings 3,87,87,88
+Synth Pad/Str,CM345,Syn Strings 3 w,87,87,89
+Synth Pad/Str,CM346,Syn Strings 2,87,87,90
+Synth Pad/Str,CM347,Syn Strings 2 w,87,87,91
+Synth Pad/Str,CM586,Warm Pad,87,89,74
+Synth Pad/Str,CM587,Warm Pad Dly,87,89,75
+Synth Pad/Str,CM588,Sine Pad,87,89,76
+Synth Pad/Str,CM589,JP8 Strings 1,87,89,77
+Synth Pad/Str,CM590,Soft Pad,87,89,78
+Synth Pad/Str,CM591,JP8 Strings 2,87,89,79
+Synth Pad/Str,CM592,JUNO Str,87,89,80
+Synth Pad/Str,CM593,JUNO Str w,87,89,81
+Synth Pad/Str,CM594,Oct Strings,87,89,82
+Synth Pad/Str,CM595,Brite Str,87,89,83
+Synth Pad/Str,CM596,Voyager,87,89,84
+Synth Pad/Str,CM597,Voyager w,87,89,85
+Synth Pad/Str,CM598,JP8 Strings 3,87,89,86
+Synth Pad/Str,CM599,PWM Str 1,87,89,87
+Synth Pad/Str,CM600,PWM Str 2,87,89,88
+Synth Pad/Str,CM601,Fading Str,87,89,89
+Synth Pad/Str,CM602,Vintage Str,87,89,90
+Synth Pad/Str,CM603,Vintage Str Amp,87,89,91
+Synth Pad/Str,CM604,Analog Str,87,89,92
+Synth Pad/Str,CM618,Space Voice,87,89,106
+Synth Pad/Str,CM619,Space Voice Dly,87,89,107
+Synth Pad/Str,CM620,Itopia,87,89,108
+Synth Pad/Str,CM621,Itopia Dly,87,89,109
+Synth Pad/Str,CM622,JP8 Hollow 1,87,89,110
+Synth Pad/Str,CM623,JP8 Hollow 2,87,89,111
+Synth Pad/Str,CM624,Hollow Pad,87,89,112
+Synth Pad/Str,CM625,Strobe Pad,87,89,113
+Synth Pad/Str,CM626,Heaven Pad,87,89,114
+Synth Pad/Str,CM627,Itopia w,87,89,115
+Synth Pad/Str,CM628,Bowed Glass,87,89,116
+Synth Pad/Str,CM629,Bowed Glass Dly,87,89,117
+Synth Pad/Str,CM630,Brite Wine,87,89,118
+Synth Pad/Str,CM631,Bell Pad,87,89,119
+Synth Pad/Str,CM632,Wine Pad,87,89,120
+Synth Pad/Str,CM633,Fine Wine Pad,87,89,121
+Synth Pad/Str,CM634,Organ Pad,87,89,122
+Synth Pad/Str,CM635,Brite Wine w,87,89,123
+Synth Pad/Str,CM636,Metallic Pad,87,89,124
+Synth Pad/Str,CM637,Metallic Pad Dly,87,89,125
+Synth Pad/Str,CM638,Chime Pad,87,89,126
+Synth Pad/Str,CM639,Halo Pad,87,89,127
+Synth Pad/Str,CM640,Halo Pad w,87,89,128
+Synth Pad/Str,CM641,Halo Pad Dly,87,90,1
+Synth Pad/Str,CM642,Sweep Pad 1,87,90,2
+Synth Pad/Str,CM643,Sweep Pad 1 Dly,87,90,3
+Synth Pad/Str,CM644,Trns Sweep Pad w,87,90,4
+Synth Pad/Str,CM645,Trns Sweep Pad,87,90,5
+Synth Pad/Str,CM646,Giant Sweep,87,90,6
+Synth Pad/Str,CM647,Sweep Pad 2 w,87,90,7
+Synth Pad/Str,CM648,Sweep Pad 2,87,90,8
+Synth Pad/Str,CM649,Reso Pad,87,90,9
+Synth Pad/Str,CM650,Ice Rain,87,90,10
+Synth Pad/Str,CM651,Ice Rain Dly,87,90,11
+Synth Pad/Str,CM652,Healing Pad,87,90,12
+Synth Pad/Str,CM653,Healing Pad w,87,90,13
+Synth Pad/Str,CM654,Soundtrack,87,90,14
+Synth Pad/Str,CM655,Soundtrack Dly,87,90,15
+Synth Pad/Str,CM656,Random Str,87,90,16
+Synth Pad/Str,CM657,Fairy’s Song,87,90,17
+Synth Pad/Str,CM732,Star Theme,87,90,92
+Synth Pad/Str,CM733,Star Theme Dly,87,90,93
+Synth Bellpad,PR116,D50 Fantasia,71,96,116
+Synth Bellpad,PR117,D50 Stac Heaven,71,96,117
+Synth Bellpad,PR118,D50 Stack Pad,71,96,118
+Synth Bellpad,PR119,Amethyst Dream,71,96,119
+Synth Bellpad,PR120,Dreaming Harp,71,96,120
+Synth Bellpad,CM571,Fantasia,87,89,59
+Synth Bellpad,CM572,D50 Bell,87,89,60
+Synth Bellpad,CM573,D50 Bell w,87,89,61
+Synth Bellpad,CM574,Fantasy 1,87,89,62
+Synth Bellpad,CM575,D50 Fantasy,87,89,63
+Synth Bellpad,CM576,D50 Fantasy w,87,89,64
+Synth Bellpad,CM577,Soft Bell,87,89,65
+Synth Bellpad,CM578,Dreambell,87,89,66
+Synth Bellpad,CM579,Dreambell w,87,89,67
+Synth Bellpad,CM580,Dreaming Box,87,89,68
+Synth Bellpad,CM581,Dreaming Box w,87,89,69
+Synth Bellpad,CM582,Fantasy 2,87,89,70
+Synth Bellpad,CM583,Fantasy 2 w,87,89,71
+Synth Bellpad,CM584,Stacc Heaven,87,89,72
+Synth Bellpad,CM585,Stacc Heaven w,87,89,73
+Synth PolyKey,PR121,Remember EP,71,96,121
+Synth PolyKey,PR122,Lo-Fi Synth Keys,71,96,122
+Synth PolyKey,PR123,Dreamer Keys,71,96,123
+Synth PolyKey,PR124,Power Short,71,96,124
+Synth PolyKey,PR125,Cue Tip,71,96,125
+Synth PolyKey,PR126,Hybrid Synth Key,71,96,126
+Synth PolyKey,PR127,Trance-Touch,71,96,127
+Synth PolyKey,PR128,Glitterwheelie,71,96,128
+Synth PolyKey,PR129,Aah Formant,71,97,1
+Synth PolyKey,PR130,Cinema Transform,71,97,2
+Synth PolyKey,PR131,Chomping,71,97,3
+Synth PolyKey,PR132,Chiptune Square,71,97,4
+Synth PolyKey,PR133,Chiptune Octave,71,97,5
+Synth PolyKey,PR134,Chiptune FX,71,97,6
+Synth PolyKey,PR135,Wet Keys,71,97,7
+Synth PolyKey,PR136,Spaghetti Square,71,97,8
+Synth PolyKey,CM605,Polysynth,87,89,93
+Synth PolyKey,CM606,Polysynth Dly,87,89,94
+Synth PolyKey,CM607,Digitaless,87,89,95
+Synth PolyKey,CM608,Analog Saws,87,89,96
+Synth PolyKey,CM609,Super Saws,87,89,97
+Synth PolyKey,CM610,Super Saws Atk,87,89,98
+Synth PolyKey,CM611,Dance Saws 2,87,89,99
+Synth PolyKey,CM612,S-Saw Pad,87,89,100
+Synth PolyKey,CM613,S-Saw Pad w,87,89,101
+Synth PolyKey,CM614,DOC Stack,87,89,102
+Synth PolyKey,CM615,Trance Saws,87,89,103
+Synth PolyKey,CM616,Trance Saws w,87,89,104
+Synth PolyKey,CM617,PWM Pad,87,89,105
+Synth PolyKey,CM701,Atmosphere,87,90,61
+Synth PolyKey,CM702,Atmosphere Cho,87,90,62
+Synth PolyKey,CM703,Analog Dream,87,90,63
+Synth PolyKey,CM704,Analog Dream Atk,87,90,64
+Synth PolyKey,CM705,Choir Key,87,90,65
+Synth PolyKey,CM706,Choir Key Echo,87,90,66
+Synth PolyKey,CM707,Brass Key,87,90,67
+Synth PolyKey,CM708,Harpsi Key,87,90,68
+Synth PolyKey,CM709,Harpsi Key w,87,90,69
+Synth PolyKey,CM710,Brightness,87,90,70
+Synth PolyKey,CM711,Brightness Cho,87,90,71
+Synth PolyKey,CM712,Vox Key,87,90,72
+Synth PolyKey,CM713,Air Key 1,87,90,73
+Synth PolyKey,CM714,Air Key 2,87,90,74
+Synth PolyKey,CM715,Digital Key,87,90,75
+Synth PolyKey,CM716,Dreamheaven 1,87,90,76
+Synth PolyKey,CM717,Dreamheaven 2,87,90,77
+Synth FX,PR137,Flanging Atmos.,71,97,9
+Synth FX,PR138,FS Crystal,71,97,10
+Synth FX,PR139,Mixture Fx Pad,71,97,11
+Synth FX,PR140,Unknown Planet,71,97,12
+Synth FX,PR141,Atmospheric Oohs,71,97,13
+Synth FX,PR142,Breathy Bubbles,71,97,14
+Synth FX,PR143,New Planetz,71,97,15
+Synth FX,PR144,1Note Synth Maj7,71,97,16
+Synth FX,PR145,SynthFX+Pluck,71,97,17
+Synth FX,PR146,Future Chord,71,97,18
+Synth FX,PR147,Vibes BendChord,71,97,19
+Synth FX,PR148,ResoSweep Vib,71,97,20
+Synth FX,PR149,SoundStrange,71,97,21
+Synth FX,PR150,Tubulence,71,97,22
+Synth FX,PR151,Zap B3 & C4,71,97,23
+Synth FX,PR152,Gridder,71,97,24
+Synth FX,PR153,Flying Key,71,97,25
+Synth FX,CM718,Goblins,87,90,78
+Synth FX,CM719,Cosmic Drops,87,90,79
+Synth FX,CM720,Echo Drops,87,90,80
+Synth FX,CM721,Echo Drops Cho,87,90,81
+Synth FX,CM722,Echo Bell,87,90,82
+Synth FX,CM723,Echo Bell Cho,87,90,83
+Synth FX,CM724,Echo Bell Dly,87,90,84
+Synth FX,CM725,Echo Pan,87,90,85
+Synth FX,CM726,Echo Pan Cho,87,90,86
+Synth FX,CM727,LFO Saw,87,90,87
+Synth FX,CM728,Keep Going,87,90,88
+Synth FX,CM729,Electrostar,87,90,89
+Synth FX,CM730,Scream at me,87,90,90
+Synth FX,CM731,Scream at me w,87,90,91
+Synth Pluck,PR154,Electric Pluck,71,97,26
+Synth Pluck,PR155,Heartbeat Pluck,71,97,27
+Synth Pluck,PR156,Margherita Pizz,71,97,28
+Synth Pluck,PR157,Kernels,71,97,29
+Synth Pluck,PR158,Doctopus /Mod,71,97,30
+Synth Pluck,PR159,PWM Acid Syn,71,97,31
+Synth Pluck,PR160,Seq X-Mod Wave,71,97,32
+Synth Pluck,PR161,Flip Pluck,71,97,33
+Synth Pluck,PR162,Thin PW Pluck,71,97,34
+Synth Pluck,CM658,Crystal,87,90,18
+Synth Pluck,CM659,Crystal w,87,90,19
+Synth Pluck,CM660,Synth Mallet,87,90,20
+Synth Pluck,CM661,Synth Mallet w,87,90,21
+Synth Pluck,CM662,Synth Mallet Dly,87,90,22
+Synth Pluck,CM663,Sine Mallet,87,90,23
+Synth Pluck,CM664,Seq Saw,87,90,24
+Synth Pluck,CM665,Seq 1,87,90,25
+Synth Pluck,CM666,Seq 1 w,87,90,26
+Synth Pluck,CM667,Seq 2,87,90,27
+Synth Pluck,CM668,Seq 3,87,90,28
+Synth Pluck,CM669,Seq Sqr 1,87,90,29
+Synth Pluck,CM670,Seq Sqr 1 Atk,87,90,30
+Synth Pluck,CM671,Seq Sqr 2,87,90,31
+Synth Pluck,CM672,Seq Tri,87,90,32
+Synth Pluck,CM673,Seq Tri w,87,90,33
+Synth Pluck,CM674,Synth Seq 1,87,90,34
+Synth Pluck,CM675,Synth Seq 2,87,90,35
+Synth Pluck,CM676,Synth Seq 3,87,90,36
+Synth Pluck,CM677,Analog Seq,87,90,37
+Synth Pluck,CM678,Detune Seq,87,90,38
+Synth Pluck,CM679,Uni-G,87,90,39
+Synth Pluck,CM680,Seq 4,87,90,40
+Synth Pluck,CM681,Analog Poly,87,90,41
+Synth Pluck,CM682,Analog Poly Dly,87,90,42
+Synth Pluck,CM683,Saws Key,87,90,43
+Synth Pluck,CM684,Vintage Key,87,90,44
+Synth Pluck,CM685,Analog Key w,87,90,45
+Synth Pluck,CM686,Analog Key,87,90,46
+Synth Pluck,CM687,Bell 1,87,90,47
+Synth Pluck,CM688,Bell 1 Atk,87,90,48
+Synth Pluck,CM689,Bell 2,87,90,49
+Synth Pluck,CM690,Bell 3,87,90,50
+Synth Pluck,CM691,Bell 3 Amp,87,90,51
+Synth Pluck,CM692,MusicBox Key w,87,90,52
+Synth Pluck,CM693,MusicBox Key,87,90,53
+Synth Pluck,CM694,Music Bells,87,90,54
+Synth Pluck,CM695,Music Bells w,87,90,55
+Synth Pluck,CM696,Dreaming Bell,87,90,56
+Synth Pluck,CM697,FingBell Key,87,90,57
+Synth Pluck,CM698,FingBell Key w,87,90,58
+Synth Pluck,CM699,Org Bell,87,90,59
+Synth Pluck,CM700,Pluck Synth,87,90,60
+Synth Bass,PR163,AX MG Bass 1,71,97,35
+Synth Bass,PR164,Syn Bass Hook,71,97,36
+Synth Bass,PR165,Round Bass,71,97,37
+Synth Bass,PR166,Pop SynthBass 1,71,97,38
+Synth Bass,PR167,Pop SynthBass 2,71,97,39
+Synth Bass,PR168,Pop SynthBass 3,71,97,40
+Synth Bass,PR169,XMod2 Donk Bs,71,97,41
+Synth Bass,PR170,Super-Basso,71,97,42
+Synth Bass,PR171,Buzz Biter,71,97,43
+Synth Bass,PR172,Res Cooker,71,97,44
+Synth Bass,PR173,Persist Bass,71,97,45
+Synth Bass,PR174,Shave Bass,71,97,46
+Synth Bass,PR175,Monster Bass,71,97,47
+Synth Bass,PR176,Synthwave Bass,71,97,48
+Synth Bass,PR177,Wub Bass,71,97,49
+Synth Bass,PR178,TB Dist Bass,71,97,50
+Synth Bass,PR179,Dark Sub,71,97,51
+Synth Bass,PR180,Dist.808StyleBs1,71,97,52
+Synth Bass,PR181,Bit Subby,71,97,53
+Synth Bass,PR182,Mod Growl Bass1,71,97,54
+Synth Bass,PR183,Show Me Low,71,97,55
+Synth Bass,PR184,Organ Bs,71,97,56
+Synth Bass,PR185,Razor Bass Lead,71,97,57
+Synth Bass,CM228,Synth Bass 1,87,86,100
+Synth Bass,CM229,Synth Bass 1 w,87,86,101
+Synth Bass,CM230,Warm Syn Bass,87,86,102
+Synth Bass,CM231,Synth Bass 3,87,86,103
+Synth Bass,CM232,Clav.Bass,87,86,104
+Synth Bass,CM233,Clav.Bass w,87,86,105
+Synth Bass,CM234,Hammer Bass,87,86,106
+Synth Bass,CM235,Hammer Bass Atk,87,86,107
+Synth Bass,CM236,Juno Sqr Bass,87,86,108
+Synth Bass,CM237,MKS-50 Bass,87,86,109
+Synth Bass,CM238,R&B Bass 1,87,86,110
+Synth Bass,CM239,R&B Bass 1 w,87,86,111
+Synth Bass,CM240,R&B Bass 1 Atk,87,86,112
+Synth Bass,CM241,MC202 Bass,87,86,113
+Synth Bass,CM242,Compu Bass 1,87,86,114
+Synth Bass,CM243,Compu Bass 1 Atk,87,86,115
+Synth Bass,CM244,Muffled Bass,87,86,116
+Synth Bass,CM245,R&B Bass 2,87,86,117
+Synth Bass,CM246,R&B Bass 2 w,87,86,118
+Synth Bass,CM247,R&B Bass 2 Atk,87,86,119
+Synth Bass,CM248,R&B Bass 3,87,86,120
+Synth Bass,CM249,R&B Bass 3 w,87,86,121
+Synth Bass,CM250,R&B Bass 4,87,86,122
+Synth Bass,CM251,MG Bass 1,87,86,123
+Synth Bass,CM252,MG Bass 1 w,87,86,124
+Synth Bass,CM253,MG Bass 1 Atk,87,86,125
+Synth Bass,CM254,MG Bass 2,87,86,126
+Synth Bass,CM255,MG Bass 2 w,87,86,127
+Synth Bass,CM256,MG Bass 3,87,86,128
+Synth Bass,CM257,MG Bass 4,87,87,1
+Synth Bass,CM258,MG Bass 5,87,87,2
+Synth Bass,CM259,New Reso Bs 1,87,87,3
+Synth Bass,CM260,New Reso Bs 1 w,87,87,4
+Synth Bass,CM261,New Reso Bs 2,87,87,5
+Synth Bass,CM262,Reso Bass 1,87,87,6
+Synth Bass,CM263,Rubber Bass,87,87,7
+Synth Bass,CM264,Reso Bass 2,87,87,8
+Synth Bass,CM265,Reso Bass 3,87,87,9
+Synth Bass,CM266,Reso Bass 4,87,87,10
+Synth Bass,CM267,Acid Bass 1,87,87,11
+Synth Bass,CM268,Acid Bass 2,87,87,12
+Synth Bass,CM269,Acid Bass 3,87,87,13
+Synth Bass,CM270,TB Bass 1,87,87,14
+Synth Bass,CM271,TB Bass 2,87,87,15
+Synth Bass,CM272,Flat Bass,87,87,16
+Synth Bass,CM273,Sub Bass,87,87,17
+Synth Bass,CM274,Sub Bass Atk,87,87,18
+Synth Bass,CM275,Garage Bass,87,87,19
+Synth Bass,CM276,Synth Bass 2,87,87,20
+Synth Bass,CM277,Synth Bass 5,87,87,21
+Synth Bass,CM278,Synth Bass 4,87,87,22
+Synth Bass,CM279,Synth Bass 6,87,87,23
+Synth Bass,CM280,Rubber Syn Bs,87,87,24
+Synth Bass,CM281,Attack Pulse,87,87,25
+Synth Bass,CM282,Seq Bass,87,87,26
+Synth Bass,CM283,106 Bass 1,87,87,27
+Synth Bass,CM284,106 Bass 2,87,87,28
+Synth Bass,CM285,Juno Bass,87,87,29
+Synth Bass,CM286,Filter Env Bs,87,87,30
+Synth Bass,CM287,Unison Syn Bs,87,87,31
+Synth Bass,CM288,Unison Syn Bs w,87,87,32
+Synth Bass,CM289,Alpha Bass,87,87,33
+Synth Bass,CM290,Alpha Bass w,87,87,34
+Synth Bass,CM291,Detune Bs,87,87,35
+Synth Bass,CM292,Detune Bs w,87,87,36
+Synth Bass,CM293,Ramp Bass,87,87,37
+Synth Bass,CM294,Ramp Bass Atk,87,87,38
+Synth Bass,CM295,Pedal Bass 1,87,87,39
+Synth Bass,CM296,Pedal Bass 2,87,87,40
+Synth Bass,CM297,Compu Bass 2,87,87,41
+Synth Bass,CM298,Sqr Bass w,87,87,42
+Synth Bass,CM299,Modular Bs 1,87,87,43
+Synth Bass,CM300,Modular Bs 2,87,87,44
+Synth Bass,CM301,Synth Bass 7,87,87,45
+Synth Bass,CM302,Pedal Bass 3,87,87,46
+Synth Bass,CM303,Monster Bass 1,87,87,47
+Synth Bass,CM304,Monster Bass 2,87,87,48
+Synth Bass,CM305,Growl Bass 1,87,87,49
+Synth Bass,CM306,Growl Bass 2,87,87,50
+Pulsating,PR186,Ice Dust,71,97,58
+Pulsating,PR187,House Moves,71,97,59
+Pulsating,PR188,Chordy Wave,71,97,60
+Pulsating,PR189,Fluctuations,71,97,61
+Pulsating,PR190,Ripples,71,97,62
+Pulsating,PR191,JP Never Dies,71,97,63
+Pulsating,PR192,Byzantine Wave,71,97,64
+Pulsating,PR193,Sliced Saw,71,97,65
+Pulsating,PR194,Talking S&H,71,97,66
+Pulsating,PR195,Pulsating Oohs,71,97,67
+Pulsating,PR196,Unstable Space,71,97,68
+Pulsating,PR197,ChordonBleu Reso,71,97,69
+E.Organ,PR198,B.Organ,71,97,70
+E.Organ,PR199,Dist B.Organ,71,97,71
+E.Organ,PR200,Soft Jazz Organ,71,97,72
+E.Organ,PR201,Whisper Organ,71,97,73
+E.Organ,PR202,Gospel Organ,71,97,74
+E.Organ,PR203,Full Draw,71,97,75
+E.Organ,PR204,Lower Organ,71,97,76
+E.Organ,PR205,Light Organ,71,97,77
+E.Organ,PR206,Perc Jazz Organ,71,97,78
+E.Organ,PR207,Perc Pop Organ,71,97,79
+E.Organ,PR208,Surf's Up!,71,97,80
+E.Organ,PR209,Organesque,71,97,81
+E.Organ,PR210,Happy 60s,71,97,82
+E.Organ,PR211,96 Years,71,97,83
+E.Organ,PR212,Glory Us Rok,71,97,84
+E.Organ,CM105,Organ 1,87,85,105
+E.Organ,CM106,Organ 1 Rtry,87,85,106
+E.Organ,CM107,Tremolo Organ,87,85,107
+E.Organ,CM108,Tremolo Organ w,87,85,108
+E.Organ,CM109,60s Organ,87,85,109
+E.Organ,CM110,60s Organ Cho,87,85,110
+E.Organ,CM111,Organ 2,87,85,111
+E.Organ,CM112,Organ 2 Rtry,87,85,112
+E.Organ,CM113,Ana Organ 1,87,85,113
+E.Organ,CM114,Ana Organ 1 Rtry,87,85,114
+E.Organ,CM115,Ana Organ 2,87,85,115
+E.Organ,CM116,Ana Organ 3,87,85,116
+E.Organ,CM117,Ana Organ 4,87,85,117
+E.Organ,CM118,Perc.Organ 1,87,85,118
+E.Organ,CM119,Perc.Organ 1Rtry,87,85,119
+E.Organ,CM120,Chorus Organ,87,85,120
+E.Organ,CM121,Perc.Organ 2,87,85,121
+E.Organ,CM122,E.Organ 1,87,85,122
+E.Organ,CM123,E.Organ 1 w,87,85,123
+E.Organ,CM124,E.Organ 1 Rtry,87,85,124
+E.Organ,CM125,E.Organ 2,87,85,125
+E.Organ,CM126,E.Organ 2 Trem,87,85,126
+E.Organ,CM127,E.Organ 3,87,85,127
+E.Organ,CM128,Mad Organ,87,85,128
+E.Organ,CM129,Rock Organ 1,87,86,1
+E.Organ,CM130,Rock Organ Amp,87,86,2
+E.Organ,CM131,Rock Organ 2,87,86,3
+E.Organ,CM132,Rock Organ w,87,86,4
+E.Organ,CM133,Full Organ Rtry,87,86,5
+E.Organ,CM134,Full Organ OD,87,86,6
+E.Organ,CM135,Rotary Organ,87,86,7
+E.Organ,CM136,Rotary Organ Cho,87,86,8
+Pipe Organ,PR213,Pos Org O /Mod,71,97,85
+Pipe Organ,PR214,Soft Pipe Organ,71,97,86
+Pipe Organ,PR215,Positive Organ,71,97,87
+Pipe Organ,PR216,Classical Organ,71,97,88
+Pipe Organ,PR217,Grand Organ,71,97,89
+Pipe Organ,CM137,Church Organ 1,87,86,9
+Pipe Organ,CM138,Church Organ 1 w,87,86,10
+Pipe Organ,CM139,Church Organ 2,87,86,11
+Pipe Organ,CM140,Church Organ 2 w,87,86,12
+Pipe Organ,CM141,Church Organ 3,87,86,13
+Pipe Organ,CM142,Church Organ 3 w,87,86,14
+Pipe Organ,CM145,Puff Organ,87,86,17
+Pipe Organ,CM146,Puff Organ w,87,86,18
+Reed Organ,CM143,Reed Organ,87,86,15
+Reed Organ,CM144,Reed Organ w,87,86,16
+Harpsichord,PR218,Elegant Harpsi,71,97,90
+Harpsichord,PR219,Harpsi 8'+4',71,97,91
+Harpsichord,CM049,Harpsichord,87,85,49
+Harpsichord,CM050,Coupled Harpsi.,87,85,50
+Harpsichord,CM051,Harpsichord w,87,85,51
+Harpsichord,CM052,Harpsichord w 2,87,85,52
+Harpsichord,CM053,Harpsichord o,87,85,53
+Clav,PR220,Harpsy Clav,71,97,92
+Clav,PR221,Clav White,71,97,93
+Clav,PR222,Clav Phase,71,97,94
+Clav,CM054,Clav 1,87,85,54
+Clav,CM055,Clav 1 w,87,85,55
+Clav,CM056,Clav 1 Phaser,87,85,56
+Clav,CM057,Clav 2,87,85,57
+Clav,CM058,Clav 2 w,87,85,58
+Clav,CM059,Pulse Clav 1,87,85,59
+Clav,CM060,Pulse Clav 1 w,87,85,60
+Clav,CM061,Pulse Clav 1 w 2,87,85,61
+Clav,CM062,Pulse Clav 2,87,85,62
+Clav,CM063,Biting Clav,87,85,63
+Clav,CM064,Analog Clav,87,85,64
+Celesta,PR223,Pure Celesta,71,97,95
+Celesta,CM065,Celesta,87,85,65
+Celesta,CM066,Celesta w,87,85,66
+Accordion,PR224,Chamber Accord,71,97,96
+Accordion,PR225,Nostalgic Accord,71,97,97
+Accordion,PR226,Bright Musette,71,97,98
+Accordion,CM147,Accordion 1,87,86,19
+Accordion,CM148,Accordion 1 w,87,86,20
+Accordion,CM149,Accordion 2,87,86,21
+Accordion,CM150,Accordion It,87,86,22
+Accordion,CM151,Vodkakordion,87,86,23
+Accordion,CM154,Bandoneon,87,86,26
+Accordion,CM155,Bandoneon w,87,86,27
+Harmonica,PR227,Blues Reed,71,97,99
+Harmonica,CM152,Harmonica,87,86,24
+Harmonica,CM153,Harmonica w,87,86,25
+Bell,PR228,Concert Tubular,71,97,100
+Bell,PR229,XMod2 Soft Bell,71,97,101
+Bell,PR230,Vintage Bell Imp,71,97,102
+Bell,PR231,Synth Bell 1,71,97,103
+Bell,PR232,Tube RingMod,71,97,104
+Bell,CM097,Tubular Bells,87,85,97
+Bell,CM098,Tubular Bells w,87,85,98
+Bell,CM099,Church Bell,87,85,99
+Bell,CM100,Church Bell w,87,85,100
+Bell,CM101,Carillon,87,85,101
+Bell,CM102,Carillon w,87,85,102
+Bell,CM754,Tinkle Bell,87,90,114
+Bell,CM755,Tinkle Bell w,87,90,115
+Bell,CM756,Agogo,87,90,116
+Bell,CM757,Agogo w,87,90,117
+Mallet,PR233,Solid Marimba,71,97,105
+Mallet,PR234,Soft Mallet,71,97,106
+Mallet,PR235,Jazz Vibe,71,97,107
+Mallet,PR236,Fine Xylophone,71,97,108
+Mallet,PR237,Glockenspiel 2,71,97,109
+Mallet,PR238,Fat SynMallet,71,97,110
+Mallet,PR239,Warm Steel Drums,71,97,111
+Mallet,PR240,Glamour,71,97,112
+Mallet,PR241,Resonant Santur,71,97,113
+Mallet,CM067,Glockenspiel,87,85,67
+Mallet,CM068,Glockenspiel w,87,85,68
+Mallet,CM073,Vibraphone,87,85,73
+Mallet,CM074,Vibraphone w,87,85,74
+Mallet,CM075,Vibraphone w 2,87,85,75
+Mallet,CM076,Vibraphone Trem,87,85,76
+Mallet,CM077,Jazz Vib,87,85,77
+Mallet,CM078,Jazz Vib w,87,85,78
+Mallet,CM079,Marimba,87,85,79
+Mallet,CM080,Marimba w,87,85,80
+Mallet,CM081,Marimba w 2,87,85,81
+Mallet,CM082,Bs Marimba 1,87,85,82
+Mallet,CM083,Bs Marimba 2,87,85,83
+Mallet,CM084,Xylophone 1,87,85,84
+Mallet,CM085,Xylophone 1 w,87,85,85
+Mallet,CM086,Xylophone 1 w 2,87,85,86
+Mallet,CM087,Xylophone 2,87,85,87
+Mallet,CM088,Kalimbells,87,85,88
+Mallet,CM089,Pops Seq 2,87,85,89
+Mallet,CM090,Pops Seq 2 w,87,85,90
+Mallet,CM091,Pops Seq 2 Atk,87,85,91
+Mallet,CM092,Pops Seq 3,87,85,92
+Mallet,CM093,Pops Seq 3 Atk,87,85,93
+Mallet,CM094,Ethno Keys,87,85,94
+Mallet,CM095,Ethno Keys Dly,87,85,95
+Mallet,CM096,Toy Box,87,85,96
+Mallet,CM103,Santur,87,85,103
+Mallet,CM104,Santur w,87,85,104
+Mallet,CM325,Yang Qin,87,87,69
+Mallet,CM326,Yang Qin w,87,87,70
+Ac.Guitar,PR242,Bright Nylon/Sld,71,97,114
+Ac.Guitar,PR243,Steel Guitar/Sld,71,97,115
+Ac.Guitar,PR244,Steel Guitar/Hrm,71,97,116
+Ac.Guitar,PR245,Folk Pad,71,97,117
+Ac.Guitar,PR246,Ac Gt Dream,71,97,118
+Ac.Guitar,CM156,Nylon Gtr 1,87,86,28
+Ac.Guitar,CM157,Ukulele,87,86,29
+Ac.Guitar,CM158,Nylon Gtr o,87,86,30
+Ac.Guitar,CM159,Nylon Gtr 2,87,86,31
+Ac.Guitar,CM160,Nylon Gtr w,87,86,32
+Ac.Guitar,CM161,Nylon Gtr Amp,87,86,33
+Ac.Guitar,CM162,Steel-str.Gtr,87,86,34
+Ac.Guitar,CM163,Steel-str.Gtr w,87,86,35
+Ac.Guitar,CM164,Steel-str.GtrAmp,87,86,36
+Ac.Guitar,CM165,Steel-str.GtrDst,87,86,37
+Ac.Guitar,CM166,Stl Gtr Trem,87,86,38
+Ac.Guitar,CM167,12-str.Guitar,87,86,39
+Ac.Guitar,CM168,12-str.Guitar w,87,86,40
+Ac.Guitar,CM169,Mandolin,87,86,41
+Ac.Guitar,CM170,Steel+Body,87,86,42
+Ac.Guitar,CM171,Reso Guitar w,87,86,43
+Ac.Guitar,CM172,Reso Guitar Amp,87,86,44
+E.Guitar,PR247,JC ST Guitar,71,97,119
+E.Guitar,PR248,ChoCleanGtr | Nz,71,97,120
+E.Guitar,PR249,Nice Oct Guitar,71,97,121
+E.Guitar,PR250,Space Mute,71,97,122
+E.Guitar,CM173,Jazz Guitar,87,86,45
+E.Guitar,CM174,Jazz Guitar w,87,86,46
+E.Guitar,CM175,Jazz Guitar Atk,87,86,47
+E.Guitar,CM176,Hawaiian Gtr,87,86,48
+E.Guitar,CM177,Clean Guitar,87,86,49
+E.Guitar,CM178,Clean Guitar w,87,86,50
+E.Guitar,CM179,Clean Gtr Chorus,87,86,51
+E.Guitar,CM180,Chorus Gtr 1,87,86,52
+E.Guitar,CM181,Soft Clean Gtr,87,86,53
+E.Guitar,CM182,Soft Clean Gtr w,87,86,54
+E.Guitar,CM183,Soft Clean Atk,87,86,55
+E.Guitar,CM184,Soft Dist Gtr,87,86,56
+E.Guitar,CM185,Mid Tone Gtr,87,86,57
+E.Guitar,CM186,Mid Tone Gtr Dly,87,86,58
+E.Guitar,CM187,Mid Tone GtrTrem,87,86,59
+E.Guitar,CM188,Muted Guitar,87,86,60
+E.Guitar,CM189,Muted Guitar w,87,86,61
+E.Guitar,CM190,Muted Guitar Atk,87,86,62
+E.Guitar,CM191,Muted Guitar Dst,87,86,63
+E.Guitar,CM192,Funk Guitar 1,87,86,64
+E.Guitar,CM193,Funk Guitar 2,87,86,65
+E.Guitar,CM194,Chorus Gtr 2,87,86,66
+E.Guitar,CM195,Chorus Gtr2 Echo,87,86,67
+E.Guitar,CM196,Chorus Gtr2 Step,87,86,68
+Dist.Guitar,PR251,OD Gtr | Nz,71,97,123
+Dist.Guitar,PR252,Dist Gtr | Nz,71,97,124
+Dist.Guitar,PR253,Dist Jumper,71,97,125
+Dist.Guitar,PR254,Luminous DistGtr,71,97,126
+Dist.Guitar,PR255,Searing Lead Gtr,71,97,127
+Dist.Guitar,PR256,E Lead Flamer,71,97,128
+Dist.Guitar,CM197,Overdrive Gtr 1,87,86,69
+Dist.Guitar,CM198,Overdrive Gtr 2,87,86,70
+Dist.Guitar,CM199,Overdrive Chorus,87,86,71
+Dist.Guitar,CM200,Guitar Pinch,87,86,72
+Dist.Guitar,CM201,Distortion Gtr 1,87,86,73
+Dist.Guitar,CM202,Distortion Gtr 2,87,86,74
+Dist.Guitar,CM203,Distortion Gtr 3,87,86,75
+Dist.Guitar,CM204,Distortion Gtr 4,87,86,76
+Dist.Guitar,CM205,Distortion Gtr 5,87,86,77
+Dist.Guitar,CM206,Gtr Feedback 1,87,86,78
+Dist.Guitar,CM207,Dist.Rhy Gtr,87,86,79
+Dist.Guitar,CM208,Dist.Rhy Gtr Amp,87,86,80
+Dist.Guitar,CM209,Gtr Harmonics,87,86,81
+Dist.Guitar,CM210,Gtr Harmonics w,87,86,82
+Dist.Guitar,CM211,Gtr Feedback 2,87,86,83
+Dist.Guitar,CM212,Gtr Feedback 2 w,87,86,84
+Ac.Bass,PR257,Mild Ac.Bass,71,98,1
+Ac.Bass,PR258,Bass+Cymbal,71,98,2
+Ac.Bass,CM213,Acoustic Bass,87,86,85
+Ac.Bass,CM214,Acoustic Bass w,87,86,86
+E.Bass,PR259,Comp'd JzBs /Slp,71,98,3
+E.Bass,PR260,Fretless Bs | Nz,71,98,4
+E.Bass,PR261,Pick Bs | Nz,71,98,5
+E.Bass,PR262,Slap Bass | Nz,71,98,6
+E.Bass,CM215,Fingered Bass,87,86,87
+E.Bass,CM216,FingeredBass Atk,87,86,88
+E.Bass,CM217,Finger Slap,87,86,89
+E.Bass,CM218,Finger Slap Atk,87,86,90
+E.Bass,CM219,Picked Bass,87,86,91
+E.Bass,CM220,Picked Bass Atk1,87,86,92
+E.Bass,CM221,Picked Bass Atk2,87,86,93
+E.Bass,CM222,Fretless Bass,87,86,94
+E.Bass,CM223,Fretless Bass w,87,86,95
+E.Bass,CM224,Slap Bass 1,87,86,96
+E.Bass,CM225,Slap Bass 1 Atk,87,86,97
+E.Bass,CM226,Slap Bass 2,87,86,98
+E.Bass,CM227,Slap Bass 2 Amp,87,86,99
+Plucked/Stroke,PR263,Harpiness,71,98,7
+Plucked/Stroke,PR264,Delayed Harp,71,98,8
+Plucked/Stroke,PR265,SpkPop Pluck Key,71,98,9
+Plucked/Stroke,PR266,Dusk Harp,71,98,10
+Plucked/Stroke,PR267,Bright Sitar,71,98,11
+Plucked/Stroke,PR268,Kalimba Cho,71,98,12
+Plucked/Stroke,CM069,Music Box,87,85,69
+Plucked/Stroke,CM070,Music Box w,87,85,70
+Plucked/Stroke,CM071,Pops Seq 1,87,85,71
+Plucked/Stroke,CM072,Pops Seq 1 Atk,87,85,72
+Plucked/Stroke,CM323,Harp,87,87,67
+Plucked/Stroke,CM324,Aerial Harp,87,87,68
+Plucked/Stroke,CM734,Sitar 1,87,90,94
+Plucked/Stroke,CM735,Sitar 1 w,87,90,95
+Plucked/Stroke,CM736,Sitar 2,87,90,96
+Plucked/Stroke,CM737,Sitar 2 w,87,90,97
+Plucked/Stroke,CM738,Banjo,87,90,98
+Plucked/Stroke,CM739,Banjo w,87,90,99
+Plucked/Stroke,CM740,Shamisen,87,90,100
+Plucked/Stroke,CM741,Shamisen w,87,90,101
+Plucked/Stroke,CM742,Koto,87,90,102
+Plucked/Stroke,CM743,Koto w,87,90,103
+Plucked/Stroke,CM744,Taisho Koto,87,90,104
+Plucked/Stroke,CM745,Taisho Koto w,87,90,105
+Plucked/Stroke,CM746,Kalimba,87,90,106
+Plucked/Stroke,CM747,Kalimba w,87,90,107
+Orchestral,PR269,Orch Str Brass,71,98,13
+Orchestral,PR270,Orchestra Brass,71,98,14
+Ensemble Brass,PR271,Light Brass Sect,71,98,15
+Ensemble Brass,PR272,Pop Brass Sect,71,98,16
+Ensemble Brass,PR273,Soft Brass Sect,71,98,17
+Ensemble Brass,PR274,Swelling Horns,71,98,18
+Ensemble Brass,CM399,French Horn 1,87,88,15
+Ensemble Brass,CM400,French Horn 1 w,87,88,16
+Ensemble Brass,CM403,Brass 1,87,88,19
+Ensemble Brass,CM404,Brass 1 w,87,88,20
+Ensemble Brass,CM405,Brass 2,87,88,21
+Ensemble Brass,CM406,Brass Atk,87,88,22
+Ensemble Brass,CM407,Brass Atk w,87,88,23
+Solo Brass,PR275,Clear Trumpet,71,98,19
+Solo Brass,PR276,HM Mute Tp,71,98,20
+Solo Brass,PR277,Soft Trombone,71,98,21
+Solo Brass,CM382,Trumpet,87,87,126
+Solo Brass,CM383,Trumpet Echo,87,87,127
+Solo Brass,CM384,Dark Trumpet,87,87,128
+Solo Brass,CM385,Dark Trumpet w,87,88,1
+Solo Brass,CM386,Romantic Tp,87,88,2
+Solo Brass,CM387,Romantic Tp Echo,87,88,3
+Solo Brass,CM388,Trombone 1,87,88,4
+Solo Brass,CM389,Trombone 1 w,87,88,5
+Solo Brass,CM390,Trombone 2,87,88,6
+Solo Brass,CM391,Bright Tb,87,88,7
+Solo Brass,CM392,Bright Tb w,87,88,8
+Solo Brass,CM393,Tuba,87,88,9
+Solo Brass,CM394,Tuba Atk,87,88,10
+Solo Brass,CM395,Mute Trumpet 1,87,88,11
+Solo Brass,CM396,Mute Trumpet 1 w,87,88,12
+Solo Brass,CM397,Mute Trumpet 2,87,88,13
+Solo Brass,CM398,Mute Trumpet 2 w,87,88,14
+Solo Brass,CM401,French Horn 2,87,88,17
+Solo Brass,CM402,FrenchHorn2 Echo,87,88,18
+Wind,PR278,Clarinet Vib,71,98,22
+Wind,PR279,Fine Oboe,71,98,23
+Wind,PR280,English Horn/vsw,71,98,24
+Wind,PR281,Good Old Day,71,98,25
+Wind,PR282,Mild Winds,71,98,26
+Wind,PR283,Asian Wind,71,98,27
+Wind,CM452,Oboe,87,88,68
+Wind,CM453,Oboe w,87,88,69
+Wind,CM454,English Horn,87,88,70
+Wind,CM455,Bassoon,87,88,71
+Wind,CM456,Clarinet,87,88,72
+Wind,CM748,Bagpipe,87,90,108
+Wind,CM749,Bagpipe w,87,90,109
+Wind,CM752,Shanai,87,90,112
+Wind,CM753,Shanai w,87,90,113
+Flute,PR284,Soloistic Flute,71,98,28
+Flute,PR285,Be Happy Flute,71,98,29
+Flute,PR286,Pop Flute,71,98,30
+Flute,PR287,LoFi Flute,71,98,31
+Flute,PR288,Sine Flute,71,98,32
+Flute,CM457,Piccolo,87,88,73
+Flute,CM458,Flute,87,88,74
+Flute,CM459,Flute w,87,88,75
+Flute,CM460,Flute Echo,87,88,76
+Flute,CM462,Pan Flute,87,88,78
+Flute,CM463,Pan Flute w,87,88,79
+Flute,CM464,Pan Flute Dly,87,88,80
+Flute,CM465,Bottle Blow,87,88,81
+Flute,CM466,Bottle Blow w,87,88,82
+Flute,CM467,Bottle Blow Dly,87,88,83
+Flute,CM468,Shakuhachi,87,88,84
+Flute,CM469,Shakuhachi w,87,88,85
+Flute,CM470,Shakuhachi Amp,87,88,86
+Sax,PR289,Dynamic Sop Sax,71,98,33
+Sax,PR290,Dynamic Alto Sax,71,98,34
+Sax,PR291,Dynamic Tnr Sax,71,98,35
+Sax,CM444,Soprano Sax,87,88,60
+Sax,CM445,Soprano Sax Amp,87,88,61
+Sax,CM446,Alto Sax,87,88,62
+Sax,CM447,Alto Sax Amp,87,88,63
+Sax,CM448,Tenor Sax,87,88,64
+Sax,CM449,Tenor Sax Amp,87,88,65
+Sax,CM450,Baritone Sax,87,88,66
+Sax,CM451,Baritone Sax Atk,87,88,67
+Recorder,PR292,TenorRecorder,71,98,36
+Recorder,PR293,Twin Air Lead,71,98,37
+Recorder,CM461,Recorder,87,88,77
+Recorder,CM471,Whistle,87,88,87
+Recorder,CM472,Whistle Dly,87,88,88
+Recorder,CM473,Ocarina,87,88,89
+Recorder,CM474,Ocarina Echo,87,88,90
+Vox/Choir,PR294,Syn Voice Lead,71,98,38
+Vox/Choir,PR295,LqFunk Vox Lead,71,98,39
+Vox/Choir,PR296,Choir Aahs,71,98,40
+Vox/Choir,PR297,Wide Choir Aahs,71,98,41
+Vox/Choir,PR298,Angels Voices,71,98,42
+Vox/Choir,PR299,VP-330 Vox,71,98,43
+Vox/Choir,CM348,Choir 1,87,87,92
+Vox/Choir,CM349,Choir 2,87,87,93
+Vox/Choir,CM350,Choir 3,87,87,94
+Vox/Choir,CM352,Humming,87,87,96
+Vox/Choir,CM353,Synth Voice,87,87,97
+Vox/Choir,CM354,Analog Voice 1,87,87,98
+Vox/Choir,CM355,Analog Voice 2,87,87,99
+Vox/Choir,CM358,Aerial Choir,87,87,102
+Vox/Choir,CM359,Aerial Choir w,87,87,103
+Vox/Choir,CM360,DJ Soft Vox,87,87,104
+Vox/Choir,CM361,DJ Soft Vox w,87,87,105
+Vox/Choir,CM362,Syn Vox,87,87,106
+Vox/Choir,CM363,Syn Vox w,87,87,107
+Vox/Choir,CM364,VP-330 Choir,87,87,108
+Vox/Choir,CM365,VP-330 Choir w,87,87,109
+Vox/Choir,CM366,FXM Voice,87,87,110
+Vox/Choir,CM367,Cat Voice,87,87,111
+Vox/Choir,CM368,Cat Voice Wah,87,87,112
+Scat,PR300,Jazz Scat Layer,71,98,44
+Scat,PR301,Jazz Voice Doo,71,98,45
+Scat,PR302,Jazz Voice Dat,71,98,46
+Scat,PR303,Jazz Voice Bap,71,98,47
+Scat,PR304,Jazz Voice Dow,71,98,48
+Scat,CM351,Voice Doos,87,87,95
+Scat,CM356,Jazz Scat,87,87,100
+Scat,CM357,Jazz Scat w,87,87,101
+Hit,PR305,Philly Hit,71,98,49
+Hit,PR306,Mix Hit,71,98,50
+Hit,PR307,Metal Hit,71,98,51
+Hit,PR308,Rave Stab,71,98,52
+Hit,PR309,Rotary Syn Min7,71,98,53
+Hit,PR310,ModCtrl DeepEcho,71,98,54
+Hit,PR311,JUNO Stab,71,98,55
+Hit,PR312,JUNO Stab 2,71,98,56
+Hit,PR313,1Note Squ Maj7,71,98,57
+Hit,PR314,1Note PhaserEP2,71,98,58
+Hit,CM369,Orchestra Hit,87,87,113
+Hit,CM370,Bass Hit,87,87,114
+Hit,CM371,Bass Hit w,87,87,115
+Hit,CM372,6th Hit,87,87,116
+Hit,CM373,6th Hit w,87,87,117
+Hit,CM374,Euro Hit,87,87,118
+Hit,CM375,Euro Hit w,87,87,119
+Hit,CM376,Cheezy Movie,87,87,120
+Hit,CM377,Cheezy Movie w,87,87,121
+Hit,CM378,Tao Hit,87,87,122
+Hit,CM379,Tao Hit w,87,87,123
+Hit,CM380,House Hit,87,87,124
+Hit,CM381,House Hit w,87,87,125
+Sound FX,CM774,Gtr Fret Noise,87,91,6
+Sound FX,CM775,Gtr Cut Noise,87,91,7
+Sound FX,CM776,Bass String Slap,87,91,8
+Sound FX,CM777,Breath Noise,87,91,9
+Sound FX,CM778,Flute Key Click,87,91,10
+Sound FX,CM779,Seashore,87,91,11
+Sound FX,CM780,Rain,87,91,12
+Sound FX,CM781,Thunder,87,91,13
+Sound FX,CM782,Thunder Dly,87,91,14
+Sound FX,CM783,Wind,87,91,15
+Sound FX,CM784,Stream,87,91,16
+Sound FX,CM785,Stream w,87,91,17
+Sound FX,CM786,Bubble 1,87,91,18
+Sound FX,CM787,Bubble 1 w,87,91,19
+Sound FX,CM788,Bubble 2,87,91,20
+Sound FX,CM789,FX Scene,87,91,21
+Sound FX,CM790,Tuned Winds,87,91,22
+Sound FX,CM791,Tuned Winds w,87,91,23
+Sound FX,CM792,Sand Noise,87,91,24
+Sound FX,CM793,Bird 1,87,91,25
+Sound FX,CM794,Dog,87,91,26
+Sound FX,CM795,Horse Gallop,87,91,27
+Sound FX,CM796,Bird 2,87,91,28
+Sound FX,CM797,Telephone 1,87,91,29
+Sound FX,CM798,Telephone 2,87,91,30
+Sound FX,CM799,Door Creaking,87,91,31
+Sound FX,CM800,Door,87,91,32
+Sound FX,CM801,Scratch,87,91,33
+Sound FX,CM802,Wind Chimes,87,91,34
+Sound FX,CM803,FX Close,87,91,35
+Sound FX,CM804,Helicopter,87,91,36
+Sound FX,CM805,Car Engine,87,91,37
+Sound FX,CM806,Car Stop,87,91,38
+Sound FX,CM807,Car Pass,87,91,39
+Sound FX,CM808,Car Crash,87,91,40
+Sound FX,CM809,Siren,87,91,41
+Sound FX,CM810,Train,87,91,42
+Sound FX,CM811,Jetplane,87,91,43
+Sound FX,CM812,Jetplane Dly,87,91,44
+Sound FX,CM813,Starship,87,91,45
+Sound FX,CM814,Starship Dly,87,91,46
+Sound FX,CM815,Burst Noise,87,91,47
+Sound FX,CM816,Passing By,87,91,48
+Sound FX,CM817,FX Pass 1,87,91,49
+Sound FX,CM818,FX Pass 2,87,91,50
+Sound FX,CM819,FX Pass 3,87,91,51
+Sound FX,CM820,FX Pass 4,87,91,52
+Sound FX,CM821,FX Pass 5,87,91,53
+Sound FX,CM822,Poly Sweep Nz,87,91,54
+Sound FX,CM823,Reso Sweep Dn,87,91,55
+Sound FX,CM824,Applause,87,91,56
+Sound FX,CM825,Applause w,87,91,57
+Sound FX,CM826,Laughing,87,91,58
+Sound FX,CM827,Screaming,87,91,59
+Sound FX,CM828,Punch,87,91,60
+Sound FX,CM829,Heart Beat,87,91,61
+Sound FX,CM830,Footsteps,87,91,62
+Sound FX,CM831,Gun Shot,87,91,63
+Sound FX,CM832,Machine Gun,87,91,64
+Sound FX,CM833,Laser Gun,87,91,65
+Sound FX,CM834,Explosion,87,91,66
+Sound FX,CM835,Explosion Dly,87,91,67
+Sound FX,CM836,Explosion Dist,87,91,68
+Sound FX,CM837,FX Hit w,87,91,69
+Stack,PR315,Emotion Quotient,71,98,59
+Stack,PR316,Truly Moving,71,98,60
+Drums,CD001,Standard Kit,86,65,1
+Drums,CD002,Room Kit,86,65,2
+Drums,CD003,Power Kit,86,65,3
+Drums,CD004,Electric Kit,86,65,4
+Drums,CD005,Analog Kit,86,65,5
+Drums,CD006,Jazz Kit,86,65,6
+Drums,CD007,Brush Kit,86,65,7
+Drums,CD008,Orchestra Kit,86,65,8
+Drums,CD009,SFX Kit,86,65,9
+Drums,CD010,Standard Kit w,86,65,10
+Drums,CD011,Room Kit w,86,65,11
+Drums,CD012,Power Kit w,86,65,12
+Drums,CD013,Electric Kit w,86,65,13
+Drums,CD014,Analog Kit w,86,65,14
+Drums,CD015,Jazz Kit w,86,65,15
+Drums,CD016,Brush Kit w,86,65,16
+Drums,CD017,Orchestra Kit w,86,65,17
+Drums,CD018,SFX Kit w,86,65,18
+Drums,CD019,Studio Kit,86,65,19
+Drums,CD020,Studio Kit w,86,65,20
+Drums,CD021,Pop Kit,86,65,21
+Drums,CD022,Pop Kit w,86,65,22
+Drums,CD023,Pop Kit Lim,86,65,23
+Drums,CD024,90’s Kit,86,65,24
+Drums,CD025,90’s Kit comp,86,65,25
+Drums,CD026,90’s Kit w comp,86,65,26
+Drums,CD027,80’s Kit,86,65,27
+Drums,CD028,80’s Kit comp,86,65,28
+Drums,CD029,80’s Kit w comp,86,65,29
+Drums,CD030,EDM Kit,86,65,30
+Drums,CD031,EDM Kit w,86,65,31
+Drums,CD032,EDM Kit Lim,86,65,32
+Drums,CD033,Drum&Bass Kit,86,65,33
+Drums,CD034,Drum&Bass Kit,86,65,34
+Drums,CD035,Drum&Bass KitLim,86,65,35
+Drums,CD036,Techno Kit,86,65,36
+Drums,CD037,Techno Kit w,86,65,37
+Drums,CD038,House Kit,86,65,38
+Drums,CD039,House Kit w,86,65,39
+Drums,CD040,HipHop Kit,86,65,40
+Drums,CD041,HipHop Kit comp,86,65,41
+Drums,CD042,HipHop Kit w cmp,86,65,42
+Drums,CD043,R&B Kit,86,65,43
+Drums,CD044,R&B Kit w,86,65,44
+Drums,CD045,TR-909,86,65,45
+Drums,CD046,TR-909 comp,86,65,46
+Drums,CD047,TR-909 w comp,86,65,47
+Drums,CD048,TR-808,86,65,48
+Drums,CD049,TR-808 comp,86,65,49
+Drums,CD050,TR-808 w comp,86,65,50
+Drums,CD051,TR-707&727,86,65,51
+Drums,CD052,TR-707&727 comp,86,65,52
+Drums,CD053,TR-707&727 w cmp,86,65,53
+Drums,CD054,CR-78,86,65,54
+Drums,CD055,CR-78 comp,86,65,55
+Drums,CD056,CR-78 w comp,86,65,56
+Drums,CD057,TR-606,86,65,57
+Drums,CD058,TR-606 comp,86,65,58
+Drums,CD059,TR-606 w comp,86,65,59
+Drums,CD060,TR-626,86,65,60
+Drums,CD061,TR-626 comp,86,65,61
+Drums,CD062,TR-626 w comp,86,65,62
+Drums,CD063,Kick,86,65,63
+Drums,CD064,Kick w,86,65,64
+Drums,CD065,Snare,86,65,65
+Drums,CD066,Snare w,86,65,66
+Drums,CD067,RimStickClapTom,86,65,67
+Drums,CD068,RimStickClapTm w,86,65,68
+Drums,CD069,HiHat Cymbal,86,65,69
+Drums,CD070,HiHat Cymbal w,86,65,70
+Drums,CD071,Other Perc 1,86,65,71
+Drums,CD072,Other Perc 1 w,86,65,72
+Drums,CD073,Other Perc 2,86,65,73
+Drums,CD074,Other Perc 2 w,86,65,74
+Percussion,PR317,Bonus Percs,71,98,61
+Percussion,CM327,Timpani,87,87,71
+Percussion,CM328,Timpani w,87,87,72
+Percussion,CM329,Timpani Low,87,87,73
+Percussion,CM330,Timpani Atk,87,87,74
+Percussion,CM758,Steel Drums,87,90,118
+Percussion,CM759,Steel Drums w,87,90,119
+Percussion,CM760,Steel Drums w 2,87,90,120
+Percussion,CM761,Woodblock,87,90,121
+Percussion,CM762,Castanets,87,90,122
+Percussion,CM763,Taiko,87,90,123
+Percussion,CM764,Concert BD,87,90,124
+Percussion,CM765,Concert BD w,87,90,125
+Percussion,CM766,Melodic Tom 1,87,90,126
+Percussion,CM767,Melodic Tom 2,87,90,127
+Percussion,CM768,Synth Drum,87,90,128
+Percussion,CM769,Synth Drum w,87,91,1
+Percussion,CM770,TR-808 Tom,87,91,2
+Percussion,CM771,Elec.Perc.,87,91,3
+Percussion,CM772,Reverse Cym,87,91,4
+Percussion,CM773,Reverse Cym Atk,87,91,5
