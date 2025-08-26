@@ -14,6 +14,12 @@ header {
   font-weight: bold;
   letter-spacing: 2px;
 }
+footer {
+  background-color: #873742;
+  color: #ebecec;
+  text-align: center;
+  padding: 10px;
+}
 .content {
   padding: 10px 40px;
 }

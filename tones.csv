@@ -41,24 +41,24 @@ Pop Piano,PR020,Pop Toy,71,96,20
 Pop Piano,CM023,Honky-tonk,87,85,23
 Pop Piano,CM024,Honky-tonk w,87,85,24
 Pop Piano,CM025,Honky-tonk w 2,87,85,25
-E.Grand Piano,PR021,70s E.Grand,71,96,21
+E.Grand Piano,PR021,70s E.Grand (Yamaha CP70?),71,96,21
 E.Grand Piano,CM020,Piano 3,87,85,20
 E.Grand Piano,CM021,Piano 3 w,87,85,21
 E.Grand Piano,CM022,Piano 3 w 2,87,85,22
-E.Piano1,PR022,70s Suitcase,71,96,22
+E.Piano1,PR022,70s Suitcase (Rhodes?),71,96,22
 E.Piano1,PR023,Lite Tine EP,71,96,23
 E.Piano1,PR024,Lite Pop EP,71,96,24
 E.Piano1,PR025,Soft Stage EP,71,96,25
 E.Piano1,PR026,Wurly Vibrato,71,96,26
-E.Piano1,PR027,Vintage Phase EP,71,96,27
-E.Piano1,PR028,Phase EP Mix,71,96,28
+E.Piano1,PR027,Vintage Phase EP (Rhodes?),71,96,27
+E.Piano1,PR028,Phase EP Mix (Rhodes?),71,96,28
 E.Piano1,PR029,EP 90 Phaser,71,96,29
 E.Piano1,PR030,Vortex EP,71,96,30
 E.Piano1,PR031,Flicker Piano,71,96,31
 E.Piano1,PR032,Suitcase EP OD,71,96,32
 E.Piano1,PR033,EP Wah,71,96,33
 E.Piano1,PR034,LoFi E.Piano,71,96,34
-E.Piano1,CM026,E.Piano 1,87,85,26
+E.Piano1,CM026,E.Piano 1 (Rhodes?),87,85,26
 E.Piano1,CM027,E.Piano 1 w,87,85,27
 E.Piano1,CM028,E.Piano 1 Trem,87,85,28
 E.Piano1,CM029,Detuned EP 1,87,85,29
@@ -66,23 +66,23 @@ E.Piano1,CM030,Vintage EP,87,85,30
 E.Piano1,CM031,60s E.Piano,87,85,31
 E.Piano1,CM032,60s E.Piano w,87,85,32
 E.Piano1,CM033,60s E.Piano Trem,87,85,33
-E.Piano1,CM034,Tremolo EP,87,85,34
+E.Piano1,CM034,Tremolo EP (Rhodes?),87,85,34
 E.Piano1,CM035,Tremolo EP w,87,85,35
 E.Piano1,CM036,Curly Wurly,87,85,36
 E.Piano1,CM037,Sinus EP,87,85,37
-E.Piano2,PR035,More Tine EP,71,96,35
-E.Piano2,PR036,80s FM EP,71,96,36
-E.Piano2,PR037,MK-80 Bright EP,71,96,37
+E.Piano2,PR035,More Tine EP (Yamaha DX7?),71,96,35
+E.Piano2,PR036,80s FM EP (Yamaha DX7?),71,96,36
+E.Piano2,PR037,MK-80 Bright EP (Yamaha DX7?),71,96,37
 E.Piano2,PR038,Mood Azure,71,96,38
 E.Piano2,PR039,Mixture EP,71,96,39
-E.Piano2,CM038,E.Piano 2,87,85,38
-E.Piano2,CM039,E.Piano 2 w,87,85,39
-E.Piano2,CM040,Detuned EP 2,87,85,40
+E.Piano2,CM038,E.Piano 2 (Yamaha DX7?),87,85,38
+E.Piano2,CM039,E.Piano 2 w (Yamaha DX7?),87,85,39
+E.Piano2,CM040,Detuned EP 2  (Yamaha DX7?),87,85,40
 E.Piano2,CM041,St.FM EP,87,85,41
 E.Piano2,CM042,St.FM EP w,87,85,42
 E.Piano2,CM043,EP Legend,87,85,43
 E.Piano2,CM044,EP Legend w,87,85,44
-E.Piano2,CM045,EP Phaser 1,87,85,45
+E.Piano2,CM045,EP Phaser 1 (Rhodes?),87,85,45
 E.Piano2,CM046,EP Phaser 2,87,85,46
 E.Piano2,CM047,EP Phaser 3,87,85,47
 E.Piano2,CM048,EP Belle,87,85,48
@@ -724,7 +724,7 @@ Harpsichord,CM052,Harpsichord w 2,87,85,52
 Harpsichord,CM053,Harpsichord o,87,85,53
 Clav,PR220,Harpsy Clav,71,97,92
 Clav,PR221,Clav White,71,97,93
-Clav,PR222,Clav Phase,71,97,94
+Clav,PR222,Clav Phase (Hohner Clavinet?),71,97,94
 Clav,CM054,Clav 1,87,85,54
 Clav,CM055,Clav 1 w,87,85,55
 Clav,CM056,Clav 1 Phaser,87,85,56
@@ -1052,7 +1052,7 @@ Hit,PR310,ModCtrl DeepEcho,71,98,54
 Hit,PR311,JUNO Stab,71,98,55
 Hit,PR312,JUNO Stab 2,71,98,56
 Hit,PR313,1Note Squ Maj7,71,98,57
-Hit,PR314,1Note PhaserEP2,71,98,58
+Hit,PR314,1Note PhaserEP2 (Rhodes?),71,98,58
 Hit,CM369,Orchestra Hit,87,87,113
 Hit,CM370,Bass Hit,87,87,114
 Hit,CM371,Bass Hit w,87,87,115

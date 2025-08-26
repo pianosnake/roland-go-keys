@@ -50,6 +50,7 @@ document.addEventListener('alpine:init', () => {
         this.onFilterCleared();
         return this.groupedTones;
       }
+      this.tonesDiv.scrollTop = 0;
       return this.groupedTones
         .map(group => ({
           category: group.category,
