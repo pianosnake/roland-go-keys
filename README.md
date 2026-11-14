@@ -1,7 +1,12 @@
-# GO:KEYS tones
+# Roland GO:KEYS MIDI Explorer
 
-A Web MIDI page for the Roland GO:KEYS. It lists the keyboard's 1228 tones on the left, and sends a bank select
-and program change when you tap one. Every CC it receives is on the right, in a grid.
+Live at https://pianosnake.github.io/roland-go-keys/
+
+A Web MIDI page for the Roland GO:KEYS 3/5. It lists the keyboard's 1228 tones on the left, and sends a bank select
+and program change when you tap one. Every CC it receives is on the right, in six sections.
+
+Enable Bluetooth on the GO:KEYS and connect to it from your computer (on a Mac: the built-in Audio MIDI Setup app),
+then open the page in Chrome.
 
 - Runs in desktop Chrome (`python3 serve.py`, then http://localhost:8771) and inside the MIDI Charmer AUv3 on iPad
   (import this folder from Files). No libraries and no network access needed.
