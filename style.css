@@ -29,7 +29,7 @@ body {
 
 /* ---------- left column: tones ---------- */
 .side {
-  width: 300px; flex: none; height: 100vh; display: flex; flex-direction: column; gap: 6px;
+  width: 250px; flex: none; height: 100vh; display: flex; flex-direction: column; gap: 6px;
   background: var(--side); padding: 10px 8px 6px; border-right: 4px solid var(--side-dark);
 }
 .brand { display: flex; align-items: flex-start; gap: 12px; }
