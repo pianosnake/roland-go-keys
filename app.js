@@ -73,6 +73,7 @@
     current: null,                 // tone index the keyboard is on (last sent or received)
     values: saved.values || {},    // cc -> last value sent or received
     bank: { msb: null, lsb: null },// last bank select received from the keyboard
+    favorites: (saved.favorites || []).filter((num) => TONES.some((t) => t.num === num)), // tone numbers, in the order added
   };
   const midi = { access: null, input: null, output: null };
 
@@ -80,7 +81,7 @@
   function save() {
     try {
       const tone = state.current == null ? null : TONES[state.current].num;
-      localStorage.setItem(STORE, JSON.stringify({ channel: state.channel, tone, values: state.values }));
+      localStorage.setItem(STORE, JSON.stringify({ channel: state.channel, tone, values: state.values, favorites: state.favorites }));
     } catch (e) { /* private mode */ }
   }
 
@@ -92,7 +93,8 @@
     let html = '', cat = null;
     TONES.forEach((t) => {
       if (t.category !== cat) { cat = t.category; html += `<div class="cat" data-cat="${esc(cat)}">${esc(cat)}</div>`; }
-      html += `<div class="row" data-i="${t.i}"><span class="num">${esc(t.num)}</span><span class="name">${esc(t.name)}</span></div>`;
+      const fav = state.favorites.indexOf(t.num) >= 0 ? ' fav' : '';   // green number = favorite
+      html += `<div class="row" data-i="${t.i}"><span class="num${fav}">${esc(t.num)}</span><span class="name">${esc(t.name)}</span></div>`;
     });
     $('list').innerHTML = html || '<div class="empty">No tones (tones.js is missing).</div>';
   }
@@ -130,8 +132,36 @@
     else if (top + el.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = top + el.offsetHeight - list.clientHeight;
   }
 
+  // ------------------------------------------------------------ favorites
+  // The star next to the current tone's name adds it to / removes it from the favorites.
+  const isFavorite = (i) => state.favorites.indexOf(TONES[i].num) >= 0;
+  function toggleFavorite(i) {
+    const num = TONES[i].num, k = state.favorites.indexOf(num);
+    if (k >= 0) state.favorites.splice(k, 1); else state.favorites.push(num);
+    const row = rowEl(i);
+    if (row) row.querySelector('.num').classList.toggle('fav', k < 0);
+    markStar(); renderFavorites(); save();
+  }
+  function markStar() {
+    const star = $('fav-star'), on = state.current != null && isFavorite(state.current);
+    star.hidden = state.current == null;
+    star.classList.toggle('on', on);
+    star.setAttribute('aria-pressed', on ? 'true' : 'false');
+    star.title = on ? 'Remove from favorites' : 'Add to favorites';
+  }
+
+  function renderFavorites() {
+    const tones = state.favorites.map((num) => TONES.find((t) => t.num === num)).filter(Boolean);
+    $('fav-body').innerHTML = tones.length
+      ? tones.map((t) => `<button class="fav-btn${t.i === state.current ? ' cur' : ''}" type="button" data-i="${t.i}" title="${esc(t.num)}">` +
+          `<span class="fav-name">${esc(t.name)}</span></button>`).join('')
+      : '<div class="fav-empty">Tap the star next to a tone\u2019s name to add it here.</div>';
+  }
+
   function markCurrent() {
     $('list').querySelectorAll('.row.cur').forEach((el) => el.classList.remove('cur'));
+    $('fav-body').querySelectorAll('.fav-btn').forEach((el) => el.classList.toggle('cur', +el.dataset.i === state.current));
+    markStar();
     const t = state.current == null ? null : TONES[state.current];
     if (t) { const el = rowEl(t.i); if (el) el.classList.add('cur'); }
     $('det-num').textContent = t ? t.num : '-----';
@@ -291,6 +321,7 @@
     $('channel').onchange = (e) => { state.channel = +e.target.value; markCurrent(); save(); };
 
     renderList();
+    renderFavorites();
     renderGrid();
     if (saved.tone) { const t = TONES.find((x) => x.num === saved.tone); if (t) state.current = t.i; }
     markCurrent();
@@ -298,6 +329,8 @@
     if (state.current != null) scrollToRow(state.current, true);
 
     $('list').onclick = (e) => { const row = e.target.closest('.row'); if (row) { selectTone(+row.dataset.i); $('list').focus(); } };
+    $('fav-star').onclick = () => { if (state.current != null) toggleFavorite(state.current); };
+    $('fav-body').onclick = (e) => { const b = e.target.closest('.fav-btn'); if (b) selectTone(+b.dataset.i); };
     $('list').onkeydown = (e) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); step(e.key === 'ArrowDown' ? 1 : -1); }
     };

@@ -74,8 +74,10 @@ body {
 .row:hover { background: #1c1e24; }
 .row .num { flex: none; width: 5.5ch; color: #7c808b; font: 12px/26px var(--lcd-font); }
 .row .name { flex: 1; min-width: 0; color: var(--lcd-text); font: 15px/26px var(--lcd-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .num.fav { color: var(--accent); font-weight: 700; }   /* favorite */
 .row.cur { background: var(--accent); box-shadow: inset 3px 0 0 var(--on-accent); }
 .row.cur .num { color: #1d4a47; }
+.row.cur .num.fav { color: #fff; }
 .row.cur .name { color: var(--on-accent); }
 .empty { color: var(--text-dim); padding: 18px; font-size: 13px; line-height: 1.4; }
 
@@ -83,7 +85,13 @@ body {
 .details { flex: 1; min-width: 0; height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px; }
 .det-head { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; padding-right: 50px; /* room for the plugin's Pages button */ }
 .det-num { flex: none; font: 24px/1 var(--lcd-font); background: var(--lcd); border: 1px solid var(--border); padding: 6px 10px; color: var(--lcd-text); }
+.det-title { display: flex; align-items: center; gap: 8px; }
 .det-name { font: 900 22px/1.15 var(--title-font); }
+/* Favorite star: outline when the current tone isn't a favorite, filled green when it is. Padding = bigger tap target. */
+.star { -webkit-appearance: none; appearance: none; flex: none; border: 0; background: none; padding: 4px; margin: -4px 0; cursor: pointer; line-height: 0; }
+.star svg path { fill: none; stroke: var(--text-dim); stroke-width: 1.6; stroke-linejoin: round; }
+.star:hover svg path { stroke: var(--accent); }
+.star.on svg path { fill: var(--accent); stroke: var(--accent); }
 .det-note { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
 
 /* CC sections flow into as many columns as fit (>= 320px each, filled top to bottom so sections of different
@@ -99,6 +107,18 @@ body {
   font: 700 11px var(--ui-font); letter-spacing: .8px; padding: 4px 30px 4px 9px;
   -webkit-clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%); clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
 }
+/* Favorites: full width above the CC sections; one button per favorite tone. */
+.sect.favs { display: block; margin-bottom: 10px; }
+.fav-body { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 10px; }
+.fav-btn {
+  -webkit-appearance: none; appearance: none; cursor: pointer; display: flex; align-items: baseline; max-width: 220px;
+  min-height: 32px; padding: 4px 10px; border: 1px solid #45484f; border-radius: 3px; background: var(--lcd);
+  color: var(--lcd-text); -webkit-text-fill-color: var(--lcd-text); font: 15px var(--lcd-font);
+}
+.fav-btn:hover { border-color: var(--accent); }
+.fav-btn .fav-name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fav-btn.cur { background: var(--accent); border-color: var(--accent); color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
+.fav-empty { color: #7c808b; font-size: 12px; padding: 6px 0; }
 .sect-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 14px; padding: 8px 10px 10px; }
 .sect-body.buttons { display: flex; flex-wrap: wrap; gap: 6px; }
 .btn .btn-cc { font-weight: 400; opacity: .65; margin-left: 2px; }

@@ -27,10 +27,15 @@
     <div class="det-head">
       <span class="det-num" id="det-num">-----</span>
       <div>
-        <div class="det-name" id="det-name">Pick a tone</div>
+        <div class="det-title"><span class="det-name" id="det-name">Pick a tone</span>
+          <button id="fav-star" class="star" type="button" aria-pressed="false" hidden>
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3-4.7-4.4 6.4-.8z"/></svg>
+          </button>
+        </div>
         <div class="det-note" id="det-note">Tap a tone on the left to send it to the keyboard.</div>
       </div>
     </div>
+    <section class="sect favs"><div class="sect-title">FAVORITES</div><div class="fav-body" id="fav-body"></div></section>
     <div class="cc-grid" id="cc-grid"></div>
     <p class="hint">Slider positions are what this page last sent, not read from the keyboard (it doesn't report them).
       Double-tap a value to send its default.</p>
