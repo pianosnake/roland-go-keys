@@ -18,6 +18,6 @@ python3 -m http.server 8000
 - Ports: picks one named like `GO:KEYS`, `Roland` or `Bluetooth`, otherwise the first port (inside an AUv3 host the
   ports have the host's names).
 - The keyboard doesn't report its controller values, so the sliders show what the page last sent (or received).  Double-tap a value to send its default.
-- Tones were retrieved from `tones.csv` posted on the (Facebook forum)[https://www.facebook.com/groups/8596326350405837]
+- Tones were retrieved from `tones.csv` posted on Roland GO:KEYS [Facebook forum](https://www.facebook.com/groups/8596326350405837)
 
 Not affiliated with Roland.
