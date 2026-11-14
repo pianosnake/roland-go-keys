@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GO:KEYS Tones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"><span class="model">GO:KEYS</span></div>
+      <label class="chan" title="MIDI channel. Firmware 1.11 only changes the UPPER tone from channel 4.">CH
+        <select id="channel"></select>
+      </label>
+    </div>
+    <div class="status-line"><span id="conn-status" class="status off">Not connected</span> <span id="status-text"></span></div>
+    <div class="search">
+      <input id="search" type="text" placeholder="Search tones…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button id="clear" class="clear" type="button" aria-label="Clear search">×</button>
+    </div>
+    <div class="list" id="list" tabindex="0"></div>
+  </aside>
+
+  <main class="details">
+    <div class="det-head">
+      <span class="det-num" id="det-num">-----</span>
+      <div>
+        <div class="det-name" id="det-name">Pick a tone</div>
+        <div class="det-note" id="det-note">Tap a tone on the left to send it to the keyboard.</div>
+      </div>
+    </div>
+    <div class="cc-grid" id="cc-grid"></div>
+    <p class="hint">Slider positions are what this page last sent, not read from the keyboard (it doesn't report them).
+      Double-tap a value to send its default.</p>
+  </main>
+
+  <script src="tones.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

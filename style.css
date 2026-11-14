@@ -1,0 +1,153 @@
+/* Layout and controls follow the jt4000m / rk100s pages; accent is the GO:KEYS 3 turquoise body colour (#64C4BF).
+   iPad (AUv3 WebKit, iOS 15) is older than desktop WebKit: no container units/queries, no `inset`; use % and @media.
+   System fonts only: pages inside the plugin have no internet. */
+:root {
+  --bg: #24262b;
+  --side: #1c1d21;
+  --side-dark: #121316;
+  --panel: #2d2f35;
+  --panel-2: #24262b;
+  --border: #4a4d56;
+  --accent: #64c4bf;
+  --accent-soft: #9fe0da;
+  --on-accent: #0b2422;   /* text on accent backgrounds: white is unreadable on this light green */
+  --text: #ececef;
+  --text-dim: #a9adb8;
+  --lcd: #0f1013;
+  --lcd-text: #ffd9a0;
+  --title-font: "Arial Black", "Helvetica Neue", Helvetica, sans-serif;
+  --lcd-font: "Menlo", "Consolas", monospace;
+  --ui-font: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+  margin: 0; display: flex; font-family: var(--ui-font); font-size: 13px; background: var(--bg); color: var(--text);
+}
+
+/* ---------- left column: tones ---------- */
+.side {
+  width: 300px; flex: none; height: 100vh; display: flex; flex-direction: column; gap: 6px;
+  background: var(--side); padding: 10px 8px 6px; border-right: 4px solid var(--side-dark);
+}
+.brand { display: flex; align-items: flex-start; gap: 12px; }
+.logo { display: flex; flex-direction: column; line-height: 1; }
+.logo .model { font: 900 26px/1 var(--title-font); letter-spacing: -.5px; }
+.chan { margin-left: auto; display: flex; align-items: center; gap: 6px; font: 700 10px var(--ui-font); color: var(--text-dim); letter-spacing: .5px; }
+.chan select {
+  -webkit-appearance: none; appearance: none; border-radius: 0; margin: 0; cursor: pointer;
+  background: var(--lcd); color: var(--lcd-text); -webkit-text-fill-color: var(--lcd-text); border: 1px solid var(--border);
+  font: 16px/20px var(--lcd-font); padding: 1px 6px; min-width: 42px; text-align: center;
+}
+
+.status-line { font-size: 11px; min-height: 18px; display: flex; gap: 6px; align-items: center; color: var(--text-dim); }
+.status { padding: 1px 7px; border-radius: 9px; white-space: nowrap; cursor: default; }
+.status.off { background: #55575d; color: #ddd; }
+.status.on { background: #2f8f3a; color: #fff; }
+.status.warn { background: #d08a00; color: #fff; }
+#status-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.search { position: relative; }
+.search input {
+  -webkit-appearance: none; appearance: none; width: 100%; margin: 0; border-radius: 0;
+  background: var(--lcd); color: var(--text); border: 1px solid var(--border);
+  font: 16px var(--ui-font); padding: 6px 30px 6px 8px;   /* 16px: iOS doesn't zoom into the field */
+}
+.search input:focus { outline: none; border-color: var(--accent); }
+.search .clear {
+  position: absolute; top: 0; right: 0; width: 30px; height: 100%; border: 0; background: none; cursor: pointer;
+  color: var(--text-dim); font: 20px/1 var(--ui-font); padding: 0;
+}
+
+.list {
+  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative;
+  background: var(--lcd); border: 1px solid var(--border); outline: none;
+}
+.list .cat {
+  position: -webkit-sticky; position: sticky; top: 0; z-index: 1;
+  background: #142a29; color: var(--accent-soft); font: 700 10px/20px var(--ui-font); letter-spacing: .8px;
+  text-transform: uppercase; padding: 0 8px; border-bottom: 1px solid #1f403e;
+}
+.row { display: flex; gap: 10px; padding: 0 8px; border-bottom: 1px solid #1b1c20; cursor: pointer; line-height: 26px; }
+.row:hover { background: #1c1e24; }
+.row .num { flex: none; width: 5.5ch; color: #7c808b; font: 12px/26px var(--lcd-font); }
+.row .name { flex: 1; min-width: 0; color: var(--lcd-text); font: 15px/26px var(--lcd-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row.cur { background: var(--accent); box-shadow: inset 3px 0 0 var(--on-accent); }
+.row.cur .num { color: #1d4a47; }
+.row.cur .name { color: var(--on-accent); }
+.empty { color: var(--text-dim); padding: 18px; font-size: 13px; line-height: 1.4; }
+
+/* ---------- right: current tone + CC grid ---------- */
+.details { flex: 1; min-width: 0; height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px; }
+.det-head { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; padding-right: 50px; /* room for the plugin's Pages button */ }
+.det-num { flex: none; font: 24px/1 var(--lcd-font); background: var(--lcd); border: 1px solid var(--border); padding: 6px 10px; color: var(--lcd-text); }
+.det-name { font: 900 22px/1.15 var(--title-font); }
+.det-note { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+/* CC sections flow into as many columns as fit (>= 320px each, filled top to bottom so sections of different
+   heights pack without gaps); inside a section the controls wrap in their own grid. inline-block + width 100%
+   keeps WebKit from splitting a section across columns. */
+.cc-grid { -webkit-column-width: 320px; column-width: 320px; -webkit-column-gap: 10px; column-gap: 10px; }
+.sect {
+  display: inline-block; width: 100%; margin: 0 0 10px; -webkit-column-break-inside: avoid; break-inside: avoid;
+  border: 1px solid var(--border); border-top: 2px solid var(--accent); background: linear-gradient(var(--panel), var(--panel-2));
+}
+.sect-title {   /* slanted tab, as on the jt4000m / rk100s pages */
+  display: inline-block; vertical-align: top; background: var(--accent); color: var(--on-accent);
+  font: 700 11px var(--ui-font); letter-spacing: .8px; padding: 4px 30px 4px 9px;
+  -webkit-clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%); clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
+}
+.sect-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 14px; padding: 8px 10px 10px; }
+.sect-body.buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.btn .btn-cc { font-weight: 400; opacity: .65; margin-left: 2px; }
+.card { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.cc-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.cc-num { flex: none; font: 700 10px var(--ui-font); color: var(--accent-soft); letter-spacing: .4px; }
+.cc-name { min-width: 0; font: 700 12px var(--ui-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.unknown .sval { color: #7c808b; }   /* not sent or received yet: showing the default */
+
+.btn {
+  -webkit-appearance: none; appearance: none; cursor: pointer; border: 1px solid #111; border-radius: 3px;
+  padding: 4px 10px; font: 700 12px var(--ui-font); color: #fff; -webkit-text-fill-color: #fff;
+  background: linear-gradient(#5a5d66, #383a41); min-height: 30px;
+}
+.btn:active { background: linear-gradient(#383a41, #5a5d66); }
+.btn.act { background: linear-gradient(#86d6d1, #4aa8a2); border-color: #1d4a47; color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
+.btn.act:active { background: linear-gradient(#4aa8a2, #86d6d1); }
+.btn.onoff { width: 70px; font-family: var(--lcd-font); letter-spacing: 1px; }
+.btn.onoff.on { background: linear-gradient(#86d6d1, #4aa8a2); border-color: #1d4a47; color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
+.card.toggle.unknown .btn.onoff { color: #aaa; -webkit-text-fill-color: #aaa; }
+
+/* Horizontal sliders (vertical/rotated ranges handle touch badly on iOS). touch-action: pan-y lets a vertical swipe
+   still scroll the page while a sideways drag moves the slider. --pct is set inline and while dragging. */
+.srow { display: flex; align-items: center; gap: 8px; }
+.srow .sval { flex: none; width: 4ch; text-align: right; font: 15px/26px var(--lcd-font); color: var(--lcd-text); cursor: pointer; }
+.srow input[type=range] {
+  -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 26px; margin: 0; padding: 0;
+  background: transparent; cursor: pointer; touch-action: pan-y;
+}
+.srow input[type=range]::-webkit-slider-runnable-track {
+  height: 10px; border: 1px solid #45484f;
+  background: linear-gradient(90deg, var(--accent) 0, var(--accent) var(--pct, 0%), var(--lcd) var(--pct, 0%));
+}
+.srow input[type=range]::-moz-range-track {
+  height: 10px; border: 1px solid #45484f;
+  background: linear-gradient(90deg, var(--accent) 0, var(--accent) var(--pct, 0%), var(--lcd) var(--pct, 0%));
+}
+.srow input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 16px; height: 24px; margin-top: -8px;
+  background: linear-gradient(#f4f4f6, #b9bcc5); border: 1px solid #111; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+.srow input[type=range]::-moz-range-thumb { width: 16px; height: 24px; background: linear-gradient(#f4f4f6, #b9bcc5); border: 1px solid #111; border-radius: 2px; }
+
+.hint { color: #7c808b; font-size: 11px; margin: 12px 0 4px; }
+
+/* Narrow windows: the tone list on top, the CCs below. */
+@media (max-width: 640px) {
+  body { flex-direction: column; height: auto; }
+  .side { width: auto; height: 50vh; border-right: 0; border-bottom: 4px solid var(--side-dark); }
+  .details { height: auto; overflow: visible; }
+  .cc-grid { -webkit-column-width: auto; column-width: auto; }
+}
