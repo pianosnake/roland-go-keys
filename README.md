@@ -4,7 +4,7 @@ Live at https://pianosnake.github.io/roland-go-keys/
 
 A Web MIDI page for the Roland GO:KEYS 3/5. It lists the keyboard's thousand+ tones on the left, and sends a bank select and program change when you tap one. Every CC it receives is on the right, in six sections.
 
-Enable Bluetooth on the GO:KEYS and connect to it from your computer (on a Mac: the built-in Audio MIDI Setup app), then open the page in Chrome.
+Enable Bluetooth on the GO:KEYS and connect to it from your computer (on a Mac: the built-in Audio MIDI Setup app), then open the page in Chrome. Or use a USB cable to connect to your computer/iPad.
 
 To run it locally, start a web server in this folder and open http://localhost:8000 in Chrome:
 ```
@@ -12,8 +12,7 @@ python3 -m http.server 8000
 ```
 (Web MIDI works on `localhost` but not from `file://`. If a reload shows an old version, use Cmd+Shift+R.)
 
-- Runs in desktop Chrome and inside the MIDI Charmer AUv3 on iPad (import this folder from Files). No libraries
-  and no network access needed.
+- Runs in desktop Chrome and inside the MIDIWeb Browser on iPad, or using MIDI Charmer AUv3 on iPad (import this folder from Files). No libraries and no network access needed.
 - Default channel 4: with firmware 1.11 the GO:KEYS only changes the UPPER tone from channel 4.
 - Ports: picks one named like `GO:KEYS`, `Roland` or `Bluetooth`, otherwise the first port (inside an AUv3 host the
   ports have the host's names).
