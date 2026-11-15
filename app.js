@@ -69,19 +69,20 @@
 
   const saved = load();
   const state = {
-    channel: saved.channel || 4,   // firmware 1.11 only changes the UPPER tone from channel 4
+    channel: saved.channel || 4,
+    port: saved.port || null,      // output port name picked by hand (null = automatic)   // firmware 1.11 only changes the UPPER tone from channel 4
     current: null,                 // tone index the keyboard is on (last sent or received)
     values: saved.values || {},    // cc -> last value sent or received
     bank: { msb: null, lsb: null },// last bank select received from the keyboard
     favorites: (saved.favorites || []).filter((num) => TONES.some((t) => t.num === num)), // tone numbers, in the order added
   };
-  const midi = { access: null, input: null, output: null };
+  const midi = { access: null, input: null, output: null, sysex: false };
 
   function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
   function save() {
     try {
       const tone = state.current == null ? null : TONES[state.current].num;
-      localStorage.setItem(STORE, JSON.stringify({ channel: state.channel, tone, values: state.values, favorites: state.favorites }));
+      localStorage.setItem(STORE, JSON.stringify({ channel: state.channel, port: state.port, tone, values: state.values, favorites: state.favorites }));
     } catch (e) { /* private mode */ }
   }
 
@@ -176,10 +177,14 @@
     state.current = i;
     markCurrent(); scrollToRow(i); save();
     if (!midi.output) { setStatus('Not connected: the tone was not sent.'); return; }
-    const ch = state.channel - 1;
-    midi.output.send([0xB0 | ch, 0, t.msb]);       // bank select MSB
-    midi.output.send([0xB0 | ch, 32, t.lsb]);      // bank select LSB
-    midi.output.send([0xC0 | ch, t.pc - 1]);       // program change (1-based in the list)
+    const ch = state.channel - 1, out = midi.output;
+    const sendTone = () => {
+      out.send([0xB0 | ch, 0, t.msb]);             // bank select MSB
+      out.send([0xB0 | ch, 32, t.lsb]);            // bank select LSB
+      out.send([0xC0 | ch, t.pc - 1]);             // program change (1-based in the list)
+    };
+    // On the Chords tab the keyboard is in app mode, which ignores program changes: chords.js steps out of it.
+    if (CHORDS) CHORDS.whileDisconnected(sendTone); else sendTone();
     setStatus(`Sent ${t.num} ${t.name}.`);
   }
 
@@ -273,10 +278,27 @@
   // ------------------------------------------------------------ MIDI
   // By name on a desktop; inside an AUv3 host the ports have the host's names, so fall back to the first one.
   const NAMES = /go:?\s?keys|roland|bluetooth/i;
-  const pick = (map) => { const list = Array.from(map.values()); return list.find((p) => NAMES.test(p.name)) || list[0] || null; };
+  // The PORT menu overrides that (needed when the keyboard sits behind an interface such as the H4MIDI WC, whose
+  // ports are named "H4MIDI-WC Port n"). The input is the port with the same name as the output.
+  const pick = (map, name) => {
+    const list = Array.from(map.values());
+    return (name && list.find((p) => p.name === name)) || list.find((p) => NAMES.test(p.name)) || list[0] || null;
+  };
+
+  function renderPorts() {
+    const outs = Array.from(midi.access.outputs.values());
+    $('port').innerHTML = outs.length
+      ? outs.map((p) => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('')
+      : '<option value="">(none)</option>';
+    $('port').value = midi.output ? midi.output.name : '';
+  }
+
+  const CHORDS = window.GOKEYS_CHORDS;
 
   function onMessage(ev) {
-    const d = ev.data, type = d[0] & 0xF0, ch = (d[0] & 0x0F) + 1;
+    const d = ev.data;
+    if (d[0] === 0xF0) { if (CHORDS) CHORDS.onSysEx(d); return; }
+    const type = d[0] & 0xF0, ch = (d[0] & 0x0F) + 1;
     if (ch !== state.channel) return;
     if (type === 0xB0 && d.length >= 3) {
       if (d[1] === 0) state.bank.msb = d[2];
@@ -290,10 +312,13 @@
   }
 
   function connect() {
-    const input = pick(midi.access.inputs), output = pick(midi.access.outputs);
+    const output = pick(midi.access.outputs, state.port);
+    const input = pick(midi.access.inputs, output ? output.name : state.port);
     if (midi.input && midi.input !== input) midi.input.onmidimessage = null;
     midi.input = input; midi.output = output;
     if (input) input.onmidimessage = onMessage;
+    renderPorts();
+    if (CHORDS) CHORDS.setOutput(output && midi.sysex ? (bytes) => output.send(bytes) : null);
     if (output) {
       setConn(NAMES.test(output.name) ? 'GO:KEYS' : 'MIDI out', 'on', `Out: ${output.name}${input ? ` · In: ${input.name}` : ''}`);
       setStatus(input ? '' : 'No MIDI input: the page won\'t follow the keyboard.');
@@ -305,10 +330,16 @@
 
   async function initMIDI() {
     if (!navigator.requestMIDIAccess) { setConn('No Web MIDI', 'off'); setStatus('Use Chrome, or the MIDI Charmer plugin on iPad.'); return; }
+    // SysEx is only needed by the Chords tab; without it the tone browser still works.
     try {
-      midi.access = await navigator.requestMIDIAccess();
+      midi.access = await navigator.requestMIDIAccess({ sysex: true });
+      midi.sysex = true;
     } catch (e) {
-      setConn('No access', 'warn'); setStatus(`MIDI access refused: ${e.message || e}`); return;
+      try {
+        midi.access = await navigator.requestMIDIAccess();
+      } catch (e2) {
+        setConn('No access', 'warn'); setStatus(`MIDI access refused: ${e2.message || e2}`); return;
+      }
     }
     midi.access.onstatechange = connect;
     connect();
@@ -359,6 +390,20 @@
       if (lastTap.cc === cc && now - lastTap.at < 350) { sendCC(cc, ccInfo[cc].def); lastTap = { cc: null, at: 0 }; }
       else lastTap = { cc, at: now };
     });
+
+    $('port').onchange = (e) => { state.port = e.target.value || null; save(); if (midi.access) connect(); };
+
+    // Tabs: TONE (tone details + CCs) and CHORDS (chords.js).
+    $('tabs').onclick = (e) => {
+      const b = e.target.closest('.tab');
+      if (!b) return;
+      $('tabs').querySelectorAll('.tab').forEach((t) => t.classList.toggle('on', t === b));
+      $('tab-tones').hidden = b.dataset.tab !== 'tones';
+      $('tab-chords').hidden = b.dataset.tab !== 'chords';
+      $('details').classList.toggle('on-tones', b.dataset.tab === 'tones');
+      if (CHORDS) CHORDS.setActive(b.dataset.tab === 'chords');
+    };
+    if (CHORDS) CHORDS.init({ status: setStatus });
 
     initMIDI();
   }
