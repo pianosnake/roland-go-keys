@@ -5,7 +5,7 @@
   <title>GO:KEYS Tones &amp; Chords</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=37">
 </head>
 <body>
   <aside class="side">
@@ -15,13 +15,16 @@
         <select id="channel"></select>
       </label>
     </div>
-    <label class="port" title="The MIDI port the keyboard is on. With a CME H4MIDI WC the GO:KEYS is usually Port 3.">PORT
+    <label class="port" title="The MIDI port the keyboard is on.">PORT
       <select id="port"></select>
     </label>
     <div class="status-line"><span id="conn-status" class="status off">Not connected</span> <span id="status-text"></span></div>
     <div class="search">
       <input id="search" type="text" placeholder="Search tones…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button id="clear" class="clear" type="button" aria-label="Clear search">×</button>
+      <button id="fav-only" class="star fav-only" type="button" aria-pressed="false" title="Show only the favorites">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3-4.7-4.4 6.4-.8z"/></svg>
+      </button>
     </div>
     <div class="list" id="list" tabindex="0"></div>
   </aside>
@@ -43,7 +46,6 @@
         <div class="det-note" id="det-note">Tap a tone on the left to send it to the keyboard.</div>
       </div>
     </div>
-    <section class="sect favs"><div class="sect-title">FAVORITES</div><div class="fav-body" id="fav-body"></div></section>
     <div class="cc-grid" id="cc-grid"></div>
     <p class="hint">Slider positions are what this page last sent, not read from the keyboard (it doesn't report them).
       Double-tap a value to send its default.</p>
@@ -69,15 +71,50 @@
           <button class="btn" type="button" data-v="off">OFF</button><button class="btn" type="button" data-v="short">SHORT</button><button class="btn" type="button" data-v="long">LONG</button></span></div>
       </div>
       <div class="chords-info" id="chords-info">Reads the chord progression stored on the keyboard (the song Chord Director edits).</div>
-      <div class="chords-name" id="chords-name"></div>
+      <div class="chords-title" id="chords-title" hidden>
+        <span class="chords-name" id="chords-name-text"></span>
+        <button id="name-edit" class="btn name-edit" type="button" aria-label="Rename the song" title="Rename the song">✎</button>
+      </div>
+      <div class="name-form" id="name-form" hidden>
+        <input class="name-input" id="chords-name" type="text" maxlength="32" placeholder="Song name (up to 32 characters)"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+        <button id="name-save" class="btn act" type="button">Save</button>
+        <button id="name-cancel" class="btn" type="button">Cancel</button>
+      </div>
       <div class="bars" id="bars"></div>
-      <p class="hint">Uses undocumented GO:KEYS 3/5 SysEx. Read again after changing the song: edits made in Chord Director
+      <div class="chord-editor" id="chord-editor" hidden>
+        <div class="ed-head">
+          <button id="ed-ins-before" class="btn ed-nav" type="button" aria-label="Insert a bar before this one" title="Insert a bar before this one">&lt;+</button>
+          <button id="ed-prev-bar" class="btn ed-nav" type="button" aria-label="Previous bar" title="Previous bar">«</button>
+          <button id="ed-prev" class="btn ed-nav" type="button" aria-label="Previous beat">◀</button>
+          <span class="ed-pos" id="ed-pos"></span>
+          <button id="ed-next" class="btn ed-nav" type="button" aria-label="Next beat">▶</button>
+          <button id="ed-next-bar" class="btn ed-nav" type="button" aria-label="Next bar" title="Next bar">»</button>
+          <button id="ed-ins-after" class="btn ed-nav" type="button" aria-label="Insert a bar after this one" title="Insert a bar after this one">+&gt;</button>
+          <span class="ed-chord" id="ed-chord"></span>
+          <button id="ed-hold" class="btn ed" type="button" title="No chord change on this beat: the previous chord continues">HOLD</button>
+          <button id="ed-close" class="btn ed-nav" type="button" aria-label="Close the editor">✕</button>
+        </div>
+        <div class="ed-row"><span class="ed-label">BAR</span><div class="ed-btns" id="ed-style"></div></div>
+        <div class="ed-row"><span class="ed-label">ROOT</span><div class="ed-btns" id="ed-root"></div></div>
+        <div class="ed-row"><span class="ed-label">TYPE</span><div class="ed-btns" id="ed-type"></div></div>
+        <div class="ed-row"><span class="ed-label">BASS</span><div class="ed-btns">
+          <select id="ed-bass" class="ed-select" aria-label="Bass note"></select>
+          <span class="ed-label ed-inline">REPEAT</span>
+          <button id="ed-rep-start" class="btn ed" type="button" title="Repeat starts at this bar">|:</button>
+          <button id="ed-rep-end" class="btn ed" type="button" title="Repeat ends at this bar">:|</button>
+          <button id="ed-del-bar" class="btn ed-nav" type="button" aria-label="Delete this bar" title="Delete this bar">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M6 1.5h4l.5 1.5H14v1.5H2V3h3.5zM3.2 5.5h9.6l-.7 9H3.9zM6 7v6h1V7zm3 0v6h1V7z"/></svg>
+          </button>
+        </div></div>
+      </div>
+      <p class="hint">Uses undocumented GO:KEYS 3/5 SysEx. Tap a beat to change its chord or the bar's variation; changes are sent at once. Read again after changing the song in Chord Director: its edits
         are not sent to this page.</p>
     </div>
   </main>
 
   <script src="tones.js"></script>
-  <script src="chords.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="chords.js?v=37"></script>
+  <script src="app.js?v=37"></script>
 </body>
 </html>

@@ -19,6 +19,10 @@
 //             tab and every 20 s (it times out after ~60 s: bar messages stop and the keyboard shows "App disconnected").
 //             Leaving the tab sends 02 00 = 00. While connected the keyboard ignores program changes, so a tone change
 //             made on this tab is wrapped in disconnect / reconnect (see whileDisconnected).
+//   Editing:  like Chord Director, one entry per edit inside 02 14 / 02 18: DT1 03 40 = 00 01 + one chord entry
+//             (root 00 = delete the chord at that bar/beat), DT1 03 41 = 00 01 + [bar 2B][value] (value 00 = none).
+//   Bars:     inserting or deleting a bar resends the whole song (02 08 ... 02 0C, Chord Director's order), because
+//             every later chord and variation moves.
 //   Settings: changed live like Chord Director: DT1 02 14 = 00 00 00 00 (begin edit), DT1 03 2x = value, DT1 02 18 (end).
 //             The keyboard applies them on the next bar. Transpose is applied by the keyboard: chords stay untransposed.
 //   Unprompted: 01 00 01 01 = play state [+ bar], 01 00 01 02 = bar number (sent on each downbeat). The bar number's
@@ -68,6 +72,17 @@
   let timeout = 0;
   const play = { playing: false, bar: null };
 
+  // Outgoing edits go through one queue, 30 ms apart, so several edits sent together don't interleave
+  // (each begin-edit / entry / end-edit triple stays together).
+  let queue = [], queueTimer = 0;
+  function enqueue(msgs) { queue = queue.concat(msgs); if (!queueTimer) queueTimer = setTimeout(drain, 50); }
+  function drain() {
+    if (!queue.length) { queueTimer = 0; return; }
+    const m = queue.shift();
+    if (send) send(m);
+    queueTimer = setTimeout(drain, 30);
+  }
+
   function dt1(addr, data) {
     const body = addr.concat(data);
     const sum = (128 - (body.reduce((a, b) => a + b, 0) % 128)) % 128;
@@ -83,7 +98,7 @@
     timeout = setTimeout(() => {
       if (!incoming) return;
       incoming = null;
-      setInfo('No answer from the keyboard. Check the PORT menu: with the H4MIDI WC the GO:KEYS is on Port 3.');
+      setInfo('No answer from the keyboard.');
     }, 3000);
   }
 
@@ -136,6 +151,7 @@
       const lastBar = song.chords.reduce((m, c) => Math.max(m, c.bar + 1), 0);
       song.bars = Math.max(incoming.bars, lastBar);
       song.loaded = true;
+      markersFromSong();
       incoming = null;
       render();
       setInfo('');
@@ -211,7 +227,7 @@
       msgs.push(dt1([0x01, 0x00, 0x03, SETTINGS[key]], [key === 'transpose' ? 0x40 + v : (v ? 1 : 0)]));
     });
     msgs.push(dt1([0x01, 0x00, 0x02, 0x18], [0, 0, 0, 0]));                 // end edit
-    msgs.forEach((m, k) => setTimeout(() => send && send(m), 50 + k * 30));
+    enqueue(msgs);
     keys.forEach((key) => { song.settings[key] = changes[key]; });
     render();
     setInfo(play.playing ? 'Sent. The keyboard applies it on the next bar.' : 'Sent.');
@@ -282,31 +298,447 @@
 
   function render() {
     renderSettings();
-    $('chords-name').textContent = song.loaded ? (song.name || 'Untitled') : '';
+    $('chords-name-text').textContent = song.name || 'Untitled';
+    $('chords-title').hidden = !song.loaded || !$('name-form').hidden;
+    if (!song.loaded) $('name-form').hidden = true;
     $('dl-txt').disabled = !song.loaded || !song.chords.length;
     if (!song.loaded) { $('bars').innerHTML = ''; return; }
-    if (!song.chords.length) { $('bars').innerHTML = '<div class="fav-empty">The song on the keyboard has no chords.</div>'; return; }
+    if (!song.bars) { $('bars').innerHTML = '<div class="fav-empty">The song on the keyboard has no bars.</div>'; return; }
     const st = song.settings;
     // Intro and ending get rows of their own, above and below the song's bars.
     const row = (html) => `<div class="bars-grid">${html}</div>`;
+    computeView();
+    const marks = repeatMarks(view.repeats);
     $('bars').innerHTML = (st.intro ? row(sectionBox('intro', 'INTRO', st.introLong)) : '') + row(byBar().map((bar, b) => {
+      if (view.hidden[b]) return '';
       const beats = [];
       for (let k = 0; k < BEATS; k++) {
         const c = bar.chords.find((x) => x.beat === k);
-        beats.push(`<span class="beat${c ? '' : ' held'}">${c ? esc(c.name) : '·'}</span>`);
+        const sel = edit.open && edit.bar === b && edit.beat === k ? ' sel' : '';
+        beats.push(`<button class="beat${c ? '' : ' held'}${sel}" type="button" data-bar="${b}" data-beat="${k}">${c ? esc(c.name) : '·'}</button>`);
       }
-      return `<div class="bar" data-bar="${b}"><div class="bar-head"><span class="bar-num">${b + 1}</span>` +
+      const mk = marks[b] || {};
+      const num = (mk.start ? '<span class="rep-mark">|:</span> ' : '') + view.number[b] +
+        (mk.end != null ? ` <span class="rep-mark">:|${mk.end ? ` ${mk.end}` : ''}</span><span class="rep-pass" data-end="${b}"></span>` : '');
+      return `<div class="bar" data-bar="${b}"><div class="bar-head"><span class="bar-num">${num}</span>` +
         `${bar.variation ? `<span class="bar-var">${esc(bar.variation)}</span>` : ''}</div>` +
         `<div class="beats">${beats.join('')}</div></div>`;
-    }).join('')) + (st.ending ? row(sectionBox('ending', 'ENDING', st.endingLong)) : '');
+    }).join('') + '<button class="bar add-bar" type="button" id="add-bar" title="Add a bar at the end">+ bar</button>') +
+      (st.ending ? row(sectionBox('ending', 'ENDING', st.endingLong)) : '');
     markBar();
+    renderEditor();
   }
 
   function markBar() {
     $('bars').querySelectorAll('.bar.now').forEach((el) => el.classList.remove('now'));
-    if (!play.playing || play.bar == null) return;
-    const el = $('bars').querySelector(`.bar[data-bar="${play.bar}"]`);
+    if (!play.playing || play.bar == null) { followed = null; return; }
+    $('bars').querySelectorAll('.rep-pass').forEach((el) => { el.textContent = ''; });
+    const at = shownBar(play.bar);
+    const el = $('bars').querySelector(`.bar[data-bar="${at.bar}"]`);
     if (el) el.classList.add('now');
+    if (at.r) {
+      const p = $('bars').querySelector(`.rep-pass[data-end="${at.r.start + at.r.len - 1}"]`);
+      if (p) p.textContent = ` ${at.pass}/${at.r.times}`;
+    }
+    if (el && play.bar !== followed) { followed = play.bar; follow(el); }
+  }
+
+  // Keep the bar being played on screen: when it gets near the bottom of the pane (or above the top), scroll so it
+  // sits about a third of the way down. Paused for a few seconds after the user scrolls or touches the pane, so it
+  // doesn't fight them. The docked chord editor covers the bottom of the pane, so that part doesn't count as visible.
+  let followed = null, userScrolledAt = -1e9;
+  function follow(el) {
+    let pane = $('details');
+    if (!pane || $('tab-chords').hidden || performance.now() - userScrolledAt < 4000) return;
+    // Narrow windows (the tone list on top) scroll the whole page instead of the pane.
+    const page = pane.scrollHeight <= pane.clientHeight;
+    if (page) pane = document.scrollingElement || document.documentElement;
+    const box = page ? { top: 0, bottom: window.innerHeight } : pane.getBoundingClientRect(), r = el.getBoundingClientRect();
+    const editor = $('chord-editor');
+    const bottom = box.bottom - (editor && !editor.hidden ? editor.offsetHeight : 0);
+    if (r.top >= box.top && r.bottom <= bottom - 8) return;
+    const top = pane.scrollTop + (r.top - box.top) - (bottom - box.top) / 3;
+    try { pane.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } catch (e) { pane.scrollTop = Math.max(0, top); }
+  }
+  function watchUserScroll() {
+    const pane = $('details');
+    if (!pane) return;
+    const mark = () => { userScrolledAt = performance.now(); };
+    ['wheel', 'touchstart', 'touchmove', 'keydown'].forEach((t) => window.addEventListener(t, mark, { passive: true }));
+  }
+
+  // ------------------------------------------------------------ repeats
+  // The keyboard stores songs written out, so repeats are found again on every render: a block of 4+ bars played
+  // 2+ times in a row. Bars are compared by what sounds on each beat (a held F equals a new F entry); variations are
+  // ignored. Greedy from the start: at each bar take the block covering the most bars (shorter block on a tie).
+  // That only fills in the markers when a song is read. After that the markers are the user's: each bar can carry
+  // |: (repeat start) and :| (repeat end); a |: followed by a :| makes the bars between them a repeat. Its passes are
+  // the identical written-out copies that follow it on the keyboard; a new pair with no copy yet gets one written out.
+  const MIN_REPEAT = 4, MAX_REPEAT = 32;
+  let starts = {}, ends = {};                       // song bar -> true
+  function markersFromSong() {
+    starts = {}; ends = {};
+    findRepeats().forEach((r) => { starts[r.start] = true; ends[r.start + r.len - 1] = true; });
+  }
+  // Marker pairs -> repeats { start, len, times }; times counts the identical copies on the keyboard.
+  function markedRepeats() {
+    const sig = barSignatures(), out = [];
+    const same = (a, b, len) => { for (let i = 0; i < len; i++) if (sig[a + i] !== sig[b + i]) return false; return true; };
+    let open = null;
+    for (let b = 0; b < song.bars; b++) {
+      if (starts[b]) open = b;
+      if (ends[b] && open != null) {
+        const len = b - open + 1;
+        let times = 1;
+        while (open + (times + 1) * len <= song.bars && same(open, open + times * len, len)) times++;
+        out.push({ start: open, len, times });
+        open = null;
+        b += (times - 1) * len;                      // markers inside the hidden copies don't count
+      }
+    }
+    return out;
+  }
+  // Move markers when bars are inserted (delta > 0) or deleted (delta < 0, the bar at at is removed).
+  function shiftMarkers(at, delta) {
+    const move = (m) => {
+      const out = {};
+      Object.keys(m).forEach((k) => {
+        const b = +k;
+        if (delta < 0 && b === at) return;
+        out[b >= at + (delta < 0 ? 1 : 0) ? b + delta : b] = true;
+      });
+      return out;
+    };
+    starts = move(starts); ends = move(ends);
+  }
+
+  function barSignatures() {
+    const sigs = [], chords = song.chords;
+    let k = 0, cur = '-';
+    for (let b = 0; b < song.bars; b++) {
+      const beats = [];
+      for (let beat = 0; beat < BEATS; beat++) {
+        while (k < chords.length && (chords[k].bar < b || (chords[k].bar === b && chords[k].beat <= beat))) {
+          const c = chords[k++];
+          cur = [c.root, c.acc, c.type, c.bass, c.bass ? c.bassAcc : 0].join('.');
+        }
+        beats.push(cur);
+      }
+      sigs.push(beats.join('|'));
+    }
+    return sigs;
+  }
+
+  function findRepeats() {
+    const sig = barSignatures(), n = sig.length, found = [];
+    const same = (a, b, len) => { for (let i = 0; i < len; i++) if (sig[a + i] !== sig[b + i]) return false; return true; };
+    let s = 0;
+    while (s < n) {
+      let best = null;
+      for (let len = MIN_REPEAT; len <= MAX_REPEAT && s + 2 * len <= n; len++) {
+        let times = 1;
+        while (s + (times + 1) * len <= n && same(s, s + times * len, len)) times++;
+        if (times >= 2 && (!best || times * len > best.times * best.len)) best = { start: s, len, times };
+      }
+      if (best) { found.push(best); s += best.times * best.len; } else s++;
+    }
+    return found;
+  }
+
+  // What the grid shows: repeats that are on, their copies hidden, and the shown bars numbered 1, 2, 3...
+  // as written (the bar after |: 1-8 :| is 9).
+  let view = { repeats: [], active: [], hidden: {}, number: {} };
+  function computeView() {
+    const repeats = markedRepeats(), active = repeats.filter((r) => r.times >= 2), hidden = {}, number = {};
+    active.forEach((r) => { for (let b = r.start + r.len; b < r.start + r.times * r.len; b++) hidden[b] = true; });
+    let n = 1;
+    for (let b = 0; b < song.bars; b++) if (!hidden[b]) number[b] = n++;
+    view = { repeats, active, hidden, number };
+  }
+  const activeRepeatAt = (bar) => view.active.find((r) => bar >= r.start && bar < r.start + r.times * r.len) || null;
+  // The shown bar for a song bar (a bar in a hidden copy maps back to the first pass), and which pass it is.
+  function shownBar(bar) {
+    if (typeof bar !== 'number') return { bar, pass: 0, r: null };
+    const r = activeRepeatAt(bar);
+    if (!r) return { bar, pass: 0, r: null };
+    return { bar: r.start + ((bar - r.start) % r.len), pass: Math.floor((bar - r.start) / r.len) + 1, r };
+  }
+  // Every song bar a shown bar stands for (all passes of a repeat).
+  function passesOf(bar) {
+    const r = activeRepeatAt(bar);
+    if (!r) return [bar];
+    const out = [];
+    for (let k = 0; k < r.times; k++) out.push(bar + k * r.len);
+    return out;
+  }
+
+  // bar -> { start: '|:', end: ':| ×n', copy: true } for the repeats that are on.
+  function repeatMarks(repeats) {
+    const marks = {};
+    const m = (b) => (marks[b] = marks[b] || {});
+    Object.keys(starts).forEach((b) => { m(+b).start = true; });
+    Object.keys(ends).forEach((b) => { m(+b).end = ''; });
+    repeats.forEach((r) => { if (r.times > 2) m(r.start + r.len - 1).end = `×${r.times}`; });
+    return marks;
+  }
+
+
+  // ------------------------------------------------------------ editor
+  // Tap a beat in the grid (touch or mouse), then pick the bar's variation or fill (first row), root / type / hold and
+  // the bass note (a menu) in the panel docked at the bottom. Every tap is sent to the keyboard at once. The panel works in sounding pitch: with a
+  // transpose the stored chord is shifted back before it's sent.
+  const ROOTS = [[3, 0x40], [3, 0x41], [4, 0x40], [5, 0x3F], [5, 0x40], [6, 0x40], [6, 0x41], [7, 0x40], [1, 0x3F], [1, 0x40], [2, 0x3F], [2, 0x40]];
+  const ROOT_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+  const TYPE_ORDER = [0x01, 0x02, 0x03, 0x14, 0x13, 0x15, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0D, 0x0F,
+    0x0E, 0x10, 0x0B, 0x0C, 0x19, 0x18, 0x17, 0x16, 0x11, 0x12, 0x1E, 0x1A, 0x1B, 0x1C, 0x1D, 0x1F];
+  // The common types are buttons (major has no suffix, so its button is blank); the rest are in a menu.
+  const TYPE_BUTTONS = [0x01, 0x02, 0x03, 0x13, 0x14, 0x05, 0x09];
+  const TYPE_MORE = TYPE_ORDER.filter((t) => TYPE_BUTTONS.indexOf(t) < 0);
+  const BAR_STYLES = [[0, '—'], [1, 'Var 1'], [2, 'Var 2'], [3, 'Var 3'], [4, 'Var 4'], [6, 'Fill Up'], [5, 'Fill Down']];
+  const edit = { open: false, bar: 0, beat: 0 };
+
+  const chordAt = (bar, beat) => song.chords.find((c) => c.bar === bar && c.beat === beat) || null;
+  // The chord sounding at a position (the last change at or before it), for defaults.
+  function chordInEffect(bar, beat) {
+    let found = null;
+    song.chords.forEach((c) => { if (c.bar < bar || (c.bar === bar && c.beat <= beat)) found = c; });
+    return found;
+  }
+  const soundingPc = (letter, acc) => (notePc(letter, acc) + song.settings.transpose + 120) % 12;
+  const storedNote = (pc) => ROOTS[(pc - song.settings.transpose + 120) % 12];
+
+  function sendEdit(addrLo, entry) {
+    if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return false; }
+    if (!connected) connectApp();
+    const msgs = [dt1([0x01, 0x00, 0x02, 0x14], [0, 0, 0, 0]), dt1([0x01, 0x00, 0x03, addrLo], [0, 1].concat(entry)),
+      dt1([0x01, 0x00, 0x02, 0x18], [0, 0, 0, 0])];
+    enqueue(msgs);
+    lastAlive = performance.now();
+    return true;
+  }
+
+  // Set (or with c = null delete) the chord at the selected beat.
+  // A bar inside a shown repeat stands for all its passes, so the change goes to every pass (the repeat stays).
+  function putChord(c) {
+    const beat = edit.beat;
+    for (const bar of passesOf(edit.bar)) {
+      const entry = c ? [bar >> 7, bar & 0x7F, beat, c.root, c.acc, c.type >> 7, c.type & 0x7F, c.bass, c.bassAcc]
+        : [bar >> 7, bar & 0x7F, beat, 0x00, 0x40, 0x00, 0x01, 0x00, 0x40];
+      if (!sendEdit(0x40, entry)) return;
+      song.chords = song.chords.filter((x) => !(x.bar === bar && x.beat === beat));
+      if (c) song.chords.push({ bar, beat, root: c.root, acc: c.acc, type: c.type, bass: c.bass, bassAcc: c.bassAcc });
+    }
+    song.chords.sort((x, y) => x.bar - y.bar || x.beat - y.beat);
+    render();
+  }
+
+  // Change one part of the chord at the selected beat; an empty beat starts from the chord sounding there.
+  function changeChord(part, value) {
+    const base = chordAt(edit.bar, edit.beat) || chordInEffect(edit.bar, edit.beat) || { root: 3, acc: 0x40, type: 1, bass: 0, bassAcc: 0x40 };
+    const c = { root: base.root, acc: base.acc, type: base.type, bass: base.bass, bassAcc: base.bassAcc };
+    if (part === 'root') { const n = storedNote(value); c.root = n[0]; c.acc = n[1]; }
+    if (part === 'acc') {                                          // sharp / flat on the root's letter; again = natural
+      const name = spell(base.root, base.acc), sign = name[1] === '#' ? 1 : name[1] === 'b' ? -1 : 0;
+      const acc = sign === value ? 0 : value;
+      if (!song.settings.transpose) { c.root = LETTERS.indexOf(name[0]); c.acc = 0x40 + acc; }   // keeps the spelling (D# or Eb)
+      else { const n = storedNote((PC[name[0]] + acc + 12) % 12); c.root = n[0]; c.acc = n[1]; }
+    }
+    if (part === 'type') c.type = value;
+    if (part === 'bass') {
+      if (value < 0) { c.bass = 0; c.bassAcc = 0x40; } else { const n = storedNote(value); c.bass = n[0]; c.bassAcc = n[1]; }
+    }
+    putChord(c);
+  }
+
+  // A variation that is already playing when the bar starts (the last entry before it is the same variation) is not
+  // written again: the bar is left without an entry (an entry it had is removed). After a fill the variation that
+  // follows isn't known here, so it is written.
+  function setBarStyle(value) {
+    const bar = edit.bar;
+    if (value >= 1 && value <= 4) {
+      let prev = null;
+      song.variations.forEach((v) => { if (v.bar < bar && (!prev || v.bar > prev.bar)) prev = v; });
+      if (prev && prev.value === value) {
+        const had = song.variations.some((v) => v.bar === bar);
+        if (had) setBarStyle(0);
+        setInfo(`${VARIATIONS[value]} is already set from bar ${view.number[prev.bar] || prev.bar + 1}${had ? ': this bar\u2019s entry was removed' : ', nothing sent'}.`);
+        return;
+      }
+    }
+    if (!sendEdit(0x41, [bar >> 7, bar & 0x7F, value])) return;
+    song.variations = song.variations.filter((v) => v.bar !== bar);
+    if (value) song.variations.push({ bar, value });
+    song.variations.sort((x, y) => x.bar - y.bar);
+    render();
+  }
+
+  // ---- whole-song transfer, used when bars are inserted or deleted (later chords and variations move).
+  // Same order as Chord Director: 02 08 begin, 03 40 chords (13 entries per packet), 03 41 variations, 03 00 name,
+  // 03 22 transpose, 24 intro, 42 intro chord, 25 intro long, 26 ending, 43 ending chord, 27 ending long, 23 loop,
+  // 03 20 bars, 02 0C end.
+  const MAX_BARS = 999;
+  const chordBytes = (c) => (c ? [c.root, c.acc, c.type >> 7, c.type & 0x7F, c.bass, c.bassAcc] : [0x00, 0x40, 0x00, 0x01, 0x00, 0x40]);
+  function sendSong() {
+    if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return false; }
+    if (!connected) connectApp();
+    const st = song.settings, A = (lo) => [0x01, 0x00, 0x03, lo], msgs = [dt1([0x01, 0x00, 0x02, 0x08], [0, 0, 0, 0])];
+    // A stream is sent as packets of [count 2B] + entries; an empty stream as one packet with count 0.
+    const stream = (lo, items, size, bytes) => {
+      let k = 0;
+      do {
+        const part = items.slice(k, k + size);
+        let data = [part.length >> 7, part.length & 0x7F];
+        part.forEach((x) => { data = data.concat(bytes(x)); });
+        msgs.push(dt1(A(lo), data));
+        k += size;
+      } while (k < items.length);
+    };
+    stream(0x40, song.chords, 13, (c) => [c.bar >> 7, c.bar & 0x7F, c.beat].concat(chordBytes(c)));
+    if (song.variations.length) stream(0x41, song.variations, 13, (v) => [v.bar >> 7, v.bar & 0x7F, v.value]);
+    const name = (song.name + ' '.repeat(32)).slice(0, 32).split('').map((ch) => ch.charCodeAt(0) & 0x7F);
+    msgs.push(dt1(A(0x00), name), dt1(A(0x22), [0x40 + st.transpose]), dt1(A(0x24), [st.intro ? 1 : 0]),
+      dt1(A(0x42), chordBytes(song.introChord)), dt1(A(0x25), [st.introLong ? 1 : 0]), dt1(A(0x26), [st.ending ? 1 : 0]),
+      dt1(A(0x43), chordBytes(song.endingChord)), dt1(A(0x27), [st.endingLong ? 1 : 0]), dt1(A(0x23), [st.loop ? 1 : 0]),
+      dt1(A(0x20), [song.bars >> 7, song.bars & 0x7F]), dt1([0x01, 0x00, 0x02, 0x0C], [0, 0, 0, 0]));
+    enqueue(msgs);
+    lastAlive = performance.now();
+    return true;
+  }
+
+  // Insert an empty bar at index at (the chord before it keeps sounding), or delete bar at.
+  function insertBar(at) {
+    if (song.bars >= MAX_BARS) return;
+    shiftMarkers(at, 1);
+    const shift = (x) => { if (x.bar >= at) x.bar += 1; };
+    song.chords.forEach(shift); song.variations.forEach(shift);
+    song.bars += 1;
+    if (sendSong()) { edit.open = true; edit.bar = at; edit.beat = 0; render(); }
+  }
+  function deleteBar(at) {
+    if (song.bars <= 1) return;
+    shiftMarkers(at, -1);
+    song.chords = song.chords.filter((c) => c.bar !== at);
+    song.variations = song.variations.filter((v) => v.bar !== at);
+    const shift = (x) => { if (x.bar > at) x.bar -= 1; };
+    song.chords.forEach(shift); song.variations.forEach(shift);
+    song.bars -= 1;
+    if (sendSong()) { edit.bar = Math.min(at, song.bars - 1); edit.beat = 0; render(); }
+  }
+
+  // Toggle |: or :| on the selected bar. A pair that isn't repeated on the keyboard yet gets its copy written out
+  // (the bars are inserted after the :| and the whole song is resent). Removing a marker keeps the bars.
+  function toggleMarker(set) {
+    if (set[edit.bar]) delete set[edit.bar]; else set[edit.bar] = true;
+    const r = markedRepeats().find((x) => x.times === 1 && edit.bar >= x.start && edit.bar < x.start + x.len &&
+      (x.start === edit.bar || x.start + x.len - 1 === edit.bar));
+    if (r && set[edit.bar]) writeOutRepeat(r);
+    render();
+  }
+  function writeOutRepeat(r) {
+    if (song.bars + r.len > MAX_BARS) return;
+    const after = r.start + r.len;
+    const move = (x) => { if (x.bar >= after) x.bar += r.len; };
+    song.chords.forEach(move); song.variations.forEach(move);
+    shiftMarkers(after, r.len);
+    const copy = (list) => list.filter((x) => x.bar >= r.start && x.bar < after).map((x) => Object.assign({}, x, { bar: x.bar + r.len }));
+    song.chords = song.chords.concat(copy(song.chords)).sort((x, y) => x.bar - y.bar || x.beat - y.beat);
+    // A chord held into the copy from before the repeat must sound at its start too.
+    if (!song.chords.some((c) => c.bar === after && c.beat === 0)) {
+      const held = chordInEffect(after - 1, BEATS - 1);
+      const first = chordInEffect(r.start, 0);
+      if (first && held !== first) song.chords.push(Object.assign({}, first, { bar: after, beat: 0 }));
+      song.chords.sort((x, y) => x.bar - y.bar || x.beat - y.beat);
+    }
+    song.variations = song.variations.concat(copy(song.variations)).sort((x, y) => x.bar - y.bar);
+    song.bars += r.len;
+    if (sendSong()) setInfo(`Repeat written out: bars ${r.start + 1}–${after} now play twice.`);
+  }
+
+  function select(bar, beat) {
+    edit.open = true; edit.bar = bar; edit.beat = beat;
+    render();
+  }
+  function stepBeat(dir) {
+    let pos = edit.bar * BEATS + edit.beat;
+    for (;;) {
+      pos += dir;
+      if (pos < 0 || pos >= song.bars * BEATS) return;
+      if (!view.hidden[Math.floor(pos / BEATS)]) break;
+    }
+    select(Math.floor(pos / BEATS), pos % BEATS);
+  }
+
+  // « / »: the first beat of the previous / next shown bar.
+  function stepBar(dir) {
+    for (let b = edit.bar + dir; b >= 0 && b < song.bars; b += dir) if (!view.hidden[b]) { select(b, 0); return; }
+  }
+
+  function renderEditor() {
+    const panel = $('chord-editor');
+    panel.hidden = !(edit.open && song.loaded && edit.bar < song.bars);
+    if (panel.hidden) return;
+    const c = chordAt(edit.bar, edit.beat), eff = c || chordInEffect(edit.bar, edit.beat);
+    $('ed-pos').textContent = `Bar ${view.number[edit.bar] || edit.bar + 1} · Beat ${edit.beat + 1}`;
+    $('ed-chord').textContent = c ? chordName(c) : eff ? `hold (${chordName(eff)})` : 'hold';
+    const bassPc = c ? (c.bass ? soundingPc(c.bass, c.bassAcc) : -1) : null;
+    const btn = (attr, v, label, on) => `<button class="btn ed${on ? ' on' : ''}" type="button" data-${attr}="${v}">${esc(label)}</button>`;
+    // Root: the seven letters plus sharp and flat (no E#, B#, Cb, Fb). The accidental buttons act on the chord at this
+    // beat, or on the one sounding there if the beat is a hold.
+    const rootName = eff ? spell(eff.root, eff.acc) : null, letter = rootName ? rootName[0] : 'C';
+    const sign = !rootName ? 0 : rootName[1] === '#' ? 1 : rootName[1] === 'b' ? -1 : 0;
+    const accBtn = (v, label, name, off) => `<button class="btn ed acc${c && sign === v ? ' on' : ''}" type="button" data-acc="${v}"` +
+      ` title="${name}" aria-label="${name}"${off ? ' disabled' : ''}>${label}</button>`;
+    $('ed-root').innerHTML = 'CDEFGAB'.split('').map((l) => btn('root', PC[l], l, !!c && l === letter)).join('') +
+      accBtn(1, '\u266F', 'Sharp', letter === 'E' || letter === 'B') + accBtn(-1, '\u266D', 'Flat', letter === 'C' || letter === 'F');
+    const more = !!c && TYPE_MORE.indexOf(c.type) >= 0;
+    $('ed-type').innerHTML = TYPE_BUTTONS.map((t) => btn('type', t, TYPES[t][0], !!c && c.type === t)).join('')
+        .replace('data-type="1">', 'data-type="1" title="Major" aria-label="Major">') +
+      `<select id="ed-type-more" class="ed-select${more ? ' on' : ''}" aria-label="Other chord types"><option value="">more…</option>` +
+      TYPE_MORE.map((t) => `<option value="${t}">${esc(TYPES[t][0])}</option>`).join('') + '</select>';
+    $('ed-type-more').value = more ? String(c.type) : '';
+    $('ed-bass').innerHTML = '<option value="-1">none</option>' + ROOT_NAMES.map((n, pc) => `<option value="${pc}">/${n}</option>`).join('');
+    $('ed-bass').value = String(bassPc == null ? -1 : bassPc);
+    const v = song.variations.find((x) => x.bar === edit.bar);
+    $('ed-style').innerHTML = BAR_STYLES.map(([val, label]) => btn('style', val, label, (v ? v.value : 0) === val)).join('');
+    $('ed-hold').classList.toggle('on', !c);
+    $('ed-rep-start').classList.toggle('on', !!starts[edit.bar]);
+    $('ed-rep-end').classList.toggle('on', !!ends[edit.bar]);
+    $('ed-del-bar').disabled = song.bars <= 1;
+    $('ed-ins-before').disabled = $('ed-ins-after').disabled = song.bars >= MAX_BARS;
+    const lastShown = (() => { for (let b = song.bars - 1; b >= 0; b--) if (!view.hidden[b]) return b; return 0; })();
+    $('ed-prev').disabled = edit.bar === 0 && edit.beat === 0;
+    $('ed-next').disabled = edit.bar === lastShown && edit.beat === BEATS - 1;
+    $('ed-prev-bar').disabled = edit.bar === 0;
+    $('ed-next-bar').disabled = edit.bar === lastShown;
+  }
+
+  function initEditor() {
+    $('bars').addEventListener('click', (e) => {
+      if (e.target.closest('#add-bar')) { insertBar(song.bars); return; }
+      const b = e.target.closest('button.beat');
+      if (b) select(+b.dataset.bar, +b.dataset.beat);
+    });
+    $('chord-editor').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b || b.disabled) return;
+      if (b.dataset.root != null) changeChord('root', +b.dataset.root);
+      else if (b.dataset.acc != null) changeChord('acc', +b.dataset.acc);
+      else if (b.dataset.type != null) changeChord('type', +b.dataset.type);
+      else if (b.dataset.style != null) setBarStyle(+b.dataset.style);
+      else if (b.id === 'ed-hold') { if (chordAt(edit.bar, edit.beat)) putChord(null); }
+      else if (b.id === 'ed-prev') stepBeat(-1);
+      else if (b.id === 'ed-next') stepBeat(1);
+      else if (b.id === 'ed-prev-bar') stepBar(-1);
+      else if (b.id === 'ed-next-bar') stepBar(1);
+      else if (b.id === 'ed-close') { edit.open = false; render(); }
+      else if (b.id === 'ed-rep-start' || b.id === 'ed-rep-end') toggleMarker(b.id === 'ed-rep-start' ? starts : ends);
+      else if (b.id === 'ed-ins-before') insertBar(edit.bar);
+      else if (b.id === 'ed-ins-after') insertBar(edit.bar + 1);
+      else if (b.id === 'ed-del-bar') deleteBar(edit.bar);
+    });
+    $('ed-bass').addEventListener('change', (e) => changeChord('bass', +e.target.value));
+    // The type menu is rebuilt on every render, so listen on the row.
+    $('ed-type').addEventListener('change', (e) => { if (e.target.id === 'ed-type-more' && e.target.value) changeChord('type', +e.target.value); });
   }
 
   // ------------------------------------------------------------ exports
@@ -379,6 +811,33 @@
   function init(opts) {
     status = opts.status || status;
     $('chords-read').onclick = request;
+    // Rename: the keyboard stores 32 ASCII characters; sent with the whole song (Chord Director only sends the name
+    // that way). Save sends it; Enter saves too, Escape cancels (desktop).
+    const nameEl = $('chords-name');
+    const closeRename = () => { $('name-form').hidden = true; nameEl.blur(); render(); };
+    const saveRename = () => {
+      const v = nameEl.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')   // é -> e
+        .replace(/[^\x20-\x7E]/g, '').replace(/\s+$/, '').slice(0, 32);
+      if (song.loaded && v !== song.name) {
+        const old = song.name;
+        song.name = v;
+        if (sendSong()) setInfo('Renamed.'); else song.name = old;
+      }
+      closeRename();
+    };
+    $('name-edit').onclick = () => {
+      nameEl.value = song.name;
+      $('name-form').hidden = false; $('chords-title').hidden = true;
+      nameEl.focus();
+    };
+    $('name-save').onclick = saveRename;
+    $('name-cancel').onclick = closeRename;
+    nameEl.onkeydown = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); saveRename(); }
+      if (e.key === 'Escape') closeRename();
+    };
+    initEditor();
+    watchUserScroll();
     $('chords-play').onclick = togglePlay;
     $('dl-txt').onclick = () => download(`${fileBase()}.csv`, 'text/csv', csvText());
     $('tr-down').onclick = () => setSetting('transpose', Math.max(TRANSPOSE_MIN, song.settings.transpose - 1));

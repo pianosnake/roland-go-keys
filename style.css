@@ -21,6 +21,7 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+input, textarea { -webkit-user-select: text; user-select: text; }
 html, body { height: 100%; }
 body {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
@@ -55,17 +56,20 @@ body {
 .status.warn { background: #d08a00; color: #fff; }
 #status-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.search { position: relative; }
+.search { position: relative; display: flex; gap: 6px; }
 .search input {
-  -webkit-appearance: none; appearance: none; width: 100%; margin: 0; border-radius: 0;
+  -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; margin: 0; border-radius: 0;
   background: var(--lcd); color: var(--text); border: 1px solid var(--border);
   font: 16px var(--ui-font); padding: 6px 30px 6px 8px;   /* 16px: iOS doesn't zoom into the field */
 }
 .search input:focus { outline: none; border-color: var(--accent); }
 .search .clear {
-  position: absolute; top: 0; right: 0; width: 30px; height: 100%; border: 0; background: none; cursor: pointer;
+  position: absolute; top: 0; right: 42px; width: 30px; height: 100%; border: 0; background: none; cursor: pointer;
   color: var(--text-dim); font: 20px/1 var(--ui-font); padding: 0;
 }
+/* Star next to the search field: show only the favorites. */
+.star.fav-only { width: 36px; margin: 0; padding: 0; border: 1px solid var(--border); background: var(--lcd); display: flex; align-items: center; justify-content: center; }
+.star.fav-only.on { border-color: var(--accent); }
 
 .list {
   flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative;
@@ -114,17 +118,7 @@ body {
   font: 700 11px var(--ui-font); letter-spacing: .8px; padding: 4px 30px 4px 9px;
   -webkit-clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%); clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 100%, 0 100%);
 }
-/* Favorites: full width above the CC sections; one button per favorite tone. */
-.sect.favs { display: block; margin-bottom: 10px; }
-.fav-body { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 10px; }
-.fav-btn {
-  -webkit-appearance: none; appearance: none; cursor: pointer; display: flex; align-items: baseline; max-width: 220px;
-  min-height: 32px; padding: 4px 10px; border: 1px solid #45484f; border-radius: 3px; background: var(--lcd);
-  color: var(--lcd-text); -webkit-text-fill-color: var(--lcd-text); font: 15px var(--lcd-font);
-}
-.fav-btn:hover { border-color: var(--accent); }
-.fav-btn .fav-name { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fav-btn.cur { background: var(--accent); border-color: var(--accent); color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
+/* Dim note in an empty area (the Chords tab uses it). */
 .fav-empty { color: #7c808b; font-size: 12px; padding: 6px 0; }
 .sect-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 14px; padding: 8px 10px 10px; }
 .sect-body.buttons { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -190,7 +184,18 @@ body {
 .chords-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .btn:disabled { opacity: .4; cursor: default; }
 .chords-info { font-size: 12px; color: var(--text-dim); margin: 10px 0 4px; }
-.chords-name { font: 900 22px/1.15 var(--title-font); margin: 6px 0 10px; }
+/* Song name: plain title + Rename button; the button opens a visible field with Save / Cancel (no reliance on blur or
+   keyboard events, which are unreliable in the iPad plugin's web view). */
+.chords-title { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; }
+.chords-name { min-width: 0; font: 900 22px/1.15 var(--title-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.name-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 10px; }
+.name-input {
+  -webkit-appearance: none; appearance: none; flex: 1; min-width: 12em; max-width: 34ch; margin: 0; border-radius: 0;
+  background: var(--lcd); color: var(--lcd-text); -webkit-text-fill-color: var(--lcd-text); border: 1px solid var(--accent);
+  font: 18px var(--lcd-font); padding: 6px 8px;   /* 16px+ so iOS doesn't zoom in */
+}
+.name-input:focus { outline: none; }
+.chords-title .btn, .name-form .btn { min-height: 36px; }
 .bars { display: flex; flex-direction: column; gap: 8px; }
 .bars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
 .bar { border: 1px solid var(--border); border-top: 2px solid var(--accent); background: var(--lcd); padding: 4px 8px 8px; }
@@ -200,6 +205,14 @@ body {
 .bar.now .bar-head, .bar.now .bar-var { color: var(--on-accent); }
 .beats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
 .beat { font: 16px/26px var(--lcd-font); color: var(--lcd-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Beat cells are buttons, big enough to tap on the iPad. */
+button.beat {
+  -webkit-appearance: none; appearance: none; margin: 0; min-width: 0; min-height: 40px; padding: 0 4px; text-align: left; cursor: pointer;
+  background: transparent; border: 1px solid #2a2c32; border-radius: 3px; -webkit-text-fill-color: currentColor; touch-action: manipulation;
+}
+button.beat:hover { border-color: var(--border); }
+button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
 .beat.held { color: #4a4d56; }
 .bar.now .beat { color: var(--on-accent); }
 .bar.now .beat.held { color: #2f6f6b; }
@@ -220,3 +233,41 @@ body {
 .seg .btn:last-child { border-radius: 0 3px 3px 0; }
 .seg .btn + .btn { margin-left: -1px; }
 .seg .btn.on { background: linear-gradient(#86d6d1, #4aa8a2); border-color: #1d4a47; color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
+
+/* Chord editor: docked at the bottom of the Chords tab (sticky, so it stays in view while the grid scrolls). */
+.chord-editor {
+  position: -webkit-sticky; position: sticky; bottom: 0; z-index: 2; margin-top: 10px; padding: 8px 10px 10px;
+  background: var(--panel); border: 1px solid var(--border); border-top: 2px solid var(--accent); box-shadow: 0 -6px 16px rgba(0,0,0,.45);
+  max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.ed-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.ed-select {
+  -webkit-appearance: none; appearance: none; border-radius: 3px; margin: 0; cursor: pointer; min-width: 84px; min-height: 40px;
+  background: var(--lcd); color: var(--lcd-text); -webkit-text-fill-color: var(--lcd-text); border: 1px solid var(--border);
+  font: 16px/20px var(--lcd-font); padding: 1px 10px;
+}
+.ed-select.on { background: linear-gradient(#86d6d1, #4aa8a2); border-color: #1d4a47; color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
+.ed-label.ed-inline { width: auto; margin-left: 12px; }
+.ed-pos { font: 700 12px var(--ui-font); letter-spacing: .5px; text-align: center; white-space: nowrap; }
+.ed-chord { flex: 1; min-width: 2em; font: 18px/30px var(--lcd-font); color: var(--lcd-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn.ed-nav { min-width: 34px; min-height: 40px; padding-left: 4px; padding-right: 4px; white-space: nowrap; }
+#ed-del-bar { margin-left: auto; min-width: 44px; }   /* lower right, away from the other buttons */
+.btn.ed-nav svg { fill: currentColor; vertical-align: middle; }
+.ed-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 6px; }
+.ed-label { flex: none; width: 44px; padding-top: 12px; font: 700 10px var(--ui-font); color: var(--text-dim); letter-spacing: .5px; }
+.ed-btns { flex: 1; display: flex; flex-wrap: wrap; gap: 4px; }
+.btn.ed { min-width: 44px; min-height: 40px; padding-left: 7px; padding-right: 7px; font-family: var(--lcd-font); font-weight: 400; font-size: 14px; touch-action: manipulation; }
+.btn.ed.acc { font-size: 18px; margin-left: 4px; }
+.btn.ed.acc + .btn.ed.acc { margin-left: 0; }
+.btn.ed.on { background: linear-gradient(#86d6d1, #4aa8a2); border-color: #1d4a47; color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
+.add-bar {
+  -webkit-appearance: none; appearance: none; cursor: pointer; min-height: 72px; border: 1px dashed var(--border); border-top: 2px dashed var(--border);
+  background: transparent; color: var(--text-dim); -webkit-text-fill-color: var(--text-dim); font: 700 13px var(--ui-font); letter-spacing: .5px;
+  touch-action: manipulation;
+}
+.add-bar:hover { border-color: var(--accent); color: var(--accent); -webkit-text-fill-color: var(--accent); }
+.rep-mark { color: var(--accent); font: 900 13px var(--lcd-font); letter-spacing: 0; }
+.bar.now .rep-mark { color: var(--on-accent); }
+.rep-pass { color: var(--accent-soft); font: 700 11px var(--ui-font); }
+.bar.now .rep-pass { color: var(--on-accent); }
+.btn.name-edit { min-width: 40px; font-size: 18px; padding: 0 8px; }

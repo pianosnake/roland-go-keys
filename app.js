@@ -74,6 +74,7 @@
     current: null,                 // tone index the keyboard is on (last sent or received)
     values: saved.values || {},    // cc -> last value sent or received
     bank: { msb: null, lsb: null },// last bank select received from the keyboard
+    favOnly: !!saved.favOnly,      // the list shows only the favorites (star next to the search field)
     favorites: (saved.favorites || []).filter((num) => TONES.some((t) => t.num === num)), // tone numbers, in the order added
   };
   const midi = { access: null, input: null, output: null, sysex: false };
@@ -82,7 +83,7 @@
   function save() {
     try {
       const tone = state.current == null ? null : TONES[state.current].num;
-      localStorage.setItem(STORE, JSON.stringify({ channel: state.channel, port: state.port, tone, values: state.values, favorites: state.favorites }));
+      localStorage.setItem(STORE, JSON.stringify({ channel: state.channel, port: state.port, tone, values: state.values, favorites: state.favorites, favOnly: state.favOnly }));
     } catch (e) { /* private mode */ }
   }
 
@@ -109,7 +110,7 @@
     for (const el of $('list').children) {
       if (el.classList.contains('cat')) { flushCat(); catEl = el; catShown = 0; continue; }
       const t = TONES[+el.dataset.i];
-      const hit = words.every((w) => t.key.includes(w));
+      const hit = words.every((w) => t.key.includes(w)) && (!state.favOnly || state.favorites.indexOf(t.num) >= 0);
       el.hidden = !hit;
       if (hit) { shown++; catShown++; }
     }
@@ -118,7 +119,8 @@
     let none = $('list').querySelector('.none');
     if (!shown) {
       if (!none) { none = document.createElement('div'); none.className = 'empty none'; $('list').appendChild(none); }
-      none.textContent = `No tone matches “${$('search').value.trim()}”.`;
+      none.textContent = state.favOnly && !state.favorites.length ? 'No favorites yet. Tap the star next to a tone\u2019s name to add it.'
+        : state.favOnly ? `No favorite matches “${$('search').value.trim()}”.` : `No tone matches “${$('search').value.trim()}”.`;
     } else if (none) none.remove();
   }
 
@@ -141,7 +143,14 @@
     if (k >= 0) state.favorites.splice(k, 1); else state.favorites.push(num);
     const row = rowEl(i);
     if (row) row.querySelector('.num').classList.toggle('fav', k < 0);
-    markStar(); renderFavorites(); save();
+    markStar(); save();
+    if (state.favOnly) filter();
+  }
+  function markFavOnly() {
+    const b = $('fav-only');
+    b.classList.toggle('on', state.favOnly);
+    b.setAttribute('aria-pressed', state.favOnly ? 'true' : 'false');
+    b.title = state.favOnly ? 'Show all tones' : 'Show only the favorites';
   }
   function markStar() {
     const star = $('fav-star'), on = state.current != null && isFavorite(state.current);
@@ -151,17 +160,8 @@
     star.title = on ? 'Remove from favorites' : 'Add to favorites';
   }
 
-  function renderFavorites() {
-    const tones = state.favorites.map((num) => TONES.find((t) => t.num === num)).filter(Boolean);
-    $('fav-body').innerHTML = tones.length
-      ? tones.map((t) => `<button class="fav-btn${t.i === state.current ? ' cur' : ''}" type="button" data-i="${t.i}" title="${esc(t.num)}">` +
-          `<span class="fav-name">${esc(t.name)}</span></button>`).join('')
-      : '<div class="fav-empty">Tap the star next to a tone\u2019s name to add it here.</div>';
-  }
-
   function markCurrent() {
     $('list').querySelectorAll('.row.cur').forEach((el) => el.classList.remove('cur'));
-    $('fav-body').querySelectorAll('.fav-btn').forEach((el) => el.classList.toggle('cur', +el.dataset.i === state.current));
     markStar();
     const t = state.current == null ? null : TONES[state.current];
     if (t) { const el = rowEl(t.i); if (el) el.classList.add('cur'); }
@@ -278,8 +278,8 @@
   // ------------------------------------------------------------ MIDI
   // By name on a desktop; inside an AUv3 host the ports have the host's names, so fall back to the first one.
   const NAMES = /go:?\s?keys|roland|bluetooth/i;
-  // The PORT menu overrides that (needed when the keyboard sits behind an interface such as the H4MIDI WC, whose
-  // ports are named "H4MIDI-WC Port n"). The input is the port with the same name as the output.
+  // The PORT menu overrides that (needed when the keyboard sits behind a MIDI interface with generic port names).
+  // The input is the port with the same name as the output.
   const pick = (map, name) => {
     const list = Array.from(map.values());
     return (name && list.find((p) => p.name === name)) || list.find((p) => NAMES.test(p.name)) || list[0] || null;
@@ -352,16 +352,15 @@
     $('channel').onchange = (e) => { state.channel = +e.target.value; markCurrent(); save(); };
 
     renderList();
-    renderFavorites();
     renderGrid();
     if (saved.tone) { const t = TONES.find((x) => x.num === saved.tone); if (t) state.current = t.i; }
     markCurrent();
+    markFavOnly();
     filter();
     if (state.current != null) scrollToRow(state.current, true);
 
     $('list').onclick = (e) => { const row = e.target.closest('.row'); if (row) { selectTone(+row.dataset.i); $('list').focus(); } };
     $('fav-star').onclick = () => { if (state.current != null) toggleFavorite(state.current); };
-    $('fav-body').onclick = (e) => { const b = e.target.closest('.fav-btn'); if (b) selectTone(+b.dataset.i); };
     $('list').onkeydown = (e) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); step(e.key === 'ArrowDown' ? 1 : -1); }
     };
@@ -371,6 +370,11 @@
       if (e.key === 'Escape') clearSearch();
     };
     $('clear').onclick = clearSearch;
+    $('fav-only').onclick = () => {
+      state.favOnly = !state.favOnly;
+      markFavOnly(); filter(); save();
+      if (state.current != null) scrollToRow(state.current, true); else $('list').scrollTop = 0;
+    };
 
     const grid = $('cc-grid');
     grid.oninput = (e) => { if (e.target.type === 'range') sendCC(+e.target.dataset.cc, +e.target.value); };
