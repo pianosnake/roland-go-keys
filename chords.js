@@ -921,6 +921,8 @@
     for (let b = edit.bar + dir; b >= 0 && b < song.bars; b += dir) if (!view.hidden[b]) { select(b, 0); return; }
   }
 
+  function lastShownBar() { for (let b = song.bars - 1; b >= 0; b--) if (!view.hidden[b]) return b; return 0; }
+
   function renderEditor() {
     const panel = $('chord-editor'), sec = edit.section;
     if (sec && !song.settings[sec]) { edit.section = null; edit.open = false; }   // that section was just turned off
@@ -964,7 +966,7 @@
     $('ed-rep-end').classList.toggle('on', !!ends[edit.bar]);
     $('ed-del-bar').disabled = song.bars <= 1;
     $('ed-ins-before').disabled = $('ed-ins-after').disabled = song.bars >= MAX_BARS;
-    const lastShown = (() => { for (let b = song.bars - 1; b >= 0; b--) if (!view.hidden[b]) return b; return 0; })();
+    const lastShown = lastShownBar();
     $('ed-prev').disabled = edit.bar === 0 && edit.beat === 0;
     $('ed-next').disabled = edit.bar === lastShown && edit.beat === BEATS - 1;
     $('ed-prev-bar').disabled = edit.bar === 0;
@@ -1001,6 +1003,76 @@
     $('ed-bass').addEventListener('change', (e) => changeChord('bass', +e.target.value));
     // The type menu is rebuilt on every render, so listen on the row.
     $('ed-type').addEventListener('change', (e) => { if (e.target.id === 'ed-type-more' && e.target.value) changeChord('type', +e.target.value); });
+    document.addEventListener('keydown', onEditorKey, true);
+    // A focused button clicks on the space bar's keyup; the keydown above already started or stopped the style.
+    document.addEventListener('keyup', (e) => {
+      if (e.key === ' ' && !$('tab-chords').hidden && !(e.target.closest && e.target.closest('input, textarea, [contenteditable]'))) e.preventDefault();
+    }, true);
+  }
+
+  // Typing on a hardware keyboard (desktop, or an iPad with one attached). Nothing is focused for it, so the iPad's
+  // on-screen keyboard never comes up. Space works on the whole Chords tab, the rest while the editor is open.
+  //   space  play / stop    right / left arrow  the next / previous beat (past the song's last beat right adds a bar)
+  //   a-g  root (natural)    m  minor on / off    6  sixth    7 / 9  the 7th / 9th chords; again = the next one
+  //   delete  remove the chord: the beat holds the chord before it    [ or {  |:    ] or }  :|
+  //   1-4  the bar's variation (Var 1-4)    l  loop on / off
+  // The 6, 7 and 9 chords follow the chord's minor or major quality, so "a m 7" is Am7 and "a 7 m" is Am7 too.
+  const MINOR_PAIRS = [[0x01, 0x02], [0x03, 0x14], [0x13, 0x15], [0x0D, 0x0F], [0x0E, 0x10], [0x0B, 0x0C], [0x19, 0x18], [0x17, 0x16]];
+  const MINOR_TYPES = [0x02, 0x14, 0x15, 0x0F, 0x10, 0x0C, 0x18, 0x16, 0x04, 0x05, 0x06, 0x11, 0x12];
+  const KEY_TYPES = {
+    6: [[0x0D, 0x0E], [0x0F, 0x10]],
+    7: [[0x03, 0x13, 0x0A, 0x1A, 0x08, 0x1B, 0x1C, 0x1D, 0x1F], [0x14, 0x15, 0x04, 0x06]],
+    9: [[0x19, 0x17, 0x0B, 0x0E, 0x1B, 0x1C], [0x18, 0x16, 0x0C, 0x10]],
+  };
+  function onEditorKey(e) {
+    if (e.metaKey || e.ctrlKey || e.altKey || $('tab-chords').hidden) return;
+    const t = e.target;
+    if (t && t.closest && t.closest('input, textarea, [contenteditable]')) return;
+    if (e.key === ' ') {                                          // preventDefault: not a click on a focused button
+      e.preventDefault();
+      if (!e.repeat) togglePlay();
+      return;
+    }
+    if ($('chord-editor').hidden) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {        // held down, it keeps stepping (but adds no bars)
+      e.preventDefault();
+      if (edit.section) return;
+      if (e.key === 'ArrowLeft') stepBeat(-1);
+      else if (edit.beat === BEATS - 1 && edit.bar === lastShownBar()) { if (!e.repeat) insertBar(song.bars); }
+      else stepBeat(1);
+      return;
+    }
+    if (e.repeat) return;
+    const k = e.key.toLowerCase(), c = editedChord();
+    if (e.key === 'Backspace' || e.key === 'Delete') {              // as HOLD (NONE for the intro / ending chord)
+      e.preventDefault();
+      if (c) { engage(); putChord(null); }
+      return;
+    }
+    if ('[{]}'.indexOf(e.key) >= 0) {                              // as the |: and :| buttons
+      e.preventDefault();
+      if (!edit.section) { engage(); toggleMarker(e.key === '[' || e.key === '{' ? starts : ends); }
+      return;
+    }
+    if (k === 'l') { e.preventDefault(); engage(); setSetting('loop', !song.settings.loop); return; }
+    if ('1234'.indexOf(k) >= 0 && k.length === 1) {               // as the BAR row's Var 1-4
+      e.preventDefault();
+      if (!edit.section) { engage(); setBarStyle(+k); }
+      return;
+    }
+    let part = null, value = null;
+    if (k.length === 1 && 'abcdefg'.indexOf(k) >= 0) { part = 'root'; value = PC[k.toUpperCase()]; }
+    else if (k === 'm') {
+      const type = c ? c.type : 1, pair = MINOR_PAIRS.find((p) => p.indexOf(type) >= 0);
+      part = 'type'; value = pair ? pair[1 - pair.indexOf(type)] : MINOR_TYPES.indexOf(type) >= 0 ? 0x01 : 0x02;
+    } else if (KEY_TYPES[k]) {
+      const type = c ? c.type : 1, list = KEY_TYPES[k][MINOR_TYPES.indexOf(type) >= 0 ? 1 : 0], at = list.indexOf(type);
+      part = 'type'; value = list[(at + 1) % list.length];        // not in the list yet (at = -1): its first chord
+    }
+    if (!part) return;
+    e.preventDefault();                                           // a focused menu would jump to the letter otherwise
+    engage();
+    changeChord(part, value);
   }
 
   // ------------------------------------------------------------ exports
