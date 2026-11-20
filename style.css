@@ -30,7 +30,7 @@ body {
 
 /* ---------- left column: tones ---------- */
 .side {
-  width: 224px; flex: none; height: 100vh; display: flex; flex-direction: column; gap: 6px;
+  width: 300px; flex: none; height: 100vh; display: flex; flex-direction: column; gap: 6px;
   background: var(--side); padding: 10px 8px 6px; border-right: 4px solid var(--side-dark);
 }
 .brand { display: flex; align-items: flex-start; gap: 12px; }
@@ -87,6 +87,8 @@ body {
 }
 .row { display: flex; gap: 10px; padding: 0 8px; border-bottom: 1px solid #1b1c20; cursor: pointer; line-height: 26px; }
 .row:hover { background: #1c1e24; }
+.row .num { flex: none; width: 5.5ch; color: #7c808b; font: 12px/26px var(--lcd-font); }   /* the tone's short code */
+.row.cur .num { color: #1d4a47; }
 .row .name { flex: 1; min-width: 0; color: var(--lcd-text); font: 15px/26px var(--lcd-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Favorite star: grey until tapped, then green. Negative margins widen the tap target into the row's gap and padding. */
 .row-star { flex: none; width: 28px; margin: 0 -8px 0 -6px; text-align: center; color: #565a64; font: 16px/26px var(--ui-font); touch-action: manipulation; }
@@ -274,11 +276,31 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .pill .btn.on { background: linear-gradient(#86d6d1, #4aa8a2); color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
 
 /* Chord editor: docked at the bottom of the Chords tab (sticky, so it stays in view while the grid scrolls). */
-.chord-editor {
-  position: -webkit-sticky; position: sticky; bottom: 0; z-index: 2; margin-top: 10px; padding: 8px 10px 10px;
-  background: var(--panel); border: 1px solid var(--border); border-top: 2px solid var(--accent); box-shadow: 0 -6px 16px rgba(0,0,0,.45);
-  max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+.chord-editor {   /* in the left column, in place of the tones / songs while a beat is selected */
+  gap: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
 }
+.ed-top { display: flex; align-items: center; margin-bottom: 8px; }
+.chord-editor .pill.ed-pill { display: flex; width: 100%; }
+.chord-editor .pill.ed-pill .btn { flex: 1; min-width: 0; }
+.chord-editor .ed-pos { flex: none; min-width: 58px; }
+.chord-editor .ed-row { flex-direction: column; gap: 4px; margin-top: 10px; }
+.chord-editor .ed-label { width: auto; padding-top: 0; }
+.chord-editor .ed-btns { width: 100%; }
+.chord-editor .ed-btns .btn.ed { flex: 1 0 28px; min-width: 0; padding: 0 2px; }
+.chord-editor .ed-group { margin: 0; padding: 0; background: none; border: 0; border-radius: 0; }   /* no band: BAR lines up with the other rows */
+.chord-editor .ed-select { flex: 1; }
+.chord-editor .pill.ed-style-pill { display: grid; grid-template-columns: repeat(10, 1fr); width: 100%; border-radius: 10px; }
+.chord-editor .pill.ed-style-pill .btn { grid-column: span 2; }                  /* — (default) V1 V2 V3 V4 on one line */
+.chord-editor .pill.ed-style-pill .btn:nth-child(n+6) { grid-column: span 5; }   /* Fill Up, Fill Down below */
+.chord-editor #ed-rep-start, .chord-editor #ed-rep-end, .chord-editor .ed-pass .btn.ed { flex: 0 1 56px; min-width: 32px; }
+.chord-editor .ed-rep-row { flex-direction: row; gap: 12px; }   /* REPEAT and PASS side by side, each label over its buttons */
+.chord-editor .ed-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.chord-editor .ed-pass-col { flex: 1; }
+.chord-editor .ed-col .ed-btns { flex-wrap: nowrap; }
+.chord-editor .ed-btns .btn.ed.acc { flex: 0 0 44px; }
+.chord-editor #ed-type-more, .chord-editor #ed-bass { flex: 0 0 calc(50% - 2px); min-width: 0; }
+.chord-editor .pill.ed-style-pill .btn { padding: 0 2px; min-height: 36px; border-top: 1px solid #111; }
 .ed-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
 .ed-select {
   -webkit-appearance: none; appearance: none; border-radius: 3px; margin: 0; cursor: pointer; min-width: 84px; min-height: 40px;
@@ -295,11 +317,10 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
   min-width: 72px; padding: 0 8px; text-align: center; white-space: nowrap; background: var(--lcd); color: var(--lcd-text);
   font: 16px/40px var(--lcd-font); border-left: 1px solid #111; border-right: 1px solid #111;
 }
-#ed-hold { margin-left: 12px; }   /* a little apart from the insert button */
-#ed-close { margin-left: auto; }   /* stays at the right end */
+#ed-close { margin-left: auto; }   /* upper right, like the settings panel's */
 .btn.ed-nav { min-width: 34px; min-height: 40px; padding-left: 4px; padding-right: 4px; white-space: nowrap; }
-#ed-del-bar { margin-left: 12px; min-width: 44px; }   /* a little apart from HOLD, so it isn't tapped by mistake */
-#ed-clear { margin-left: auto; min-width: 136px; min-height: 40px; white-space: nowrap; }   /* lower right, away from the other buttons */
+#ed-del-bar { min-width: 44px; }   /* upper left, away from the other buttons so it isn't tapped by mistake */
+#ed-clear { flex: none; width: 100%; min-height: 40px; margin-top: 14px; white-space: nowrap; }   /* at the bottom, away from the other buttons */
 #ed-clear.armed { background: linear-gradient(#d0584c, #a8352b); border-color: #5a1510; }   /* waiting for the second tap */
 .btn.ed-nav svg { fill: currentColor; vertical-align: middle; }
 /* The bar's variation or fill as one pill. It wraps instead of clipping when the window is too narrow for one line. */

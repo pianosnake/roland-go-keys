@@ -97,7 +97,7 @@
       if (t.category !== cat) { cat = t.category; html += `<div class="cat" data-cat="${esc(cat)}">${esc(cat)}</div>`; }
       // The star is a text glyph, not an SVG button: 1228 rows, and the iPad Air 2 is slow. \uFE0E keeps iOS from drawing an emoji.
       const fav = state.favorites.indexOf(t.num) >= 0;
-      html += `<div class="row" data-i="${t.i}"><span class="name">${esc(t.name)}</span>` +
+      html += `<div class="row" data-i="${t.i}"><span class="num">${esc(t.num)}</span><span class="name">${esc(t.name)}</span>` +
         `<span class="row-star${fav ? ' on' : ''}" role="button" aria-label="Favorite" aria-pressed="${fav}">\u2605\uFE0E</span></div>`;
     });
     $('list').innerHTML = html || '<div class="empty">No tones (tones.js is missing).</div>';

@@ -197,6 +197,7 @@
   }
   function setActive(on) {
     active = on;
+    layoutSide();                                   // the chord editor only shows on the Chords tab
     if (on) return;
     engaged = false;
     if (aliveTimer) { clearInterval(aliveTimer); aliveTimer = 0; }
@@ -422,8 +423,7 @@
     const page = pane.scrollHeight <= pane.clientHeight;
     if (page) pane = document.scrollingElement || document.documentElement;
     const box = page ? { top: 0, bottom: window.innerHeight } : pane.getBoundingClientRect(), r = el.getBoundingClientRect();
-    const editor = $('chord-editor');
-    const bottom = box.bottom - (editor && !editor.hidden ? editor.offsetHeight : 0);
+    const bottom = box.bottom;
     if (r.top >= box.top && r.bottom <= bottom - 8) return;
     const top = pane.scrollTop + (r.top - box.top) - (bottom - box.top) / 3;
     try { pane.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } catch (e) { pane.scrollTop = Math.max(0, top); }
@@ -585,9 +585,9 @@
   const TYPE_ORDER = [0x01, 0x02, 0x03, 0x14, 0x13, 0x15, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0D, 0x0F,
     0x0E, 0x10, 0x0B, 0x0C, 0x19, 0x18, 0x17, 0x16, 0x11, 0x12, 0x1E, 0x1A, 0x1B, 0x1C, 0x1D, 0x1F];
   // The common types are buttons (major has no suffix, so its button is blank); the rest are in a menu.
-  const TYPE_BUTTONS = [0x01, 0x02, 0x03, 0x13, 0x14, 0x05, 0x09];
+  const TYPE_BUTTONS = [0x01, 0x02, 0x03, 0x13, 0x14, 0x05];
   const TYPE_MORE = TYPE_ORDER.filter((t) => TYPE_BUTTONS.indexOf(t) < 0);
-  const BAR_STYLES = [[0, 'Default'], [1, 'Var 1'], [2, 'Var 2'], [3, 'Var 3'], [4, 'Var 4'], [6, 'Fill Up'], [5, 'Fill Down']];
+  const BAR_STYLES = [[0, '\u2014'], [1, 'V1'], [2, 'V2'], [3, 'V3'], [4, 'V4'], [6, 'Fill Up'], [5, 'Fill Down']];
   // pass: which pass of a repeat the BAR row edits (0 = first). section: 'intro' / 'ending' while editing that chord.
   const edit = { open: false, bar: 0, beat: 0, pass: 0, section: null };
   const editedChord = () => (edit.section ? song[`${edit.section}Chord`] : chordAt(edit.bar, edit.beat));
@@ -927,21 +927,34 @@
 
   function lastShownBar() { for (let b = song.bars - 1; b >= 0; b--) if (!view.hidden[b]) return b; return 0; }
 
+  // The left column shows one of: the TONES / SONGS tabs, the MIDI settings (gear), or the chord editor while a beat
+  // is selected on the Chords tab. The settings win over the editor; closing them brings the editor back.
+  let editorWanted = false, gearOpen = false;
+  function layoutSide() {
+    const showEd = editorWanted && !$('tab-chords').hidden && !gearOpen, other = showEd || gearOpen;
+    const tab = $('side-tabs').querySelector('.on').dataset.pane;
+    $('chord-editor').hidden = !showEd;
+    $('pane-settings').hidden = !gearOpen;
+    $('side-tabs').hidden = other;
+    $('pane-tones').hidden = other || tab !== 'tones';
+    $('pane-songs').hidden = other || tab !== 'songs';
+    $('side-gear').classList.toggle('on', gearOpen); $('side-gear').setAttribute('aria-pressed', String(gearOpen));
+  }
+
   function renderEditor() {
     const panel = $('chord-editor'), sec = edit.section;
     if (sec && !song.settings[sec]) { edit.section = null; edit.open = false; }   // that section was just turned off
-    panel.hidden = !(edit.open && song.loaded && (edit.section || edit.bar < song.bars));
-    if (panel.hidden) return;
+    editorWanted = edit.open && song.loaded && (!!edit.section || edit.bar < song.bars);
+    layoutSide();
+    if (!editorWanted) return;
     panel.classList.toggle('section', !!sec);                     // only the chord rows apply to the intro and ending
     const c = editedChord(), eff = c || (sec ? null : chordInEffect(edit.bar, edit.beat));
     $('ed-pos').textContent = sec ? (sec === 'intro' ? 'Intro' : 'Ending') : `${passLabel(styleBar())}:${edit.beat + 1}`;
-    $('ed-hold').textContent = sec ? 'NONE' : 'HOLD';
-    $('ed-hold').title = sec ? 'No chord in this section' : 'No chord change on this beat: the previous chord continues';
     const bassPc = c ? (c.bass ? soundingPc(c.bass, c.bassAcc) : -1) : null;
     const btn = (attr, v, label, on) => `<button class="btn ed${on ? ' on' : ''}" type="button" data-${attr}="${v}">${esc(label)}</button>`;
     // A repeated bar is played once per pass: 1, 2, 3... The BAR row edits the pass picked here.
     const rep = sec ? null : activeRepeatAt(edit.bar);
-    $('ed-pass-row').hidden = !rep;
+    $('ed-pass-col').hidden = !rep;                  // beside the repeat signs; the BAR row edits the pass picked
     if (rep) {
       let passes = '';
       for (let k = 0; k < rep.times; k++) passes += btn('pass', k, String(k + 1), k === editPass());
@@ -953,7 +966,11 @@
     const sign = !rootName ? 0 : rootName[1] === '#' ? 1 : rootName[1] === 'b' ? -1 : 0;
     const accBtn = (v, label, name, off) => `<button class="btn ed acc${c && sign === v ? ' on' : ''}" type="button" data-acc="${v}"` +
       ` title="${name}" aria-label="${name}"${off ? ' disabled' : ''}>${label}</button>`;
-    $('ed-root').innerHTML = 'CDEFGAB'.split('').map((l) => btn('root', PC[l], l, !!c && l === letter)).join('') +
+    // The blank button first (as major is on the TYPE row): no chord on this beat, the previous one continues
+    // (in the intro or ending: no chord).
+    const holdTitle = sec ? 'No chord' : 'Hold: no chord change on this beat, the previous chord continues';
+    $('ed-root').innerHTML = `<button class="btn ed hold${c ? '' : ' on'}" type="button" data-hold="1" title="${holdTitle}" aria-label="${holdTitle}"></button>` +
+      'CDEFGAB'.split('').map((l) => btn('root', PC[l], l, !!c && l === letter)).join('') +
       accBtn(1, '\u266F', 'Sharp', letter === 'E' || letter === 'B') + accBtn(-1, '\u266D', 'Flat', letter === 'C' || letter === 'F');
     const more = !!c && TYPE_MORE.indexOf(c.type) >= 0;
     $('ed-type').innerHTML = TYPE_BUTTONS.map((t) => btn('type', t, TYPES[t][0], !!c && c.type === t)).join('')
@@ -964,8 +981,8 @@
     $('ed-bass').innerHTML = '<option value="-1">none</option>' + ROOT_NAMES.map((n, pc) => `<option value="${pc}">/${n}</option>`).join('');
     $('ed-bass').value = String(bassPc == null ? -1 : bassPc);
     const styled = styleBar(), v = song.variations.find((x) => x.bar === styled);
-    $('ed-style').innerHTML = BAR_STYLES.map(([val, label]) => btn('style', val, label, (v ? v.value : 0) === val)).join('');
-    $('ed-hold').classList.toggle('on', !c);
+    $('ed-style').innerHTML = BAR_STYLES.map(([val, label]) => btn('style', val, label, (v ? v.value : 0) === val)).join('')
+      .replace('data-style="0">', 'data-style="0" title="Default: no variation change" aria-label="Default">');
     $('ed-rep-start').classList.toggle('on', !!starts[edit.bar]);
     $('ed-rep-end').classList.toggle('on', !!ends[edit.bar]);
     $('ed-del-bar').disabled = song.bars <= 1;
@@ -992,7 +1009,7 @@
       else if (b.dataset.acc != null) changeChord('acc', +b.dataset.acc);
       else if (b.dataset.type != null) changeChord('type', +b.dataset.type);
       else if (b.dataset.style != null) setBarStyle(+b.dataset.style);
-      else if (b.id === 'ed-hold') { if (editedChord()) putChord(null); }
+      else if (b.dataset.hold) { if (editedChord()) putChord(null); }
       else if (b.id === 'ed-prev') stepBeat(-1);
       else if (b.id === 'ed-next') stepBeat(1);
       else if (b.id === 'ed-prev-bar') stepBar(-1);
@@ -1169,24 +1186,15 @@
   }
 
   function initSongs() {
-    const showPane = (pane) => {
-      $('pane-tones').hidden = pane !== 'tones';
-      $('pane-songs').hidden = pane !== 'songs';
-    };
     $('side-tabs').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
       Array.prototype.forEach.call($('side-tabs').children, (x) => x.classList.toggle('on', x === b));
-      showPane(b.dataset.pane);
+      layoutSide();
     });
     // The gear swaps the left column for the MIDI settings (port, channel), which are seldom changed.
-    const setGear = (open) => {
-      $('side-gear').classList.toggle('on', open); $('side-gear').setAttribute('aria-pressed', String(open));
-      $('pane-settings').hidden = !open; $('side-tabs').hidden = open;
-      if (open) showPane(null); else showPane($('side-tabs').querySelector('.on').dataset.pane);
-    };
-    $('side-gear').onclick = () => setGear($('pane-settings').hidden);
-    $('settings-close').onclick = () => setGear(false);
+    $('side-gear').onclick = () => { gearOpen = !gearOpen; layoutSide(); };
+    $('settings-close').onclick = () => { gearOpen = false; layoutSide(); };
     // The ⋯ menu by the song name: Rename, Save as new, CSV, Transpose. Transpose keeps it open; the rest close it.
     const setMenu = (open) => { $('song-menu').hidden = !open; $('song-more').setAttribute('aria-expanded', String(open)); };
     $('song-more').onclick = () => setMenu($('song-menu').hidden);
@@ -1203,8 +1211,8 @@
   }
 
   // ------------------------------------------------------------ exports
-  function fileBase() {
-    const n = (song.name || 'gokeys-chords').replace(/~$/, '').replace(/[^\w#-]+/g, '_').replace(/^_+|_+$/g, '');
+  function fileBase(name = song.name) {
+    const n = (name || 'gokeys-chords').replace(/~$/, '').replace(/[^\w#-]+/g, '_').replace(/^_+|_+$/g, '');
     return n || 'gokeys-chords';
   }
 
@@ -1228,7 +1236,8 @@
     }
     return beats.join(' ');
   }
-  function csvText() {
+  const csvText = () => csvFor(song);
+  function csvFor(song) {   // the page's song, or a saved song's data (same fields)
     const st = song.settings, lines = [];
     lines.push('FORMAT,2', `NAME,${(song.name || DEFAULT_NAME).replace(/,/g, ' ')}`, `INTRO_SW,${onOff(st.intro)}`,
       `ENDING_SW,${onOff(st.ending)}`, `LOOP,${onOff(st.loop)}`, `TRANSPOSE,${st.transpose}`, '');
@@ -1333,6 +1342,64 @@
     reader.readAsText(file);
   }
 
+  // Download all saved songs: one CSV each, in a zip. Stored (uncompressed) entries, so no library is needed;
+  // the files are small text anyway.
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    return t;
+  })();
+  function crc32(bytes) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zip(files) {   // [{ name, data: Uint8Array, date: Date }] -> Uint8Array
+    const enc = new TextEncoder(), parts = [], central = [];
+    let offset = 0;
+    files.forEach((f) => {
+      const name = enc.encode(f.name), d = f.date;
+      const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+      const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+      const crc = crc32(f.data), size = f.data.length;
+      const local = new DataView(new ArrayBuffer(30));
+      local.setUint32(0, 0x04034B50, true); local.setUint16(4, 20, true); local.setUint16(6, 0x0800, true);   // UTF-8 names
+      local.setUint16(10, time, true); local.setUint16(12, date, true); local.setUint32(14, crc, true);
+      local.setUint32(18, size, true); local.setUint32(22, size, true); local.setUint16(26, name.length, true);
+      const cen = new DataView(new ArrayBuffer(46));
+      cen.setUint32(0, 0x02014B50, true); cen.setUint16(4, 20, true); cen.setUint16(6, 20, true); cen.setUint16(8, 0x0800, true);
+      cen.setUint16(12, time, true); cen.setUint16(14, date, true); cen.setUint32(16, crc, true);
+      cen.setUint32(20, size, true); cen.setUint32(24, size, true); cen.setUint16(28, name.length, true);
+      cen.setUint32(42, offset, true);
+      parts.push(new Uint8Array(local.buffer), name, f.data);
+      central.push(new Uint8Array(cen.buffer), name);
+      offset += 30 + name.length + size;
+    });
+    const cenSize = central.reduce((n, p) => n + p.length, 0);
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054B50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+    end.setUint32(12, cenSize, true); end.setUint32(16, offset, true);
+    const all = parts.concat(central, [new Uint8Array(end.buffer)]);
+    const out = new Uint8Array(all.reduce((n, p) => n + p.length, 0));
+    let at = 0;
+    all.forEach((p) => { out.set(p, at); at += p.length; });
+    return out;
+  }
+  function downloadAll() {
+    const list = songs().filter((e) => e && e.data);
+    if (!list.length) { setInfo('No saved songs to download.'); return; }
+    const enc = new TextEncoder(), used = {};
+    const files = list.map((e) => {
+      const base = fileBase(e.data.name);
+      let name = `${base}.csv`;
+      for (let n = 2; used[name.toLowerCase()]; n++) name = `${base}_${n}.csv`;   // two songs with the same name
+      used[name.toLowerCase()] = true;
+      return { name, data: enc.encode(csvFor(e.data)), date: new Date(e.saved || Date.now()) };
+    });
+    download('gokeys-songs.zip', 'application/zip', zip(files));
+    setInfo(`Downloaded ${files.length} song${files.length === 1 ? '' : 's'} in gokeys-songs.zip.`);
+  }
+
   // a[download] works in Chrome (the MIDI Charmer plugin's web view has no downloads).
   function download(name, type, data) {
     const url = URL.createObjectURL(new Blob([data], { type }));
@@ -1346,6 +1413,8 @@
     status = opts.status || status;
     $('tab-chords').addEventListener('click', onControlUsed, true);
     $('tab-chords').addEventListener('change', onControlUsed, true);
+    $('chord-editor').addEventListener('click', onControlUsed, true);
+    $('chord-editor').addEventListener('change', onControlUsed, true);
     $('chords-read').onclick = request;
     $('chords-send').onclick = () => { if (song.loaded && song.bars && sendSong()) setInfo('Sent the song to the keyboard.'); };
     // Rename: the keyboard stores 32 ASCII characters; sent with the whole song (Chord Director only sends the name
@@ -1378,6 +1447,7 @@
     watchUserScroll();
     $('chords-play').onclick = togglePlay;
     $('dl-txt').onclick = () => download(`${fileBase()}.csv`, 'text/csv', csvText());
+    $('dl-all').onclick = downloadAll;
     $('ul-txt').onclick = () => { $('ul-file').value = ''; $('ul-file').click(); };
     $('ul-file').onchange = (e) => { const f = e.target.files && e.target.files[0]; if (f) uploadCsv(f); };
     $('tr-down').onclick = () => setSetting('transpose', Math.max(TRANSPOSE_MIN, song.settings.transpose - 1));
