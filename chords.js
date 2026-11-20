@@ -632,9 +632,11 @@
     render();
   }
 
-  // Change one part of the chord at the selected beat; an empty beat starts from the chord sounding there.
+  // Change one part of the chord at the selected beat. A new chord on an empty beat is a plain major chord, on the root
+  // of the chord sounding there until a root is picked.
   function changeChord(part, value) {
-    const base = editedChord() || (edit.section ? null : chordInEffect(edit.bar, edit.beat)) || { root: 3, acc: 0x40, type: 1, bass: 0, bassAcc: 0x40 };
+    const held = edit.section ? null : chordInEffect(edit.bar, edit.beat);
+    const base = editedChord() || { root: held ? held.root : 3, acc: held ? held.acc : 0x40, type: 1, bass: 0, bassAcc: 0x40 };
     const c = { root: base.root, acc: base.acc, type: base.type, bass: base.bass, bassAcc: base.bassAcc };
     if (part === 'root') { const n = storedNote(value); c.root = n[0]; c.acc = n[1]; }
     if (part === 'acc') {                                          // sharp / flat on the root's letter; again = natural
