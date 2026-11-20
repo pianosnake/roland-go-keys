@@ -30,7 +30,7 @@ body {
 
 /* ---------- left column: tones ---------- */
 .side {
-  width: 250px; flex: none; height: 100vh; display: flex; flex-direction: column; gap: 6px;
+  width: 224px; flex: none; height: 100vh; display: flex; flex-direction: column; gap: 6px;
   background: var(--side); padding: 10px 8px 6px; border-right: 4px solid var(--side-dark);
 }
 .brand { display: flex; align-items: flex-start; gap: 12px; }
@@ -71,6 +71,11 @@ body {
 .star.fav-only { width: 36px; margin: 0; padding: 0; border: 1px solid var(--border); background: var(--lcd); display: flex; align-items: center; justify-content: center; }
 .star.fav-only.on { border-color: var(--accent); }
 
+/* The selected tone, always in view above the list. */
+.cur-tone { flex: none; display: flex; align-items: baseline; gap: 8px; padding: 3px 6px; background: var(--lcd); }
+.cur-num { flex: none; color: var(--accent-soft); font: 12px/26px var(--lcd-font); }
+.cur-name { flex: 1; min-width: 0; color: var(--lcd-text); font: 15px/26px var(--lcd-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 .list {
   flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative;
   background: var(--lcd); border: 1px solid var(--border); outline: none;
@@ -82,28 +87,26 @@ body {
 }
 .row { display: flex; gap: 10px; padding: 0 8px; border-bottom: 1px solid #1b1c20; cursor: pointer; line-height: 26px; }
 .row:hover { background: #1c1e24; }
-.row .num { flex: none; width: 5.5ch; color: #7c808b; font: 12px/26px var(--lcd-font); }
 .row .name { flex: 1; min-width: 0; color: var(--lcd-text); font: 15px/26px var(--lcd-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row .num.fav { color: var(--accent); font-weight: 700; }   /* favorite */
+/* Favorite star: grey until tapped, then green. Negative margins widen the tap target into the row's gap and padding. */
+.row-star { flex: none; width: 28px; margin: 0 -8px 0 -6px; text-align: center; color: #565a64; font: 16px/26px var(--ui-font); touch-action: manipulation; }
+.row-star:hover { color: var(--accent-soft); }
+.row-star.on { color: var(--accent); }
 .row.cur { background: var(--accent); box-shadow: inset 3px 0 0 var(--on-accent); }
-.row.cur .num { color: #1d4a47; }
-.row.cur .num.fav { color: #fff; }
+.row.cur .row-star { color: #3a8580; }   /* the selected row is green, so its stars need their own colours */
+.row.cur .row-star.on { color: #fff; }
 .row.cur .name { color: var(--on-accent); }
 .empty { color: var(--text-dim); padding: 18px; font-size: 13px; line-height: 1.4; }
 
 /* ---------- right: current tone + CC grid ---------- */
 .details { flex: 1; min-width: 0; height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px; }
 .details.on-tones { background: #16171a; }   /* TONE tab: darker so the sections stand out */
-.det-head { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; padding-right: 50px; /* room for the plugin's Pages button */ }
-.det-num { flex: none; font: 24px/1 var(--lcd-font); background: var(--lcd); border: 1px solid var(--border); padding: 6px 10px; color: var(--lcd-text); }
-.det-title { display: flex; align-items: center; gap: 8px; }
-.det-name { font: 900 22px/1.15 var(--title-font); }
-/* Favorite star: outline when the current tone isn't a favorite, filled green when it is. Padding = bigger tap target. */
+/* Favorites filter star: outline when off, filled green when on. Padding = bigger tap target. */
 .star { -webkit-appearance: none; appearance: none; flex: none; border: 0; background: none; padding: 4px; margin: -4px 0; cursor: pointer; line-height: 0; }
 .star svg path { fill: none; stroke: var(--text-dim); stroke-width: 1.6; stroke-linejoin: round; }
 .star:hover svg path { stroke: var(--accent); }
 .star.on svg path { fill: var(--accent); stroke: var(--accent); }
-.det-note { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.det-note { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
 
 /* CC sections flow into as many columns as fit (>= 320px each, filled top to bottom so sections of different
    heights pack without gaps); inside a section the controls wrap in their own grid. inline-block + width 100%
@@ -266,6 +269,7 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .pill-part { display: inline-flex; }
 .pill .btn { border: 0; border-radius: 0; font-family: var(--lcd-font); letter-spacing: 1px; min-width: 58px; }
 .pill-part .btn + .btn { border-left: 1px solid #111; }
+.pill .set-val { min-width: 58px; border: 0; border-left: 1px solid #111; border-right: 1px solid #111; }   /* transpose value */
 #set-loop { border-left: 5px double #111; border-right: 5px double #111; min-width: 68px; }
 .pill .btn.on { background: linear-gradient(#86d6d1, #4aa8a2); color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
 
@@ -286,7 +290,9 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .ed-pos { font: 700 12px var(--ui-font); letter-spacing: .5px; text-align: center; white-space: nowrap; }
 #ed-hold { margin-left: auto; }   /* HOLD and close stay at the right end */
 .btn.ed-nav { min-width: 34px; min-height: 40px; padding-left: 4px; padding-right: 4px; white-space: nowrap; }
-#ed-del-bar { margin-left: auto; min-width: 44px; }   /* lower right, away from the other buttons */
+#ed-del-bar { margin-left: 12px; min-width: 44px; }   /* a little apart from the insert button */
+#ed-clear { margin-left: auto; min-width: 136px; min-height: 40px; white-space: nowrap; }   /* lower right, away from the other buttons */
+#ed-clear.armed { background: linear-gradient(#d0584c, #a8352b); border-color: #5a1510; }   /* waiting for the second tap */
 .btn.ed-nav svg { fill: currentColor; vertical-align: middle; }
 .ed-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 6px; }
 /* PASS picks which pass the BAR row edits, so the two share a panel. Negative margins keep the labels in line with the other rows. */

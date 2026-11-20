@@ -14,9 +14,10 @@
 //             DT1 01 00 03 42 / 03 43        intro / ending chord: [root][acc][type 2B][bass][bass acc] (root 0 = none,
 //                                            written as an empty CHORD,1, cell in the keyboard's CSV)
 //             DT1 01 00 02 0C                end
-//   Style:    DT1 01 00 02 01 = 01 start / 00 stop. Needs "app connected" DT1 01 00 02 00 = 01.
-//   App mode: while the Chords tab is shown the page stays connected like Chord Director: 02 00 = 01 on opening the
-//             tab and every 20 s (it times out after ~60 s: bar messages stop and the keyboard shows "App disconnected").
+//   Style:    DT1 01 00 02 01 = 01 start / 00 stop. Works without app mode.
+//   App mode: opening the page or the tab doesn't enter it. The first use of a control on the Chords tab other than
+//             Play/Stop does: 02 00 = 01, then every 20 s like Chord Director (it times out after ~60 s: bar messages
+//             stop and the keyboard shows "App disconnected").
 //             Leaving the tab sends 02 00 = 00. While connected the keyboard ignores program changes, so a tone change
 //             made on this tab is wrapped in disconnect / reconnect (see whileDisconnected).
 //   Editing:  like Chord Director, one entry per edit inside 02 14 / 02 18: DT1 03 40 = 00 01 + one chord entry
@@ -62,6 +63,7 @@
   };
   const notePc = (letter, acc) => (PC[LETTERS[letter]] + (acc - 0x40) + 12) % 12;
 
+  const DEFAULT_NAME = 'Initial Pattern';   // a pattern with a blank title can't be saved to a user slot on the keyboard
   let send = null, status = () => {};
   const song = { name: '', bars: 0, chords: [], variations: [], settings: defaults(), loaded: false };
   function defaults() { return { transpose: 0, loop: true, intro: false, introLong: false, ending: false, endingLong: false }; }
@@ -178,16 +180,15 @@
   function togglePlay() {
     if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
     const wasPlaying = play.playing;
-    if (!connected) connectApp();
-    setTimeout(() => send && send(dt1([0x01, 0x00, 0x02, 0x01], [wasPlaying ? 0 : 1])), connected ? 50 : 0);
+    send(dt1([0x01, 0x00, 0x02, 0x01], [wasPlaying ? 0 : 1]));
     play.playing = !play.playing;
     play.bar = play.playing ? firstBar() : null;
     markPlay(); markBar();
   }
 
-  // App mode, kept up while the Chords tab is shown. The 20 s timer is backed up by the bar messages, because Chrome
-  // slows timers down in background windows.
-  let active = false, connected = false, aliveTimer = 0, lastAlive = 0;
+  // App mode, entered by engage() and kept up until the user leaves the Chords tab. The 20 s timer is backed up by the
+  // bar messages, because Chrome slows timers down in background windows.
+  let active = false, engaged = false, connected = false, aliveTimer = 0, lastAlive = 0;
   const appCmd = (v) => dt1([0x01, 0x00, 0x02, 0x00], [v]);
   function connectApp() {
     if (!send) return;
@@ -195,22 +196,29 @@
   }
   function setActive(on) {
     active = on;
-    if (on) {
-      connectApp();
-      if (!aliveTimer) aliveTimer = setInterval(() => { if (active) connectApp(); }, 20000);
-    } else {
-      if (aliveTimer) { clearInterval(aliveTimer); aliveTimer = 0; }
-      if (connected && send) send(appCmd(0));
-      connected = false;
-    }
+    if (on) return;
+    engaged = false;
+    if (aliveTimer) { clearInterval(aliveTimer); aliveTimer = 0; }
+    if (connected && send) send(appCmd(0));
+    connected = false;
   }
-  function keepAlive() { if (active && performance.now() - lastAlive > 15000) connectApp(); }
+  function engage() {
+    if (!active || engaged) return;
+    engaged = true;
+    connectApp();
+    aliveTimer = setInterval(connectApp, 20000);
+  }
+  // Runs before the control's own handler, so app mode is on by the time an edit is sent.
+  function onControlUsed(e) {
+    if (e.target.closest('button, select, input') && !e.target.closest('#chords-play')) engage();
+  }
+  function keepAlive() { if (engaged && performance.now() - lastAlive > 15000) connectApp(); }
 
   // Runs fn (a tone change) with app mode briefly off, so the keyboard accepts the program change.
   function whileDisconnected(fn) {
     if (!connected || !send) { fn(); return; }
     send(appCmd(0)); connected = false;
-    setTimeout(() => { fn(); setTimeout(() => { if (active) connectApp(); }, 100); }, 30);
+    setTimeout(() => { fn(); setTimeout(() => { if (engaged) connectApp(); }, 100); }, 30);
   }
 
   // Change song settings the way Chord Director does: begin edit, write, end edit. Writes need "app connected".
@@ -303,7 +311,7 @@
 
   function render() {
     renderSettings();
-    $('chords-name-text').textContent = song.name || 'Untitled';
+    $('chords-name-text').textContent = song.name || DEFAULT_NAME;
     $('chords-title').hidden = !song.loaded || !$('name-form').hidden;
     if (!song.loaded) $('name-form').hidden = true;
     $('dl-txt').disabled = !song.loaded || !song.chords.length;
@@ -325,7 +333,7 @@
       }
       const mk = marks[b] || {};
       const num = view.number[b];
-      const r = activeRepeatAt(b);
+      const r = activeRepeatAt(b) || view.repeats.find((x) => x.start === b) || null;   // includes a pair with no copy yet
       // The repeat signs are drawn on the bar's left and right edges (rep-open, rep-close in style.css).
       // A sign with no partner is grey.
       const loneOpen = !!mk.start && !view.repeats.some((x) => x.start === b);
@@ -367,13 +375,16 @@
     return s ? !!before && s.value <= 4 && s.value === before.value : !before;
   }
 
-  // One label per pass of a repeated bar: "1 Var 1   2 Fill Up". The repeat's first bar always shows how each pass
-  // starts; later bars only show the passes that change.
+  // One label per pass of a repeated bar: "1 Var 1   2 —". The repeat's first bar always lists at least passes 1 and 2,
+  // with the variation or fill picked on that bar for each pass, or — when none is (one carried on from an earlier bar
+  // doesn't count). Later bars only show the passes that change.
   function passStyles(bar, r, styles) {
+    const opening = bar === r.start;
     let html = '';
-    for (let k = 0; k < r.times; k++) {
-      const s = styles[bar + k * r.len];
-      if (bar !== r.start && sameAsBarBefore(styles, bar + k * r.len)) continue;
+    for (let k = 0; k < Math.max(r.times, opening ? 2 : 1); k++) {
+      const played = k < r.times ? styles[bar + k * r.len] : null;
+      const s = opening && !(played && played.own) ? null : played;
+      if (!opening && sameAsBarBefore(styles, bar + k * r.len)) continue;
       const sel = edit.open && !edit.section && edit.bar === bar && editPass() === k ? ' sel' : '';
       html += `<span class="pass-var${s && s.own ? ' own' : ''}${sel}" data-pass="${k}"><b>${k + 1}</b> ${s ? esc(VARIATIONS[s.value] || `Var ${s.value}`) : '—'}</span>`;
     }
@@ -697,7 +708,7 @@
     };
     stream(0x40, song.chords, 13, (c) => [c.bar >> 7, c.bar & 0x7F, c.beat].concat(chordBytes(c)));
     if (song.variations.length) stream(0x41, song.variations, 13, (v) => [v.bar >> 7, v.bar & 0x7F, v.value]);
-    const name = (song.name + ' '.repeat(32)).slice(0, 32).split('').map((ch) => ch.charCodeAt(0) & 0x7F);
+    const name = ((song.name || DEFAULT_NAME) + ' '.repeat(32)).slice(0, 32).split('').map((ch) => ch.charCodeAt(0) & 0x7F);
     msgs.push(dt1(A(0x00), name), dt1(A(0x22), [0x40 + st.transpose]), dt1(A(0x24), [st.intro ? 1 : 0]),
       dt1(A(0x42), chordBytes(song.introChord)), dt1(A(0x25), [st.introLong ? 1 : 0]), dt1(A(0x26), [st.ending ? 1 : 0]),
       dt1(A(0x43), chordBytes(song.endingChord)), dt1(A(0x27), [st.endingLong ? 1 : 0]), dt1(A(0x23), [st.loop ? 1 : 0]),
@@ -736,6 +747,34 @@
     const formed = pair && pair.len > 1 && markedRepeats().find((x) => x.times === 1 && (lostStart ? x.start + x.len - 1 === kept : x.start === kept));
     if (formed) writeOutRepeat(formed);
     if (formed ? send : sendSong()) { edit.bar = Math.min(at, song.bars - 1); edit.beat = 0; render(); }
+  }
+
+  // Clear chart: back to the keyboard's initial pattern, 4 bars of C titled Initial Pattern with default settings. It replaces
+  // the song on the keyboard, so it takes a second tap within 3 s (confirm() isn't reliable in the iPad plugin's web view).
+  let clearTimer = 0;
+  function disarmClear() {
+    clearTimeout(clearTimer); clearTimer = 0;
+    $('ed-clear').textContent = 'Clear chart';
+    $('ed-clear').classList.remove('armed');
+  }
+  function clearChart() {
+    if (!clearTimer) {
+      $('ed-clear').textContent = 'Tap again to clear';
+      $('ed-clear').classList.add('armed');
+      clearTimer = setTimeout(disarmClear, 3000);
+      return;
+    }
+    disarmClear();
+    if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
+    song.name = DEFAULT_NAME; song.variations = []; song.settings = defaults();
+    song.bars = 4;
+    song.chords = [{ bar: 0, beat: 0, root: 3, acc: 0x40, type: 1, bass: 0, bassAcc: 0x40 }];   // bars 2-4 hold the C
+    song.introChord = null; song.endingChord = null;
+    starts = {}; ends = {};
+    edit.section = null; edit.pass = 0; edit.bar = 0; edit.beat = 0;
+    sendSong();
+    render();
+    setInfo('Chart cleared.');
   }
 
   // Toggle |: or :| on the selected bar. A pair that isn't repeated on the keyboard yet gets its copy written out
@@ -949,6 +988,7 @@
       else if (b.id === 'ed-ins-before') insertBar(edit.bar);
       else if (b.id === 'ed-ins-after') insertBar(edit.bar + 1);
       else if (b.id === 'ed-del-bar') deleteBar(edit.bar);
+      else if (b.id === 'ed-clear') clearChart();
     });
     $('ed-bass').addEventListener('change', (e) => changeChord('bass', +e.target.value));
     // The type menu is rebuilt on every render, so listen on the row.
@@ -983,7 +1023,7 @@
   }
   function csvText() {
     const st = song.settings, lines = [];
-    lines.push('FORMAT,2', `NAME,${(song.name || 'Chords').replace(/,/g, ' ')}`, `INTRO_SW,${onOff(st.intro)}`,
+    lines.push('FORMAT,2', `NAME,${(song.name || DEFAULT_NAME).replace(/,/g, ' ')}`, `INTRO_SW,${onOff(st.intro)}`,
       `ENDING_SW,${onOff(st.ending)}`, `LOOP,${onOff(st.loop)}`, `TRANSPOSE,${st.transpose}`, '');
     if (st.intro) {
       lines.push(`DIVISION,Intro,${st.introLong ? 'Long' : 'Short'}`,
@@ -1024,6 +1064,8 @@
 
   function init(opts) {
     status = opts.status || status;
+    $('tab-chords').addEventListener('click', onControlUsed, true);
+    $('tab-chords').addEventListener('change', onControlUsed, true);
     $('chords-read').onclick = request;
     $('chords-send').onclick = () => { if (song.loaded && song.bars && sendSong()) setInfo('Sent the song to the keyboard.'); };
     // Rename: the keyboard stores 32 ASCII characters; sent with the whole song (Chord Director only sends the name
@@ -1080,6 +1122,6 @@
     onSysEx,
     setActive,
     whileDisconnected,
-    setOutput(fn) { send = fn; connected = false; if (active) connectApp(); },
+    setOutput(fn) { send = fn; connected = false; if (engaged) connectApp(); },
   };
 }());

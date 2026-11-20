@@ -95,8 +95,10 @@
     let html = '', cat = null;
     TONES.forEach((t) => {
       if (t.category !== cat) { cat = t.category; html += `<div class="cat" data-cat="${esc(cat)}">${esc(cat)}</div>`; }
-      const fav = state.favorites.indexOf(t.num) >= 0 ? ' fav' : '';   // green number = favorite
-      html += `<div class="row" data-i="${t.i}"><span class="num${fav}">${esc(t.num)}</span><span class="name">${esc(t.name)}</span></div>`;
+      // The star is a text glyph, not an SVG button: 1228 rows, and the iPad Air 2 is slow. \uFE0E keeps iOS from drawing an emoji.
+      const fav = state.favorites.indexOf(t.num) >= 0;
+      html += `<div class="row" data-i="${t.i}"><span class="name">${esc(t.name)}</span>` +
+        `<span class="row-star${fav ? ' on' : ''}" role="button" aria-label="Favorite" aria-pressed="${fav}">\u2605\uFE0E</span></div>`;
     });
     $('list').innerHTML = html || '<div class="empty">No tones (tones.js is missing).</div>';
   }
@@ -129,21 +131,25 @@
   function scrollToRow(i, center) {
     const list = $('list'), el = rowEl(i);
     if (!el || el.hidden) return;
-    const top = el.offsetTop - list.offsetTop;
+    const top = el.offsetTop;   // .list is position: relative, so this is already measured from the top of the list
     if (center) list.scrollTop = top - list.clientHeight / 2 + el.offsetHeight / 2;
     else if (top < list.scrollTop + 22) list.scrollTop = top - 22;  // keep the category heading visible
     else if (top + el.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = top + el.offsetHeight - list.clientHeight;
   }
 
   // ------------------------------------------------------------ favorites
-  // The star next to the current tone's name adds it to / removes it from the favorites.
+  // The star on each row of the list adds that tone to / removes it from the favorites.
   const isFavorite = (i) => state.favorites.indexOf(TONES[i].num) >= 0;
   function toggleFavorite(i) {
     const num = TONES[i].num, k = state.favorites.indexOf(num);
     if (k >= 0) state.favorites.splice(k, 1); else state.favorites.push(num);
     const row = rowEl(i);
-    if (row) row.querySelector('.num').classList.toggle('fav', k < 0);
-    markStar(); save();
+    if (row) {
+      const star = row.querySelector('.row-star');
+      star.classList.toggle('on', k < 0);
+      star.setAttribute('aria-pressed', k < 0 ? 'true' : 'false');
+    }
+    save();
     if (state.favOnly) filter();
   }
   function markFavOnly() {
@@ -152,21 +158,13 @@
     b.setAttribute('aria-pressed', state.favOnly ? 'true' : 'false');
     b.title = state.favOnly ? 'Show all tones' : 'Show only the favorites';
   }
-  function markStar() {
-    const star = $('fav-star'), on = state.current != null && isFavorite(state.current);
-    star.hidden = state.current == null;
-    star.classList.toggle('on', on);
-    star.setAttribute('aria-pressed', on ? 'true' : 'false');
-    star.title = on ? 'Remove from favorites' : 'Add to favorites';
-  }
 
   function markCurrent() {
     $('list').querySelectorAll('.row.cur').forEach((el) => el.classList.remove('cur'));
-    markStar();
     const t = state.current == null ? null : TONES[state.current];
     if (t) { const el = rowEl(t.i); if (el) el.classList.add('cur'); }
-    $('det-num').textContent = t ? t.num : '-----';
-    $('det-name').textContent = t ? t.name : 'Pick a tone';
+    $('cur-num').textContent = t ? t.num : '-----';
+    $('cur-name').textContent = t ? t.name : 'No tone selected';
     $('det-note').textContent = t
       ? `${t.category} · bank ${t.msb}/${t.lsb} · program ${t.pc} · channel ${state.channel}`
       : 'Tap a tone on the left to send it to the keyboard.';
@@ -359,8 +357,13 @@
     filter();
     if (state.current != null) scrollToRow(state.current, true);
 
-    $('list').onclick = (e) => { const row = e.target.closest('.row'); if (row) { selectTone(+row.dataset.i); $('list').focus(); } };
-    $('fav-star').onclick = () => { if (state.current != null) toggleFavorite(state.current); };
+    $('list').onclick = (e) => {
+      const row = e.target.closest('.row');
+      if (!row) return;
+      if (e.target.closest('.row-star')) toggleFavorite(+row.dataset.i);   // the star doesn't change the tone
+      else selectTone(+row.dataset.i);
+      $('list').focus();
+    };
     $('list').onkeydown = (e) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); step(e.key === 'ArrowDown' ? 1 : -1); }
     };
@@ -407,7 +410,7 @@
       $('details').classList.toggle('on-tones', b.dataset.tab === 'tones');
       if (CHORDS) CHORDS.setActive(b.dataset.tab === 'chords');
     };
-    if (CHORDS) CHORDS.init({ status: setStatus });
+    if (CHORDS) { CHORDS.init({ status: setStatus }); CHORDS.setActive(true); }   // the page opens on the Chords tab (not in app mode yet)
 
     initMIDI();
   }

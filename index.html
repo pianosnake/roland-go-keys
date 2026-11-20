@@ -5,7 +5,7 @@
   <title>GO:KEYS Tones &amp; Chords</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=62">
+  <link rel="stylesheet" href="style.css?v=70">
 </head>
 <body>
   <aside class="side">
@@ -26,32 +26,23 @@
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3-4.7-4.4 6.4-.8z"/></svg>
       </button>
     </div>
+    <div class="cur-tone" id="cur-tone"><span class="cur-num" id="cur-num"></span><span class="cur-name" id="cur-name"></span></div>
     <div class="list" id="list" tabindex="0"></div>
   </aside>
 
-  <main class="details on-tones" id="details">
+  <main class="details" id="details">
     <nav class="tabs" id="tabs">
-      <button class="tab on" type="button" data-tab="tones">TONE</button>
-      <button class="tab" type="button" data-tab="chords">CHORDS</button>
+      <button class="tab on" type="button" data-tab="chords">CHORDS</button>
+      <button class="tab" type="button" data-tab="tones">TONE</button>
     </nav>
-    <div id="tab-tones">
-    <div class="det-head">
-      <span class="det-num" id="det-num">-----</span>
-      <div>
-        <div class="det-title"><span class="det-name" id="det-name">Pick a tone</span>
-          <button id="fav-star" class="star" type="button" aria-pressed="false" hidden>
-            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3-4.7-4.4 6.4-.8z"/></svg>
-          </button>
-        </div>
-        <div class="det-note" id="det-note">Tap a tone on the left to send it to the keyboard.</div>
-      </div>
-    </div>
+    <div id="tab-tones" hidden>
+    <div class="det-note" id="det-note">Tap a tone on the left to send it to the keyboard.</div>
     <div class="cc-grid" id="cc-grid"></div>
     <p class="hint">Slider positions are what this page last sent, not read from the keyboard (it doesn't report them).
       Double-tap a value to send its default.</p>
     </div>
 
-    <div id="tab-chords" hidden>
+    <div id="tab-chords">
       <div class="chords-tools">
         <button id="chords-play" class="btn play" type="button" aria-label="Start the style" title="Start the style">
           <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path class="ico-play" d="M4 2.5v11l9.5-5.5z"/><rect class="ico-stop" x="3" y="3" width="10" height="10"/></svg>
@@ -64,9 +55,7 @@
         </button>
         <button id="dl-txt" class="btn" type="button" disabled>Download chords (.csv)</button>
         <div class="set"><span class="set-label">TRANSPOSE</span>
-          <button id="tr-down" class="btn" type="button" aria-label="Transpose down">−</button>
-          <span class="set-val" id="tr-val">--</span>
-          <button id="tr-up" class="btn" type="button" aria-label="Transpose up">+</button></div>
+          <span class="pill" role="group" aria-label="Transpose"><button id="tr-down" class="btn" type="button" aria-label="Transpose down">−</button><span class="set-val" id="tr-val">--</span><button id="tr-up" class="btn" type="button" aria-label="Transpose up">+</button></span></div>
       </div>
       <div class="chords-settings" id="chords-settings">
         <div class="set form"><span class="set-label">INTRO</span>
@@ -95,6 +84,9 @@
           <button id="ed-next" class="btn ed-nav bar-only" type="button" aria-label="Next beat">▶</button>
           <button id="ed-next-bar" class="btn ed-nav bar-only" type="button" aria-label="Next bar" title="Next bar">»</button>
           <button id="ed-ins-after" class="btn ed-nav bar-only" type="button" aria-label="Insert a bar after this one" title="Insert a bar after this one">+&gt;</button>
+          <button id="ed-del-bar" class="btn ed-nav bar-only" type="button" aria-label="Delete this bar" title="Delete this bar">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M6 1.5h4l.5 1.5H14v1.5H2V3h3.5zM3.2 5.5h9.6l-.7 9H3.9zM6 7v6h1V7zm3 0v6h1V7z"/></svg>
+          </button>
           <button id="ed-hold" class="btn ed" type="button" title="No chord change on this beat: the previous chord continues">HOLD</button>
           <button id="ed-close" class="btn ed-nav" type="button" aria-label="Close the editor">✕</button>
         </div>
@@ -109,16 +101,14 @@
           <span class="ed-label ed-inline bar-only">REPEAT</span>
           <button id="ed-rep-start" class="btn ed bar-only" type="button" title="Repeat starts at this bar">|:</button>
           <button id="ed-rep-end" class="btn ed bar-only" type="button" title="Repeat ends at this bar">:|</button>
-          <button id="ed-del-bar" class="btn ed-nav bar-only" type="button" aria-label="Delete this bar" title="Delete this bar">
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M6 1.5h4l.5 1.5H14v1.5H2V3h3.5zM3.2 5.5h9.6l-.7 9H3.9zM6 7v6h1V7zm3 0v6h1V7z"/></svg>
-          </button>
+          <button id="ed-clear" class="btn" type="button" title="Reset this chord pattern to 4 bars of C, titled Initial Pattern, with default settings">Clear chart</button>
         </div></div>
       </div>
     </div>
   </main>
 
   <script src="tones.js"></script>
-  <script src="chords.js?v=62"></script>
-  <script src="app.js?v=62"></script>
+  <script src="chords.js?v=70"></script>
+  <script src="app.js?v=70"></script>
 </body>
 </html>
