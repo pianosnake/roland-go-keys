@@ -438,10 +438,11 @@
   // ignored. Greedy from the start: at each bar take the block covering the most bars (shorter block on a tie).
   // That only fills in the markers when a song is read. After that the markers are the user's: each bar can carry
   // |: (repeat start) and :| (repeat end); a |: followed by a :| makes the bars between them a repeat. Its passes are
-  // the written-out copies with the same chords that follow it on the keyboard; a new pair with no copy yet gets one
-  // written out. Chords are shared by all passes, but each pass keeps its own variations and fills.
+  // the written-out copies with the same chords that follow it on the keyboard. A pair the user makes always gets a new
+  // copy written out and remembers its number of passes, so matching bars after it stay in the grid as ordinary bars.
+  // Chords are shared by all passes, but each pass keeps its own variations and fills.
   const MIN_REPEAT = 4, MAX_REPEAT = 32;
-  let starts = {}, ends = {};                       // song bar -> true
+  let starts = {}, ends = {};                       // song bar -> true; a number in starts = that repeat's exact passes
   function markersFromSong() {
     starts = {}; ends = {};
     findRepeats().forEach((r) => { starts[r.start] = true; ends[r.start + r.len - 1] = true; });
@@ -460,8 +461,9 @@
       if (starts[b]) open = b;
       if (ends[b] && open != null) {
         const len = b - open + 1;
+        const most = typeof starts[open] === 'number' ? starts[open] : Infinity;
         let times = 1;
-        while (open + (times + 1) * len <= song.bars && same(open, open + times * len, len)) times++;
+        while (times < most && open + (times + 1) * len <= song.bars && same(open, open + times * len, len)) times++;
         out.push({ start: open, len, times });
         open = null;
         b += (times - 1) * len;                      // markers inside the hidden copies don't count
@@ -476,7 +478,7 @@
       Object.keys(m).forEach((k) => {
         const b = +k;
         if (delta < 0 && b === at) return;
-        out[b >= at + (delta < 0 ? 1 : 0) ? b + delta : b] = true;
+        out[b >= at + (delta < 0 ? 1 : 0) ? b + delta : b] = m[k];
       });
       return out;
     };
@@ -582,7 +584,7 @@
   // The common types are buttons (major has no suffix, so its button is blank); the rest are in a menu.
   const TYPE_BUTTONS = [0x01, 0x02, 0x03, 0x13, 0x14, 0x05, 0x09];
   const TYPE_MORE = TYPE_ORDER.filter((t) => TYPE_BUTTONS.indexOf(t) < 0);
-  const BAR_STYLES = [[0, '—'], [1, 'Var 1'], [2, 'Var 2'], [3, 'Var 3'], [4, 'Var 4'], [6, 'Fill Up'], [5, 'Fill Down']];
+  const BAR_STYLES = [[0, 'Default'], [1, 'Var 1'], [2, 'Var 2'], [3, 'Var 3'], [4, 'Var 4'], [6, 'Fill Up'], [5, 'Fill Down']];
   // pass: which pass of a repeat the BAR row edits (0 = first). section: 'intro' / 'ending' while editing that chord.
   const edit = { open: false, bar: 0, beat: 0, pass: 0, section: null };
   const editedChord = () => (edit.section ? song[`${edit.section}Chord`] : chordAt(edit.bar, edit.beat));
@@ -744,8 +746,8 @@
     song.bars -= 1;
     // The sign left behind may now pair with a grey sign: that new repeat needs its copy on the keyboard.
     const lostStart = !!pair && pair.start === at, kept = pair && (lostStart ? pair.start + pair.len - 2 : pair.start);
-    const formed = pair && pair.len > 1 && markedRepeats().find((x) => x.times === 1 && (lostStart ? x.start + x.len - 1 === kept : x.start === kept));
-    if (formed) writeOutRepeat(formed);
+    const formed = pair && pair.len > 1 && markedRepeats().find((x) => (lostStart ? x.start + x.len - 1 === kept : x.start === kept));
+    if (formed) writeOutNewRepeat(formed);
     if (formed ? send : sendSong()) { edit.bar = Math.min(at, song.bars - 1); edit.beat = 0; render(); }
   }
 
@@ -791,7 +793,7 @@
     for (let b = to + 1; b < r.start + r.len; b++) order.push(b);
     for (let b = oldEnd; b < song.bars; b++) order.push(b);
     reorderBars(order, r);
-    starts[from] = true; ends[to] = true;
+    starts[from] = r.times; ends[to] = true;
     if (sendSong()) setInfo(`Repeat changed: the song is now ${song.bars} bars.`);
   }
   // Take repeat r apart: its signs and written-out copies go, its first pass stays. The caller sends the song.
@@ -822,7 +824,7 @@
     const delta = order.length - song.bars;
     const moveSigns = (m) => {
       const out = {};
-      Object.keys(m).forEach((k) => { const b = +k; if (b < r.start) out[b] = true; else if (b >= oldEnd) out[b + delta] = true; });
+      Object.keys(m).forEach((k) => { const b = +k; if (b < r.start) out[b] = m[k]; else if (b >= oldEnd) out[b + delta] = m[k]; });
       return out;
     };
     starts = moveSigns(starts); ends = moveSigns(ends);
@@ -845,8 +847,8 @@
         if (isStart) ends[pair.start + pair.len - 1] = true; else starts[pair.start] = true;   // the partner stays, grey
       }
       // The partner may now pair with a grey sign: that makes a new repeat, which needs its copy on the keyboard.
-      const formed = pair && markedRepeats().find((x) => x.times === 1 && (isStart ? x.start + x.len === pair.start + pair.len : x.start === pair.start));
-      if (formed) writeOutRepeat(formed);
+      const formed = pair && markedRepeats().find((x) => (isStart ? x.start + x.len === pair.start + pair.len : x.start === pair.start));
+      if (formed) writeOutNewRepeat(formed);
       else if (dropped && sendSong()) setInfo(`Repeat removed: the song is now ${song.bars} bars.`);
       render();
       return;
@@ -861,14 +863,19 @@
       }
       delete set[set === starts ? moved.start : last];   // the sign moves here; no bars are added
       set[edit.bar] = true;
+      starts[set === starts ? edit.bar : moved.start] = 1;
       render();
       return;
     }
     set[edit.bar] = true;
-    const r = markedRepeats().find((x) => x.times === 1 && edit.bar >= x.start && edit.bar < x.start + x.len &&
-      (x.start === edit.bar || x.start + x.len - 1 === edit.bar));
-    if (r) writeOutRepeat(r);
+    const r = markedRepeats().find((x) => x.start === edit.bar || x.start + x.len - 1 === edit.bar);
+    if (r) writeOutNewRepeat(r);
     render();
+  }
+  // A repeat the user just made: its bars play twice, whatever comes after them.
+  function writeOutNewRepeat(r) {
+    starts[r.start] = 1;
+    writeOutRepeat(r);
   }
   function writeOutRepeat(r) {
     if (song.bars + r.len > MAX_BARS) return;
@@ -887,6 +894,7 @@
     }
     song.variations = song.variations.concat(copy(song.variations)).sort((x, y) => x.bar - y.bar);
     song.bars += r.len;
+    starts[r.start] = 2;
     if (sendSong()) setInfo(`Repeat written out: bars ${r.start + 1}–${after} now play twice.`);
   }
 
@@ -920,7 +928,7 @@
     if (panel.hidden) return;
     panel.classList.toggle('section', !!sec);                     // only the chord rows apply to the intro and ending
     const c = editedChord(), eff = c || (sec ? null : chordInEffect(edit.bar, edit.beat));
-    $('ed-pos').textContent = sec ? (sec === 'intro' ? 'Intro' : 'Ending') : `Bar ${passLabel(styleBar())} · Beat ${edit.beat + 1}`;
+    $('ed-pos').textContent = sec ? (sec === 'intro' ? 'Intro' : 'Ending') : `${passLabel(styleBar())}:${edit.beat + 1}`;
     $('ed-hold').textContent = sec ? 'NONE' : 'HOLD';
     $('ed-hold').title = sec ? 'No chord in this section' : 'No chord change on this beat: the previous chord continues';
     const bassPc = c ? (c.bass ? soundingPc(c.bass, c.bassAcc) : -1) : null;

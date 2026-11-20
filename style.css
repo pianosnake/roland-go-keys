@@ -287,13 +287,26 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 }
 .ed-select.on { background: linear-gradient(#86d6d1, #4aa8a2); border-color: #1d4a47; color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
 .ed-label.ed-inline { width: auto; margin-left: 12px; }
-.ed-pos { font: 700 12px var(--ui-font); letter-spacing: .5px; text-align: center; white-space: nowrap; }
-#ed-hold { margin-left: auto; }   /* HOLD and close stay at the right end */
+/* Bar navigation as one pill: three buttons, the position (measure:beat), three buttons. */
+.pill.ed-pill { flex: none; border-radius: 21px; }
+.pill.ed-pill .btn { min-width: 40px; min-height: 40px; padding: 0 4px; letter-spacing: 0; white-space: nowrap; touch-action: manipulation; }
+.pill.ed-pill .btn + .btn { border-left: 1px solid #111; }
+.ed-pos {
+  min-width: 72px; padding: 0 8px; text-align: center; white-space: nowrap; background: var(--lcd); color: var(--lcd-text);
+  font: 16px/40px var(--lcd-font); border-left: 1px solid #111; border-right: 1px solid #111;
+}
+#ed-hold { margin-left: 12px; }   /* a little apart from the insert button */
+#ed-close { margin-left: auto; }   /* stays at the right end */
 .btn.ed-nav { min-width: 34px; min-height: 40px; padding-left: 4px; padding-right: 4px; white-space: nowrap; }
-#ed-del-bar { margin-left: 12px; min-width: 44px; }   /* a little apart from the insert button */
+#ed-del-bar { margin-left: 12px; min-width: 44px; }   /* a little apart from HOLD, so it isn't tapped by mistake */
 #ed-clear { margin-left: auto; min-width: 136px; min-height: 40px; white-space: nowrap; }   /* lower right, away from the other buttons */
 #ed-clear.armed { background: linear-gradient(#d0584c, #a8352b); border-color: #5a1510; }   /* waiting for the second tap */
 .btn.ed-nav svg { fill: currentColor; vertical-align: middle; }
+/* The bar's variation or fill as one pill. It wraps instead of clipping when the window is too narrow for one line. */
+.pill.ed-style-pill { flex-wrap: wrap; max-width: 100%; border-radius: 21px; }
+.pill.ed-style-pill .btn { min-width: 0; padding: 0 9px; letter-spacing: 0; white-space: nowrap; }
+.pill.ed-style-pill .btn + .btn { border-left: 1px solid #111; }
+@media (max-width: 760px) { .pill.ed-style-pill { border-radius: 12px; } }
 .ed-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 6px; }
 /* PASS picks which pass the BAR row edits, so the two share a panel. Negative margins keep the labels in line with the other rows. */
 .ed-group { margin: 6px -9px 0; padding: 0 8px 8px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; }
