@@ -5,20 +5,21 @@
   <title>GO:KEYS Tones &amp; Chords</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=83">
+  <link rel="stylesheet" href="style.css?v=86">
 </head>
 <body>
   <aside class="side">
     <div class="brand">
       <div class="logo"><span class="model">GO:KEYS</span></div>
-      <label class="chan" title="MIDI channel. Firmware 1.11 only changes the UPPER tone from channel 4.">CH
-        <select id="channel"></select>
-      </label>
+      <button id="side-gear" class="btn side-gear" type="button" aria-label="MIDI settings" title="MIDI settings" aria-pressed="false">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M6.9 1h2.2l.4 1.9 1.2.5 1.6-1.1 1.6 1.6-1.1 1.6.5 1.2 1.9.4v2.2l-1.9.4-.5 1.2 1.1 1.6-1.6 1.6-1.6-1.1-1.2.5-.4 1.9H6.9l-.4-1.9-1.2-.5-1.6 1.1-1.6-1.6 1.1-1.6-.5-1.2L1 9.1V6.9l1.9-.4.5-1.2-1.1-1.6 1.6-1.6 1.6 1.1 1.2-.5zM8 5.6a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z"/></svg>
+      </button>
     </div>
-    <label class="port" title="The MIDI port the keyboard is on.">PORT
-      <select id="port"></select>
-    </label>
     <div class="status-line"><span id="conn-status" class="status off">Not connected</span> <span id="status-text"></span></div>
+    <div class="side-tabs" id="side-tabs" role="tablist">
+      <button class="btn on" type="button" data-pane="tones">TONES</button><button class="btn" type="button" data-pane="songs">SONGS</button>
+    </div>
+    <div class="side-pane" id="pane-tones">
     <div class="search">
       <input id="search" type="text" placeholder="Search tones…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button id="clear" class="clear" type="button" aria-label="Clear search">×</button>
@@ -28,6 +29,20 @@
     </div>
     <div class="cur-tone" id="cur-tone"><span class="cur-num" id="cur-num"></span><span class="cur-name" id="cur-name"></span></div>
     <div class="list" id="list" tabindex="0"></div>
+    </div>
+    <div class="side-pane" id="pane-songs" hidden>
+      <div class="list" id="song-list"></div>
+    </div>
+    <div class="side-pane settings-pane" id="pane-settings" hidden>
+      <div class="settings-head"><span>MIDI SETTINGS</span><button id="settings-close" class="btn" type="button" aria-label="Close the settings">✕</button></div>
+      <label class="port" title="The MIDI port the keyboard is on.">PORT
+        <select id="port"></select>
+      </label>
+      <label class="chan" title="MIDI channel. Firmware 1.11 only changes the UPPER tone from channel 4.">CHANNEL
+        <select id="channel"></select>
+      </label>
+      <p class="settings-note">Channel 4: the GO:KEYS only changes the UPPER tone from channel 4.</p>
+    </div>
   </aside>
 
   <main class="details" id="details">
@@ -53,20 +68,33 @@
         <button id="chords-send" class="btn act xfer" type="button" title="Send this song to the keyboard, replacing the one stored there" disabled>
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M7 14.5h2V6.3l3.1 3.1L13.5 8 8 2.5 2.5 8l1.4 1.4L7 6.3z"/></svg>SEND
         </button>
-        <button id="dl-txt" class="btn" type="button" disabled>Download chords (.csv)</button>
-        <div class="set"><span class="set-label">TRANSPOSE</span>
-          <span class="pill" role="group" aria-label="Transpose"><button id="tr-down" class="btn" type="button" aria-label="Transpose down">−</button><span class="set-val" id="tr-val">--</span><button id="tr-up" class="btn" type="button" aria-label="Transpose up">+</button></span></div>
-      </div>
+        <span class="tools-sep"></span>
       <div class="chords-settings" id="chords-settings">
         <div class="set form"><span class="set-label">INTRO</span>
           <span class="pill" role="group" aria-label="Intro, loop and ending"><span class="pill-part" id="seg-intro">
             <button class="btn" type="button" data-v="short" aria-label="Short intro" title="Tap again to turn the intro off">SHORT</button><button class="btn" type="button" data-v="long" aria-label="Long intro" title="Tap again to turn the intro off">LONG</button></span><button id="set-loop" class="btn" type="button">LOOP</button><span class="pill-part" id="seg-ending">
             <button class="btn" type="button" data-v="short" aria-label="Short ending" title="Tap again to turn the ending off">SHORT</button><button class="btn" type="button" data-v="long" aria-label="Long ending" title="Tap again to turn the ending off">LONG</button></span></span>
           <span class="set-label">ENDING</span></div>      </div>
+      </div>
       <div class="chords-info" id="chords-info">GET reads the chord progression stored on the keyboard (the song Chord Director edits). SEND writes it back.</div>
       <div class="chords-title" id="chords-title" hidden>
         <span class="chords-name" id="chords-name-text"></span>
-        <button id="name-edit" class="btn name-edit" type="button" aria-label="Rename the song" title="Rename the song">✎</button>
+        <button id="song-save-quick" class="btn name-edit" type="button" aria-label="Save the song on this device" title="Save the song on this device">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M2 2h9.5L14 4.5V14H2zm2 1v3.5h7V3zm1.5 6.5a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"/></svg>
+        </button>
+        <span class="menu-wrap">
+          <button id="song-more" class="btn name-edit" type="button" aria-label="More" title="More" aria-haspopup="true" aria-expanded="false">⋯</button>
+          <div class="menu" id="song-menu" role="menu" hidden>
+            <button id="name-edit" class="menu-item" type="button" role="menuitem">Rename…</button>
+            <button id="song-save-new" class="menu-item" type="button" role="menuitem">Save as new</button>
+            <div class="menu-sep"></div>
+            <button id="dl-txt" class="menu-item" type="button" role="menuitem">Download chords (.csv)</button>
+            <button id="ul-txt" class="menu-item" type="button" role="menuitem">Upload chords (.csv)…</button>
+            <input id="ul-file" type="file" accept=".csv,.CSV,text/csv" hidden>
+            <div class="menu-item menu-tr"><span>Transpose</span>
+              <span class="pill" role="group" aria-label="Transpose"><button id="tr-down" class="btn" type="button" aria-label="Transpose down">−</button><span class="set-val" id="tr-val">--</span><button id="tr-up" class="btn" type="button" aria-label="Transpose up">+</button></span></div>
+          </div>
+        </span>
       </div>
       <div class="name-form" id="name-form" hidden>
         <input class="name-input" id="chords-name" type="text" maxlength="32" placeholder="Song name (up to 32 characters)"
@@ -110,7 +138,7 @@
   </main>
 
   <script src="tones.js"></script>
-  <script src="chords.js?v=83"></script>
-  <script src="app.js?v=83"></script>
+  <script src="chords.js?v=86"></script>
+  <script src="app.js?v=86"></script>
 </body>
 </html>

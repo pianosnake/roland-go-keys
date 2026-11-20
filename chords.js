@@ -155,6 +155,7 @@
       song.loaded = true;
       markersFromSong();
       incoming = null;
+      savedId = matchingSaved();
       render();
       setInfo('');
     }
@@ -311,8 +312,10 @@
 
   function render() {
     renderSettings();
+    renderSongs();
     $('chords-name-text').textContent = song.name || DEFAULT_NAME;
     $('chords-title').hidden = !song.loaded || !$('name-form').hidden;
+    $('chords-info').hidden = song.loaded;            // a hint until there's a song; messages also go to the status line
     if (!song.loaded) $('name-form').hidden = true;
     $('dl-txt').disabled = !song.loaded || !song.chords.length;
     $('chords-send').disabled = !song.loaded || !song.bars;
@@ -773,6 +776,7 @@
     song.chords = [{ bar: 0, beat: 0, root: 3, acc: 0x40, type: 1, bass: 0, bassAcc: 0x40 }];   // bars 2-4 hold the C
     song.introChord = null; song.endingChord = null;
     starts = {}; ends = {};
+    savedId = null;                                   // Save mustn't overwrite the saved song with the blank chart
     edit.section = null; edit.pass = 0; edit.bar = 0; edit.beat = 0;
     sendSong();
     render();
@@ -1075,6 +1079,129 @@
     changeChord(part, value);
   }
 
+
+  // ------------------------------------------------------------ saved songs
+  // Songs saved in this browser (localStorage), on the SONGS tab of the left column. A saved song keeps everything the
+  // page shows, repeat signs included. Loading one sends it to the keyboard, replacing the song there, so the page
+  // keeps showing what the keyboard has. That loses the keyboard's song unless it's saved, so then a load takes a
+  // second tap within 3 s, like Clear chart. Delete takes a second tap too.
+  const SONGS_KEY = 'gokeys-songs';
+  let savedSongs = null;           // [{ id, saved (ms), data }], newest first; read from storage once
+  let savedId = null;              // the saved song the page started from (loaded or last saved): Save overwrites it
+  let armed = null, armTimer = 0;  // { kind: 'load' | 'del', id } waiting for its second tap
+  function songs() {
+    if (!savedSongs) {
+      try { savedSongs = JSON.parse(localStorage.getItem(SONGS_KEY) || '[]') || []; } catch (e) { savedSongs = []; }
+      if (!Array.isArray(savedSongs)) savedSongs = [];
+    }
+    return savedSongs;
+  }
+  function storeSongs() {
+    try { localStorage.setItem(SONGS_KEY, JSON.stringify(songs())); return true; } catch (e) {
+      setInfo('Couldn’t save: this browser’s storage is full or blocked.');
+      return false;
+    }
+  }
+  const snapshot = () => JSON.stringify({ name: song.name, bars: song.bars, chords: song.chords, variations: song.variations,
+    settings: song.settings, introChord: song.introChord || null, endingChord: song.endingChord || null, starts, ends });
+  const sameAsSaved = (e) => !!e && JSON.stringify(e.data) === snapshot();
+  const songById = (id) => songs().find((e) => e.id === id) || null;
+  function matchingSaved() { const snap = snapshot(), e = songs().find((x) => JSON.stringify(x.data) === snap); return e ? e.id : null; }
+  const isSaved = () => song.loaded && sameAsSaved(songById(savedId));
+
+  function saveSong(asNew) {
+    if (!song.loaded) { setInfo('Press GET to read the chords from the keyboard first.'); return; }
+    let e = asNew ? null : songById(savedId);
+    if (!e) { e = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) }; songs().unshift(e); }
+    e.saved = Date.now(); e.data = JSON.parse(snapshot());
+    savedSongs.sort((a, b) => b.saved - a.saved);
+    savedId = e.id;
+    if (storeSongs()) setInfo(`Saved “${song.name || DEFAULT_NAME}” on this device.`);
+    render();
+  }
+  function disarm() { armed = null; clearTimeout(armTimer); armTimer = 0; renderSongs(); }
+  function arm(kind, id) { armed = { kind, id }; clearTimeout(armTimer); armTimer = setTimeout(disarm, 3000); renderSongs(); }
+  const isArmed = (kind, id) => !!armed && armed.kind === kind && armed.id === id;
+
+  function loadSong(id) {
+    const e = songById(id);
+    if (!e) return;
+    if (song.loaded && !isSaved() && !isArmed('load', id)) {
+      arm('load', id);
+      setInfo('The song on the keyboard isn’t saved: loading replaces it. Tap again to load.');
+      return;
+    }
+    disarm();
+    const d = JSON.parse(JSON.stringify(e.data));
+    song.name = d.name || ''; song.bars = d.bars || 0; song.chords = d.chords || []; song.variations = d.variations || [];
+    song.settings = Object.assign(defaults(), d.settings);
+    song.introChord = d.introChord; song.endingChord = d.endingChord;
+    song.loaded = true;
+    starts = d.starts || {}; ends = d.ends || {};
+    savedId = id;
+    edit.open = false; edit.section = null; edit.pass = 0; edit.bar = 0; edit.beat = 0;
+    render();
+    if (sendSong()) setInfo(`Loaded “${song.name || DEFAULT_NAME}” and sent it to the keyboard.`);
+  }
+  function deleteSong(id) {
+    if (!isArmed('del', id)) { arm('del', id); return; }
+    savedSongs = songs().filter((e) => e.id !== id);
+    if (savedId === id) savedId = null;
+    disarm();
+    storeSongs();
+    render();
+  }
+
+  function renderSongs() {
+    const cur = isSaved() ? savedId : null;
+    $('song-save-new').disabled = !song.loaded;
+    $('song-save-quick').disabled = !!cur;           // greyed out: nothing changed since it was saved
+    $('song-save-quick').title = cur ? 'Saved on this device' : 'Save the song on this device';
+    const day = (ms) => new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    $('song-list').innerHTML = songs().map((e) => {
+      const d = e.data || {}, load = isArmed('load', e.id), del = isArmed('del', e.id);
+      return `<div class="row song-row${e.id === cur ? ' cur' : ''}${load ? ' arm' : ''}" data-id="${esc(e.id)}" ` +
+        `title="${esc(d.name || DEFAULT_NAME)}: ${d.bars || 0} bars, saved ${esc(day(e.saved))}">` +
+        `<span class="name">${esc(d.name || DEFAULT_NAME)}</span>` +
+        `<span class="song-meta">${load ? 'tap again' : `${d.bars || 0} bars`}</span>` +
+        `<span class="song-del${del ? ' armed' : ''}" role="button" aria-label="Delete">${del ? 'Delete?' : '✕'}</span></div>`;
+    }).join('') || '<div class="empty">No saved songs yet. GET the song from the keyboard, then tap the save icon next to its name.</div>';
+  }
+
+  function initSongs() {
+    const showPane = (pane) => {
+      $('pane-tones').hidden = pane !== 'tones';
+      $('pane-songs').hidden = pane !== 'songs';
+    };
+    $('side-tabs').addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      Array.prototype.forEach.call($('side-tabs').children, (x) => x.classList.toggle('on', x === b));
+      showPane(b.dataset.pane);
+    });
+    // The gear swaps the left column for the MIDI settings (port, channel), which are seldom changed.
+    const setGear = (open) => {
+      $('side-gear').classList.toggle('on', open); $('side-gear').setAttribute('aria-pressed', String(open));
+      $('pane-settings').hidden = !open; $('side-tabs').hidden = open;
+      if (open) showPane(null); else showPane($('side-tabs').querySelector('.on').dataset.pane);
+    };
+    $('side-gear').onclick = () => setGear($('pane-settings').hidden);
+    $('settings-close').onclick = () => setGear(false);
+    // The ⋯ menu by the song name: Rename, Save as new, CSV, Transpose. Transpose keeps it open; the rest close it.
+    const setMenu = (open) => { $('song-menu').hidden = !open; $('song-more').setAttribute('aria-expanded', String(open)); };
+    $('song-more').onclick = () => setMenu($('song-menu').hidden);
+    $('song-menu').addEventListener('click', (e) => { if (e.target.closest('button.menu-item')) setMenu(false); });
+    document.addEventListener('click', (e) => { if (!$('song-menu').hidden && !e.target.closest('.menu-wrap')) setMenu(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+    $('song-save-new').onclick = () => saveSong(true);
+    $('song-save-quick').onclick = () => saveSong(false);
+    $('song-list').addEventListener('click', (e) => {
+      const row = e.target.closest('.song-row');
+      if (!row) return;
+      if (e.target.closest('.song-del')) deleteSong(row.dataset.id); else loadSong(row.dataset.id);
+    });
+  }
+
   // ------------------------------------------------------------ exports
   function fileBase() {
     const n = (song.name || 'gokeys-chords').replace(/~$/, '').replace(/[^\w#-]+/g, '_').replace(/^_+|_+$/g, '');
@@ -1133,6 +1260,79 @@
     return lines.join('\r\n') + '\r\n';
   }
 
+
+  // Reading one back (Upload chords): the same format. A chord name is root + accidental + type suffix + optional
+  // /bass, e.g. Bbm7/F. Throws an Error with a message for the user when the file isn't one of these.
+  const SUFFIX = {};
+  Object.keys(TYPES).forEach((t) => { SUFFIX[TYPES[t][0]] = +t; });
+  const ACC_BYTE = { '': 0x40, '#': 0x41, b: 0x3F };
+  function parseChord(text) {
+    const m = /^([A-G])([#b]?)(.*?)(?:\/([A-G])([#b]?))?$/.exec(text);
+    if (!m || SUFFIX[m[3]] == null) throw new Error(`Unknown chord “${text}”.`);
+    return { root: LETTERS.indexOf(m[1]), acc: ACC_BYTE[m[2]], type: SUFFIX[m[3]],
+      bass: m[4] ? LETTERS.indexOf(m[4]) : 0, bassAcc: m[4] ? ACC_BYTE[m[5]] : 0x40 };
+  }
+  function parseCsv(text) {
+    const out = { name: '', bars: 0, chords: [], variations: [], settings: defaults(), introChord: null, endingChord: null };
+    const VAR = { 'Variation,1': 1, 'Variation,2': 2, 'Variation,3': 3, 'Variation,4': 4, 'FillIn,Down': 5, 'FillIn,Up': 6 };
+    let division = null, sawFormat = false;
+    text.replace(/^﻿/, '').split(/\r?\n/).forEach((raw) => {
+      const line = raw.trim();
+      if (!line) return;
+      const cells = line.split(','), key = cells[0].toUpperCase(), rest = cells.slice(1).join(',');
+      if (key === 'FORMAT') sawFormat = true;
+      else if (key === 'NAME') out.name = rest.replace(/[^\x20-\x7E]/g, '').trim().slice(0, 32);
+      else if (key === 'INTRO_SW') out.settings.intro = /^on$/i.test(rest);
+      else if (key === 'ENDING_SW') out.settings.ending = /^on$/i.test(rest);
+      else if (key === 'LOOP') out.settings.loop = /^on$/i.test(rest);
+      else if (key === 'TRANSPOSE') out.settings.transpose = Math.max(TRANSPOSE_MIN, Math.min(TRANSPOSE_MAX, parseInt(rest, 10) || 0));
+      else if (key === 'DIVISION') {
+        division = rest;
+        if (/^Intro,/i.test(rest)) out.settings.introLong = /,Long$/i.test(rest);
+        else if (/^Ending,/i.test(rest)) out.settings.endingLong = /,Long$/i.test(rest);
+        else if (VAR[rest]) out.variations.push({ bar: out.bars, value: VAR[rest] });
+      } else if (key === 'CHORD') {
+        const bars = cells.slice(2);
+        if (/^(Intro|Ending),/i.test(division || '')) {           // one cell: the section's chord (empty = none)
+          const c = bars[0] && bars[0].trim() ? parseChord(bars[0].trim().split(/\s+/)[0]) : null;
+          out[/^Intro/i.test(division) ? 'introChord' : 'endingChord'] = c;
+          division = null;
+          return;
+        }
+        bars.forEach((cell) => {
+          cell.trim().split(/\s+/).forEach((tok, beat) => {
+            if (!tok || tok === ':') return;
+            if (beat >= BEATS) throw new Error(`Bar ${out.bars + 1} has more than ${BEATS} beats.`);
+            out.chords.push(Object.assign({ bar: out.bars, beat }, parseChord(tok)));
+          });
+          out.bars++;
+        });
+        division = null;
+      }
+    });
+    if (!sawFormat || !out.bars) throw new Error('This isn’t a GO:KEYS chord pattern file (FORMAT and CHORD lines are missing).');
+    if (out.bars > MAX_BARS) throw new Error(`The file has ${out.bars} bars; the keyboard takes up to ${MAX_BARS}.`);
+    if (out.settings.ending) out.settings.loop = false;
+    return out;
+  }
+  // Upload chords: replaces the song on the page and on the keyboard, like loading a saved song.
+  function uploadCsv(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let d;
+      try { d = parseCsv(String(reader.result)); } catch (e) { setInfo(`Couldn’t read ${file.name}: ${e.message}`); return; }
+      Object.assign(song, { name: d.name, bars: d.bars, chords: d.chords, variations: d.variations, settings: d.settings,
+        introChord: d.introChord, endingChord: d.endingChord, loaded: true });
+      markersFromSong();
+      savedId = matchingSaved();
+      edit.open = false; edit.section = null; edit.pass = 0; edit.bar = 0; edit.beat = 0;
+      render();
+      if (sendSong()) setInfo(`Loaded ${file.name} and sent it to the keyboard.`);
+    };
+    reader.onerror = () => setInfo(`Couldn’t read ${file.name}.`);
+    reader.readAsText(file);
+  }
+
   // a[download] works in Chrome (the MIDI Charmer plugin's web view has no downloads).
   function download(name, type, data) {
     const url = URL.createObjectURL(new Blob([data], { type }));
@@ -1174,9 +1374,12 @@
       if (e.key === 'Escape') closeRename();
     };
     initEditor();
+    initSongs();
     watchUserScroll();
     $('chords-play').onclick = togglePlay;
     $('dl-txt').onclick = () => download(`${fileBase()}.csv`, 'text/csv', csvText());
+    $('ul-txt').onclick = () => { $('ul-file').value = ''; $('ul-file').click(); };
+    $('ul-file').onchange = (e) => { const f = e.target.files && e.target.files[0]; if (f) uploadCsv(f); };
     $('tr-down').onclick = () => setSetting('transpose', Math.max(TRANSPOSE_MIN, song.settings.transpose - 1));
     $('tr-up').onclick = () => setSetting('transpose', Math.min(TRANSPOSE_MAX, song.settings.transpose + 1));
     $('set-loop').onclick = () => setSetting('loop', !song.settings.loop);

@@ -17,7 +17,8 @@ A Web MIDI page for the Roland GO:KEYS 3/5. It lists the keyboard's thousand+ to
 - Tap a beat to edit it. Use computer keyboard to type chords.
 - Repeats: set |: and :| on bars and the repeated bars are written out on the keyboard, while the page shows them once.
 - Insert and delete bars, rename the song, clear the chart back to the keyboard's initial pattern.
-- Download the song as a CSV in the keyboard's own chord-pattern format (the CHORDnnn.CSV files of a USB backup).
+- Save songs on this device (SONGS tab in the left column) and load them back; loading sends the song to the keyboard. Saved songs keep their repeat signs.
+- Download the song as a CSV in the keyboard's own chord-pattern format (the CHORDnnn.CSV files of a USB backup), or upload one to load it and send it to the keyboard.
 
 ## Setup
 
