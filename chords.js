@@ -217,7 +217,7 @@
   function setSetting(key, value) { const c = {}; c[key] = value; setSettings(c); }
   function setSettings(changes) {
     if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
-    if (!song.loaded) { setInfo('Read the chords from the keyboard first.'); return; }
+    if (!song.loaded) { setInfo('Press GET to read the chords from the keyboard first.'); return; }
     const keys = Object.keys(changes).filter((key) => song.settings[key] !== changes[key]);
     if (!keys.length) return;
     if (!connected) connectApp();
@@ -282,18 +282,23 @@
     $('tr-down').disabled = off || st.transpose <= TRANSPOSE_MIN;
     $('tr-up').disabled = off || st.transpose >= TRANSPOSE_MAX;
     const loop = !off && st.loop;
-    $('set-loop').classList.toggle('on', loop); $('set-loop').textContent = loop ? 'ON' : 'OFF';
+    $('set-loop').classList.toggle('on', loop); $('set-loop').setAttribute('aria-pressed', loop ? 'true' : 'false');
     $('set-loop').disabled = off || st.ending;                    // a song with an ending doesn't loop
     $('set-loop').title = st.ending ? 'Turn the ending off to loop the song' : '';
     ['intro', 'ending'].forEach((sec) => {
-      const v = off ? null : !st[sec] ? 'off' : length(st[`${sec}Long`]);
-      $(`seg-${sec}`).querySelectorAll('button').forEach((b) => { b.classList.toggle('on', b.dataset.v === v); });
+      const v = off || !st[sec] ? null : length(st[`${sec}Long`]);
+      $(`seg-${sec}`).querySelectorAll('button').forEach((b) => {
+        b.classList.toggle('on', b.dataset.v === v); b.setAttribute('aria-pressed', b.dataset.v === v ? 'true' : 'false');
+      });
     });
   }
 
+  // The intro and the ending have one chord each: tap it to edit it.
   function sectionBox(key, label, long) {
+    const c = song[`${key}Chord`], sel = edit.open && edit.section === key ? ' sel' : '';
     return `<div class="bar section" data-bar="${key}"><div class="bar-head"><span class="bar-num">${label}</span>` +
-      `<span class="bar-var">${length(long)}</span></div><div class="beats"><span class="beat held">${label}</span></div></div>`;
+      `<span class="bar-var">${length(long)}</span></div><div class="beats one"><button class="beat${c ? '' : ' held'}${sel}" type="button" ` +
+      `data-section="${key}" aria-label="${label} chord">${c ? esc(chordName(c)) : '·'}</button></div></div>`;
   }
 
   function render() {
@@ -302,26 +307,37 @@
     $('chords-title').hidden = !song.loaded || !$('name-form').hidden;
     if (!song.loaded) $('name-form').hidden = true;
     $('dl-txt').disabled = !song.loaded || !song.chords.length;
+    $('chords-send').disabled = !song.loaded || !song.bars;
     if (!song.loaded) { $('bars').innerHTML = ''; return; }
     if (!song.bars) { $('bars').innerHTML = '<div class="fav-empty">The song on the keyboard has no bars.</div>'; return; }
     const st = song.settings;
     // Intro and ending get rows of their own, above and below the song's bars.
     const row = (html) => `<div class="bars-grid">${html}</div>`;
     computeView();
-    const marks = repeatMarks(view.repeats);
+    const marks = repeatMarks(view.repeats), styles = barStyles();
     $('bars').innerHTML = (st.intro ? row(sectionBox('intro', 'INTRO', st.introLong)) : '') + row(byBar().map((bar, b) => {
       if (view.hidden[b]) return '';
       const beats = [];
       for (let k = 0; k < BEATS; k++) {
         const c = bar.chords.find((x) => x.beat === k);
-        const sel = edit.open && edit.bar === b && edit.beat === k ? ' sel' : '';
+        const sel = edit.open && !edit.section && edit.bar === b && edit.beat === k ? ' sel' : '';
         beats.push(`<button class="beat${c ? '' : ' held'}${sel}" type="button" data-bar="${b}" data-beat="${k}">${c ? esc(c.name) : '·'}</button>`);
       }
       const mk = marks[b] || {};
-      const num = (mk.start ? '<span class="rep-mark">|:</span> ' : '') + view.number[b] +
-        (mk.end != null ? ` <span class="rep-mark">:|${mk.end ? ` ${mk.end}` : ''}</span><span class="rep-pass" data-end="${b}"></span>` : '');
-      return `<div class="bar" data-bar="${b}"><div class="bar-head"><span class="bar-num">${num}</span>` +
-        `${bar.variation ? `<span class="bar-var">${esc(bar.variation)}</span>` : ''}</div>` +
+      const num = view.number[b];
+      const r = activeRepeatAt(b);
+      // The repeat signs are drawn on the bar's left and right edges (rep-open, rep-close in style.css).
+      // A sign with no partner is grey.
+      const loneOpen = !!mk.start && !view.repeats.some((x) => x.start === b);
+      const loneClose = mk.end != null && !view.repeats.some((x) => x.start + x.len - 1 === b);
+      const signs = (mk.start ? ' rep-open' : '') + (mk.end != null ? ' rep-close' : '') +
+        (loneOpen ? ' lone-open' : '') + (loneClose ? ' lone-close' : '');
+      // Upper right: the bar's variation (bars in a repeat list theirs per pass, beside the number), the times played
+      // and the pass being played.
+      const right = (bar.variation && !r && !sameAsBarBefore(styles, b) ? `<span class="bar-var">${esc(bar.variation)}</span>` : '') +
+        (mk.end != null ? `<span class="rep-end">${mk.end ? `<span class="rep-mark">${mk.end}</span>` : ''}<span class="rep-pass" data-end="${b}"></span></span>` : '');
+      return `<div class="bar${signs}" data-bar="${b}"${loneOpen || loneClose ? ' title="This repeat sign has no partner"' : ''}><div class="bar-head"><span class="bar-num">${num}</span>` +
+        `${r ? passStyles(b, r, styles) : ''}<span class="bar-right">${right}</span></div>` +
         `<div class="beats">${beats.join('')}</div></div>`;
     }).join('') + '<button class="bar add-bar" type="button" id="add-bar" title="Add a bar at the end">+ bar</button>') +
       (st.ending ? row(sectionBox('ending', 'ENDING', st.endingLong)) : '');
@@ -329,8 +345,44 @@
     renderEditor();
   }
 
+  // What each song bar plays: { value, own } (own = the bar has its own entry, otherwise the variation carries on from
+  // an earlier bar), or null when it isn't known: before the first entry, and after a fill until the next entry.
+  function barStyles() {
+    const entry = {}, out = [];
+    song.variations.forEach((v) => { entry[v.bar] = v.value; });
+    let cur = null;
+    for (let b = 0; b < song.bars; b++) {
+      if (entry[b]) { cur = entry[b]; out.push({ value: cur, own: true }); continue; }
+      if (cur > 4) cur = null;
+      out.push(cur ? { value: cur, own: false } : null);
+    }
+    return out;
+  }
+
+  // The bar plays the same variation as the bar before it, so its label can be left out. A fill is never the same:
+  // each one is played again.
+  function sameAsBarBefore(styles, bar) {
+    if (!bar) return false;
+    const s = styles[bar], before = styles[bar - 1];
+    return s ? !!before && s.value <= 4 && s.value === before.value : !before;
+  }
+
+  // One label per pass of a repeated bar: "1 Var 1   2 Fill Up". The repeat's first bar always shows how each pass
+  // starts; later bars only show the passes that change.
+  function passStyles(bar, r, styles) {
+    let html = '';
+    for (let k = 0; k < r.times; k++) {
+      const s = styles[bar + k * r.len];
+      if (bar !== r.start && sameAsBarBefore(styles, bar + k * r.len)) continue;
+      const sel = edit.open && !edit.section && edit.bar === bar && editPass() === k ? ' sel' : '';
+      html += `<span class="pass-var${s && s.own ? ' own' : ''}${sel}" data-pass="${k}"><b>${k + 1}</b> ${s ? esc(VARIATIONS[s.value] || `Var ${s.value}`) : '—'}</span>`;
+    }
+    return html ? `<div class="bar-passes">${html}</div>` : '';
+  }
+
   function markBar() {
     $('bars').querySelectorAll('.bar.now').forEach((el) => el.classList.remove('now'));
+    $('bars').querySelectorAll('.pass-var.play').forEach((el) => el.classList.remove('play'));
     if (!play.playing || play.bar == null) { followed = null; return; }
     $('bars').querySelectorAll('.rep-pass').forEach((el) => { el.textContent = ''; });
     const at = shownBar(play.bar);
@@ -339,6 +391,8 @@
     if (at.r) {
       const p = $('bars').querySelector(`.rep-pass[data-end="${at.r.start + at.r.len - 1}"]`);
       if (p) p.textContent = ` ${at.pass}/${at.r.times}`;
+      const pv = el && el.querySelector(`.pass-var[data-pass="${at.pass - 1}"]`);
+      if (pv) pv.classList.add('play');
     }
     if (el && play.bar !== followed) { followed = play.bar; follow(el); }
   }
@@ -373,17 +427,23 @@
   // ignored. Greedy from the start: at each bar take the block covering the most bars (shorter block on a tie).
   // That only fills in the markers when a song is read. After that the markers are the user's: each bar can carry
   // |: (repeat start) and :| (repeat end); a |: followed by a :| makes the bars between them a repeat. Its passes are
-  // the identical written-out copies that follow it on the keyboard; a new pair with no copy yet gets one written out.
+  // the written-out copies with the same chords that follow it on the keyboard; a new pair with no copy yet gets one
+  // written out. Chords are shared by all passes, but each pass keeps its own variations and fills.
   const MIN_REPEAT = 4, MAX_REPEAT = 32;
   let starts = {}, ends = {};                       // song bar -> true
   function markersFromSong() {
     starts = {}; ends = {};
     findRepeats().forEach((r) => { starts[r.start] = true; ends[r.start + r.len - 1] = true; });
   }
-  // Marker pairs -> repeats { start, len, times }; times counts the identical copies on the keyboard.
+  // Marker pairs -> repeats { start, len, times }; times counts the copies on the keyboard. For a pair the user marked,
+  // a copy matches if it sounds the same or is written the same: a section that starts on a held chord looks identical
+  // to its copy even though a different chord is held into each.
   function markedRepeats() {
-    const sig = barSignatures(), out = [];
-    const same = (a, b, len) => { for (let i = 0; i < len; i++) if (sig[a + i] !== sig[b + i]) return false; return true; };
+    const sig = barSignatures(), written = barEntries(), out = [];
+    const same = (a, b, len) => {
+      for (let i = 0; i < len; i++) if (sig[a + i] !== sig[b + i] && written[a + i] !== written[b + i]) return false;
+      return true;
+    };
     let open = null;
     for (let b = 0; b < song.bars; b++) {
       if (starts[b]) open = b;
@@ -412,6 +472,18 @@
     starts = move(starts); ends = move(ends);
   }
 
+  const chordSound = (c) => [c.root, c.acc, c.type, c.bass, c.bass ? c.bassAcc : 0].join('.');
+
+  // The chord changes written in each bar, as the grid shows them.
+  function barEntries() {
+    const out = [];
+    for (let b = 0; b < song.bars; b++) out.push('');
+    song.chords.forEach((c) => {
+      if (c.bar < song.bars) out[c.bar] += `${[c.beat, c.root, c.acc, c.type, c.bass, c.bass ? c.bassAcc : 0].join('.')}|`;
+    });
+    return out;
+  }
+
   function barSignatures() {
     const sigs = [], chords = song.chords;
     let k = 0, cur = '-';
@@ -420,7 +492,7 @@
       for (let beat = 0; beat < BEATS; beat++) {
         while (k < chords.length && (chords[k].bar < b || (chords[k].bar === b && chords[k].beat <= beat))) {
           const c = chords[k++];
-          cur = [c.root, c.acc, c.type, c.bass, c.bass ? c.bassAcc : 0].join('.');
+          cur = chordSound(c);
         }
         beats.push(cur);
       }
@@ -471,6 +543,11 @@
     for (let k = 0; k < r.times; k++) out.push(bar + k * r.len);
     return out;
   }
+  // A song bar as the user reads it: "3" on the first pass, "3+8" on the second, "3+16" on the third.
+  function passLabel(bar) {
+    const at = shownBar(bar), n = view.number[at.bar];
+    return at.r && at.pass > 1 ? `${n}+${(at.pass - 1) * at.r.len}` : String(n);
+  }
 
   // bar -> { start: '|:', end: ':| ×n', copy: true } for the repeats that are on.
   function repeatMarks(repeats) {
@@ -495,7 +572,18 @@
   const TYPE_BUTTONS = [0x01, 0x02, 0x03, 0x13, 0x14, 0x05, 0x09];
   const TYPE_MORE = TYPE_ORDER.filter((t) => TYPE_BUTTONS.indexOf(t) < 0);
   const BAR_STYLES = [[0, '—'], [1, 'Var 1'], [2, 'Var 2'], [3, 'Var 3'], [4, 'Var 4'], [6, 'Fill Up'], [5, 'Fill Down']];
-  const edit = { open: false, bar: 0, beat: 0 };
+  // pass: which pass of a repeat the BAR row edits (0 = first). section: 'intro' / 'ending' while editing that chord.
+  const edit = { open: false, bar: 0, beat: 0, pass: 0, section: null };
+  const editedChord = () => (edit.section ? song[`${edit.section}Chord`] : chordAt(edit.bar, edit.beat));
+  function editPass() {
+    const r = activeRepeatAt(edit.bar);
+    return r ? Math.min(edit.pass, r.times - 1) : 0;
+  }
+  // The song bar the BAR row edits: the selected bar on the selected pass.
+  function styleBar() {
+    const at = shownBar(edit.bar);
+    return at.r ? at.bar + editPass() * at.r.len : edit.bar;
+  }
 
   const chordAt = (bar, beat) => song.chords.find((c) => c.bar === bar && c.beat === beat) || null;
   // The chord sounding at a position (the last change at or before it), for defaults.
@@ -520,6 +608,7 @@
   // Set (or with c = null delete) the chord at the selected beat.
   // A bar inside a shown repeat stands for all its passes, so the change goes to every pass (the repeat stays).
   function putChord(c) {
+    if (edit.section) { putSectionChord(c); return; }
     const beat = edit.beat;
     for (const bar of passesOf(edit.bar)) {
       const entry = c ? [bar >> 7, bar & 0x7F, beat, c.root, c.acc, c.type >> 7, c.type & 0x7F, c.bass, c.bassAcc]
@@ -532,9 +621,20 @@
     render();
   }
 
+  // Set (or with c = null clear) the intro or ending chord, the way Chord Director does: 02 14 / 03 42 or 43 / 02 18.
+  function putSectionChord(c) {
+    if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
+    if (!connected) connectApp();
+    enqueue([dt1([0x01, 0x00, 0x02, 0x14], [0, 0, 0, 0]), dt1([0x01, 0x00, 0x03, edit.section === 'intro' ? 0x42 : 0x43], chordBytes(c)),
+      dt1([0x01, 0x00, 0x02, 0x18], [0, 0, 0, 0])]);
+    lastAlive = performance.now();
+    song[`${edit.section}Chord`] = c ? { root: c.root, acc: c.acc, type: c.type, bass: c.bass, bassAcc: c.bassAcc } : null;
+    render();
+  }
+
   // Change one part of the chord at the selected beat; an empty beat starts from the chord sounding there.
   function changeChord(part, value) {
-    const base = chordAt(edit.bar, edit.beat) || chordInEffect(edit.bar, edit.beat) || { root: 3, acc: 0x40, type: 1, bass: 0, bassAcc: 0x40 };
+    const base = editedChord() || (edit.section ? null : chordInEffect(edit.bar, edit.beat)) || { root: 3, acc: 0x40, type: 1, bass: 0, bassAcc: 0x40 };
     const c = { root: base.root, acc: base.acc, type: base.type, bass: base.bass, bassAcc: base.bassAcc };
     if (part === 'root') { const n = storedNote(value); c.root = n[0]; c.acc = n[1]; }
     if (part === 'acc') {                                          // sharp / flat on the root's letter; again = natural
@@ -552,16 +652,16 @@
 
   // A variation that is already playing when the bar starts (the last entry before it is the same variation) is not
   // written again: the bar is left without an entry (an entry it had is removed). After a fill the variation that
-  // follows isn't known here, so it is written.
+  // follows isn't known here, so it is written. Only the selected pass of a repeat changes.
   function setBarStyle(value) {
-    const bar = edit.bar;
+    const bar = styleBar();
     if (value >= 1 && value <= 4) {
       let prev = null;
       song.variations.forEach((v) => { if (v.bar < bar && (!prev || v.bar > prev.bar)) prev = v; });
       if (prev && prev.value === value) {
         const had = song.variations.some((v) => v.bar === bar);
         if (had) setBarStyle(0);
-        setInfo(`${VARIATIONS[value]} is already set from bar ${view.number[prev.bar] || prev.bar + 1}${had ? ': this bar\u2019s entry was removed' : ', nothing sent'}.`);
+        setInfo(`${VARIATIONS[value]} is already set from bar ${passLabel(prev.bar)}${had ? ': this bar\u2019s entry was removed' : ', nothing sent'}.`);
         return;
       }
     }
@@ -616,22 +716,117 @@
   }
   function deleteBar(at) {
     if (song.bars <= 1) return;
+    // A repeat that loses a sign also loses its written-out copies; the other sign stays, grey.
+    const pair = markedRepeats().find((r) => r.start === at || r.start + r.len - 1 === at);
+    if (pair && pair.times >= 2) {
+      dropCopies(pair);
+      if (pair.start === at) ends[pair.start + pair.len - 1] = true;
+      if (pair.start + pair.len - 1 === at) starts[pair.start] = true;
+    }
     shiftMarkers(at, -1);
     song.chords = song.chords.filter((c) => c.bar !== at);
     song.variations = song.variations.filter((v) => v.bar !== at);
     const shift = (x) => { if (x.bar > at) x.bar -= 1; };
     song.chords.forEach(shift); song.variations.forEach(shift);
     song.bars -= 1;
-    if (sendSong()) { edit.bar = Math.min(at, song.bars - 1); edit.beat = 0; render(); }
+    // The sign left behind may now pair with a grey sign: that new repeat needs its copy on the keyboard.
+    const lostStart = !!pair && pair.start === at, kept = pair && (lostStart ? pair.start + pair.len - 2 : pair.start);
+    const formed = pair && pair.len > 1 && markedRepeats().find((x) => x.times === 1 && (lostStart ? x.start + x.len - 1 === kept : x.start === kept));
+    if (formed) writeOutRepeat(formed);
+    if (formed ? send : sendSong()) { edit.bar = Math.min(at, song.bars - 1); edit.beat = 0; render(); }
   }
 
   // Toggle |: or :| on the selected bar. A pair that isn't repeated on the keyboard yet gets its copy written out
-  // (the bars are inserted after the :| and the whole song is resent). Removing a marker keeps the bars.
+  // (the bars are inserted after the :| and the whole song is resent). Removing a marker leaves its partner, grey, and
+  // removes the repeat's written-out copies, so the grid doesn't change: the first pass stays.
+  // Shrink repeat r to bars from..to of its first pass, as the signs now read: the bars before them play once, then
+  // from..to play r.times times (each pass keeps its own variations), then the bars after them play once. The bars of
+  // the old copies outside from..to are dropped and the whole song is resent. What sounds on each kept bar stays the
+  // same: a chord or variation that used to carry over from a dropped bar is written on the bar.
+  function reshapeRepeat(r, from, to) {
+    const oldEnd = r.start + r.times * r.len, order = [];
+    for (let b = 0; b < from; b++) order.push(b);
+    for (let k = 0; k < r.times; k++) for (let b = from; b <= to; b++) order.push(b + k * r.len);
+    for (let b = to + 1; b < r.start + r.len; b++) order.push(b);
+    for (let b = oldEnd; b < song.bars; b++) order.push(b);
+    reorderBars(order, r);
+    starts[from] = true; ends[to] = true;
+    if (sendSong()) setInfo(`Repeat changed: the song is now ${song.bars} bars.`);
+  }
+  // Take repeat r apart: its signs and written-out copies go, its first pass stays. The caller sends the song.
+  function dropCopies(r) {
+    const order = [];
+    for (let b = 0; b < r.start + r.len; b++) order.push(b);
+    for (let b = r.start + r.times * r.len; b < song.bars; b++) order.push(b);
+    reorderBars(order, r);
+  }
+  // Rebuild the song from the old bars listed in order. The signs of repeat r, and any others inside it, are dropped.
+  function reorderBars(order, r) {
+    const oldEnd = r.start + r.times * r.len;
+    const oldStyles = barStyles(), chords = [], variations = [];
+    let style = null;
+    order.forEach((old, bar) => {
+      const here = song.chords.filter((c) => c.bar === old);
+      if (!here.some((c) => c.beat === 0)) {
+        const held = chordInEffect(old, 0), before = chords[chords.length - 1];
+        if (held && (!before || chordSound(held) !== chordSound(before))) chords.push(Object.assign({}, held, { bar, beat: 0 }));
+      }
+      here.forEach((c) => chords.push(Object.assign({}, c, { bar })));
+      const v = song.variations.find((x) => x.bar === old && x.value), want = oldStyles[old];
+      if (style > 4) style = null;
+      if (v) { variations.push({ bar, value: v.value }); style = v.value; }
+      else if (want && want.value !== style) { variations.push({ bar, value: want.value }); style = want.value; }
+    });
+
+    const delta = order.length - song.bars;
+    const moveSigns = (m) => {
+      const out = {};
+      Object.keys(m).forEach((k) => { const b = +k; if (b < r.start) out[b] = true; else if (b >= oldEnd) out[b + delta] = true; });
+      return out;
+    };
+    starts = moveSigns(starts); ends = moveSigns(ends);
+    song.chords = chords; song.variations = variations; song.bars = order.length;
+  }
+  // The repeat whose sign a new sign on the selected bar replaces: the repeat the bar is inside. Outside a repeat a new
+  // sign does nothing until it has a partner.
+  function repeatToMove(set) {
+    const bar = edit.bar, isStart = set === starts, last = (x) => x.start + x.len - 1;
+    return markedRepeats().find((x) => (isStart ? bar > x.start && bar <= last(x) : bar >= x.start && bar < last(x))) || null;
+  }
   function toggleMarker(set) {
-    if (set[edit.bar]) delete set[edit.bar]; else set[edit.bar] = true;
+    if (set[edit.bar]) {
+      const pair = markedRepeats().find((x) => (set === starts ? x.start : x.start + x.len - 1) === edit.bar);
+      const isStart = set === starts;
+      delete set[edit.bar];
+      const dropped = !!pair && pair.times >= 2;
+      if (dropped) {
+        dropCopies(pair);
+        if (isStart) ends[pair.start + pair.len - 1] = true; else starts[pair.start] = true;   // the partner stays, grey
+      }
+      // The partner may now pair with a grey sign: that makes a new repeat, which needs its copy on the keyboard.
+      const formed = pair && markedRepeats().find((x) => x.times === 1 && (isStart ? x.start + x.len === pair.start + pair.len : x.start === pair.start));
+      if (formed) writeOutRepeat(formed);
+      else if (dropped && sendSong()) setInfo(`Repeat removed: the song is now ${song.bars} bars.`);
+      render();
+      return;
+    }
+    const moved = repeatToMove(set);
+    if (moved) {
+      const last = moved.start + moved.len - 1;
+      if (moved.times >= 2) {                        // the repeat gets smaller: its copies are rebuilt to match
+        reshapeRepeat(moved, set === starts ? edit.bar : moved.start, set === starts ? last : edit.bar);
+        render();
+        return;
+      }
+      delete set[set === starts ? moved.start : last];   // the sign moves here; no bars are added
+      set[edit.bar] = true;
+      render();
+      return;
+    }
+    set[edit.bar] = true;
     const r = markedRepeats().find((x) => x.times === 1 && edit.bar >= x.start && edit.bar < x.start + x.len &&
       (x.start === edit.bar || x.start + x.len - 1 === edit.bar));
-    if (r && set[edit.bar]) writeOutRepeat(r);
+    if (r) writeOutRepeat(r);
     render();
   }
   function writeOutRepeat(r) {
@@ -655,7 +850,11 @@
   }
 
   function select(bar, beat) {
-    edit.open = true; edit.bar = bar; edit.beat = beat;
+    edit.open = true; edit.section = null; edit.bar = bar; edit.beat = beat;
+    render();
+  }
+  function selectSection(key) {
+    edit.open = true; edit.section = key;
     render();
   }
   function stepBeat(dir) {
@@ -674,14 +873,25 @@
   }
 
   function renderEditor() {
-    const panel = $('chord-editor');
-    panel.hidden = !(edit.open && song.loaded && edit.bar < song.bars);
+    const panel = $('chord-editor'), sec = edit.section;
+    if (sec && !song.settings[sec]) { edit.section = null; edit.open = false; }   // that section was just turned off
+    panel.hidden = !(edit.open && song.loaded && (edit.section || edit.bar < song.bars));
     if (panel.hidden) return;
-    const c = chordAt(edit.bar, edit.beat), eff = c || chordInEffect(edit.bar, edit.beat);
-    $('ed-pos').textContent = `Bar ${view.number[edit.bar] || edit.bar + 1} · Beat ${edit.beat + 1}`;
-    $('ed-chord').textContent = c ? chordName(c) : eff ? `hold (${chordName(eff)})` : 'hold';
+    panel.classList.toggle('section', !!sec);                     // only the chord rows apply to the intro and ending
+    const c = editedChord(), eff = c || (sec ? null : chordInEffect(edit.bar, edit.beat));
+    $('ed-pos').textContent = sec ? (sec === 'intro' ? 'Intro' : 'Ending') : `Bar ${passLabel(styleBar())} · Beat ${edit.beat + 1}`;
+    $('ed-hold').textContent = sec ? 'NONE' : 'HOLD';
+    $('ed-hold').title = sec ? 'No chord in this section' : 'No chord change on this beat: the previous chord continues';
     const bassPc = c ? (c.bass ? soundingPc(c.bass, c.bassAcc) : -1) : null;
     const btn = (attr, v, label, on) => `<button class="btn ed${on ? ' on' : ''}" type="button" data-${attr}="${v}">${esc(label)}</button>`;
+    // A repeated bar is played once per pass: 1, 2, 3... The BAR row edits the pass picked here.
+    const rep = sec ? null : activeRepeatAt(edit.bar);
+    $('ed-pass-row').hidden = !rep;
+    if (rep) {
+      let passes = '';
+      for (let k = 0; k < rep.times; k++) passes += btn('pass', k, String(k + 1), k === editPass());
+      $('ed-pass').innerHTML = passes;
+    }
     // Root: the seven letters plus sharp and flat (no E#, B#, Cb, Fb). The accidental buttons act on the chord at this
     // beat, or on the one sounding there if the beat is a hold.
     const rootName = eff ? spell(eff.root, eff.acc) : null, letter = rootName ? rootName[0] : 'C';
@@ -698,7 +908,7 @@
     $('ed-type-more').value = more ? String(c.type) : '';
     $('ed-bass').innerHTML = '<option value="-1">none</option>' + ROOT_NAMES.map((n, pc) => `<option value="${pc}">/${n}</option>`).join('');
     $('ed-bass').value = String(bassPc == null ? -1 : bassPc);
-    const v = song.variations.find((x) => x.bar === edit.bar);
+    const styled = styleBar(), v = song.variations.find((x) => x.bar === styled);
     $('ed-style').innerHTML = BAR_STYLES.map(([val, label]) => btn('style', val, label, (v ? v.value : 0) === val)).join('');
     $('ed-hold').classList.toggle('on', !c);
     $('ed-rep-start').classList.toggle('on', !!starts[edit.bar]);
@@ -716,16 +926,18 @@
     $('bars').addEventListener('click', (e) => {
       if (e.target.closest('#add-bar')) { insertBar(song.bars); return; }
       const b = e.target.closest('button.beat');
-      if (b) select(+b.dataset.bar, +b.dataset.beat);
+      if (b && b.dataset.section) selectSection(b.dataset.section);
+      else if (b) select(+b.dataset.bar, +b.dataset.beat);
     });
     $('chord-editor').addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b || b.disabled) return;
-      if (b.dataset.root != null) changeChord('root', +b.dataset.root);
+      if (b.dataset.pass != null) { edit.pass = +b.dataset.pass; render(); }
+      else if (b.dataset.root != null) changeChord('root', +b.dataset.root);
       else if (b.dataset.acc != null) changeChord('acc', +b.dataset.acc);
       else if (b.dataset.type != null) changeChord('type', +b.dataset.type);
       else if (b.dataset.style != null) setBarStyle(+b.dataset.style);
-      else if (b.id === 'ed-hold') { if (chordAt(edit.bar, edit.beat)) putChord(null); }
+      else if (b.id === 'ed-hold') { if (editedChord()) putChord(null); }
       else if (b.id === 'ed-prev') stepBeat(-1);
       else if (b.id === 'ed-next') stepBeat(1);
       else if (b.id === 'ed-prev-bar') stepBar(-1);
@@ -811,6 +1023,7 @@
   function init(opts) {
     status = opts.status || status;
     $('chords-read').onclick = request;
+    $('chords-send').onclick = () => { if (song.loaded && song.bars && sendSong()) setInfo('Sent the song to the keyboard.'); };
     // Rename: the keyboard stores 32 ASCII characters; sent with the whole song (Chord Director only sends the name
     // that way). Save sends it; Enter saves too, Escape cancels (desktop).
     const nameEl = $('chords-name');
@@ -843,15 +1056,15 @@
     $('tr-down').onclick = () => setSetting('transpose', Math.max(TRANSPOSE_MIN, song.settings.transpose - 1));
     $('tr-up').onclick = () => setSetting('transpose', Math.min(TRANSPOSE_MAX, song.settings.transpose + 1));
     $('set-loop').onclick = () => setSetting('loop', !song.settings.loop);
-    // OFF / SHORT / LONG: on/off is 03 24 / 26, the length 03 25 / 27.
+    // SHORT / LONG: tapping the one that's lit turns the section off. On/off is 03 24 / 26, the length 03 25 / 27.
     ['intro', 'ending'].forEach((sec) => {
       $(`seg-${sec}`).onclick = (e) => {
         const b = e.target.closest('button');
         if (!b) return;
-        const c = {};
-        c[sec] = b.dataset.v !== 'off';
-        if (b.dataset.v !== 'off') c[`${sec}Long`] = b.dataset.v === 'long';
-        if (sec === 'ending' && c.ending) c.loop = false;          // a song with an ending doesn't loop
+        const st = song.settings, c = {};
+        c[sec] = !(st[sec] && length(st[`${sec}Long`]) === b.dataset.v);
+        if (c[sec]) c[`${sec}Long`] = b.dataset.v === 'long';
+        if (sec === 'ending') c.loop = !c.ending;                  // a song with an ending doesn't loop; without one it does
         setSettings(c);
       };
     });

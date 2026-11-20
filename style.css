@@ -182,6 +182,9 @@ body {
 }
 .tab.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
 .chords-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.chords-tools .set { margin-left: 12px; }
+.btn.xfer { display: inline-flex; align-items: center; gap: 5px; letter-spacing: .5px; }
+.btn.xfer svg { flex: none; fill: currentColor; }
 .btn:disabled { opacity: .4; cursor: default; }
 .chords-info { font-size: 12px; color: var(--text-dim); margin: 10px 0 4px; }
 /* Song name: plain title + Rename button; the button opens a visible field with Save / Cancel (no reliance on blur or
@@ -203,6 +206,35 @@ body {
 .bar-head { display: flex; justify-content: space-between; font: 700 10px var(--ui-font); color: #7c808b; letter-spacing: .5px; }
 .bar-var { color: var(--accent-soft); }
 .bar.now .bar-head, .bar.now .bar-var { color: var(--on-accent); }
+/* Repeat signs: a solid line down the whole edge of the bar with two dots beside it. The closing sign is the mirror image. */
+.bar.rep-open, .bar.rep-close { position: relative; --rep: var(--accent); }
+.bar.now.rep-open, .bar.now.rep-close { --rep: var(--on-accent); }
+.bar.lone-open::before, .bar.lone-close::after { --rep: #7c808b; }   /* a sign with no partner */
+.bar.now.lone-open::before, .bar.now.lone-close::after { --rep: #2f6f6b; }
+.bar.rep-open { padding-left: 22px; }
+.bar.rep-close { padding-right: 22px; }
+.bar.rep-open::before, .bar.rep-close::after {
+  content: ""; position: absolute; top: -2px; bottom: -1px; width: 18px; pointer-events: none;
+  background:
+    linear-gradient(var(--rep), var(--rep)) 0 0 / 6px 100% no-repeat,
+    radial-gradient(circle, var(--rep) 3px, transparent 3.6px) 9px calc(50% - 9px) / 8px 8px no-repeat,
+    radial-gradient(circle, var(--rep) 3px, transparent 3.6px) 9px calc(50% + 9px) / 8px 8px no-repeat;
+}
+.bar.rep-open::before { left: -1px; }
+.bar.rep-close::after { right: -1px; -webkit-transform: scaleX(-1); transform: scaleX(-1); }
+.bar-num { flex: none; }
+.bar-right { flex: none; display: flex; align-items: baseline; gap: 8px; margin-left: auto; }
+.rep-end { white-space: nowrap; }
+/* Variation or fill on each pass of a repeat: bright = set on this bar, dim = carried on from an earlier bar. */
+.bar-passes { flex: 0 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: 0 6px; margin: 0 6px; font: 700 10px/14px var(--ui-font); color: #7c808b; }
+.pass-var { padding: 0 3px; border: 1px solid transparent; border-radius: 3px; white-space: nowrap; }
+.pass-var b { color: var(--text-dim); }
+.pass-var.own { color: var(--accent-soft); }
+.pass-var.sel { border-color: var(--accent); }
+.pass-var.play { background: var(--on-accent); color: var(--accent-soft); }
+.bar.now .pass-var { color: var(--on-accent); }
+.bar.now .pass-var b { color: inherit; }
+.bar.now .pass-var.play { color: var(--accent-soft); }
 .beats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
 .beat { font: 16px/26px var(--lcd-font); color: var(--lcd-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Beat cells are buttons, big enough to tap on the iPad. */
@@ -226,13 +258,16 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .set-label { font: 700 10px var(--ui-font); color: var(--text-dim); letter-spacing: .5px; }
 .set-val { min-width: 3ch; text-align: center; font: 16px/30px var(--lcd-font); color: var(--lcd-text); background: var(--lcd); border: 1px solid var(--border); padding: 0 6px; }
 .bar.section { border-top-color: var(--accent-soft); }
-.bar.section .beat { font-family: var(--ui-font); font-size: 12px; letter-spacing: .8px; }
-.seg { display: inline-flex; }
-.seg .btn { border-radius: 0; font-family: var(--lcd-font); letter-spacing: 1px; min-width: 58px; }
-.seg .btn:first-child { border-radius: 3px 0 0 3px; }
-.seg .btn:last-child { border-radius: 0 3px 3px 0; }
-.seg .btn + .btn { margin-left: -1px; }
-.seg .btn.on { background: linear-gradient(#86d6d1, #4aa8a2); border-color: #1d4a47; color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
+.beats.one { grid-template-columns: 1fr; }
+.chord-editor.section .bar-only { display: none; }   /* the intro and ending only have a chord */
+/* Intro, loop and ending as one long pill: SHORT|LONG||LOOP||SHORT|LONG. */
+.set.form { flex-wrap: wrap; }
+.pill { display: inline-flex; border: 1px solid #111; border-radius: 16px; overflow: hidden; }
+.pill-part { display: inline-flex; }
+.pill .btn { border: 0; border-radius: 0; font-family: var(--lcd-font); letter-spacing: 1px; min-width: 58px; }
+.pill-part .btn + .btn { border-left: 1px solid #111; }
+#set-loop { border-left: 5px double #111; border-right: 5px double #111; min-width: 68px; }
+.pill .btn.on { background: linear-gradient(#86d6d1, #4aa8a2); color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
 
 /* Chord editor: docked at the bottom of the Chords tab (sticky, so it stays in view while the grid scrolls). */
 .chord-editor {
@@ -249,11 +284,13 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .ed-select.on { background: linear-gradient(#86d6d1, #4aa8a2); border-color: #1d4a47; color: var(--on-accent); -webkit-text-fill-color: var(--on-accent); }
 .ed-label.ed-inline { width: auto; margin-left: 12px; }
 .ed-pos { font: 700 12px var(--ui-font); letter-spacing: .5px; text-align: center; white-space: nowrap; }
-.ed-chord { flex: 1; min-width: 2em; font: 18px/30px var(--lcd-font); color: var(--lcd-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#ed-hold { margin-left: auto; }   /* HOLD and close stay at the right end */
 .btn.ed-nav { min-width: 34px; min-height: 40px; padding-left: 4px; padding-right: 4px; white-space: nowrap; }
 #ed-del-bar { margin-left: auto; min-width: 44px; }   /* lower right, away from the other buttons */
 .btn.ed-nav svg { fill: currentColor; vertical-align: middle; }
 .ed-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 6px; }
+/* PASS picks which pass the BAR row edits, so the two share a panel. Negative margins keep the labels in line with the other rows. */
+.ed-group { margin: 6px -9px 0; padding: 0 8px 8px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; }
 .ed-label { flex: none; width: 44px; padding-top: 12px; font: 700 10px var(--ui-font); color: var(--text-dim); letter-spacing: .5px; }
 .ed-btns { flex: 1; display: flex; flex-wrap: wrap; gap: 4px; }
 .btn.ed { min-width: 44px; min-height: 40px; padding-left: 7px; padding-right: 7px; font-family: var(--lcd-font); font-weight: 400; font-size: 14px; touch-action: manipulation; }

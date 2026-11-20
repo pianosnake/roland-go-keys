@@ -4,7 +4,7 @@ Live at https://pianosnake.github.io/roland-go-keys/
 
 A Web MIDI page for the Roland GO:KEYS 3/5. It lists the keyboard's thousand+ tones on the left, and sends a bank select and program change when you tap one. Every CC it receives is on the right, in six sections.
 
-The **Chords** tab reads the chord progression stored on a GO:KEYS 3/5 (the song Chord Director edits) over undocumented SysEx, shows it bar by bar, and downloads it as a CSV in the keyboard's own chord-pattern format (the CHORDnnn.CSV files of a USB backup). (Downloads don't work inside the MIDI Charmer plugin.) Chrome asks for SysEx permission.
+The **Chords** tab reads the chord progression stored on a GO:KEYS 3/5 (the song Chord Director edits) over undocumented SysEx with **GET**, writes it back with **SEND**, shows it bar by bar, and downloads it as a CSV in the keyboard's own chord-pattern format (the CHORDnnn.CSV files of a USB backup). (Downloads don't work inside the MIDI Charmer plugin.) Chrome asks for SysEx permission.
 
 Enable Bluetooth on the GO:KEYS and connect to it from your computer (on a Mac: the built-in Audio MIDI Setup app), then open the page in Chrome. Or use a USB cable to connect to your computer/iPad.
 
