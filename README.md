@@ -11,19 +11,19 @@ A Web MIDI page for the Roland GO:KEYS 3/5. It lists the keyboard's thousand+ to
 - Star tones as favorites, and show only the favorites.
 - Sliders for the controllers (CCs), in six sections.
 
-**Chords**
-- **GET** reads the chord progression stored on the keyboard (the song Chord Director edits) and **SEND** writes it back. Chrome asks for SysEx permission.
-- The song is shown bar by bar, 4 beats per bar. Play / stop the style from the page; the bar being played is highlighted and the view follows it.
-- Tap a beat to edit it. Use computer keyboard to type chords.
+**Chords** (SysEx permission required)
+- Reads chord progression currently active on the keyboard, modify it and write it back. 
+- The song is shown bar by bar, 4 beats per bar. Play / Stop the style from the page; the bar being played is highlighted and the view follows it.
+- Tap a beat to edit it. Use computer keyboard to type chords or onscreen buttons.
 - Play song starting on selected measure
-- Repeats: set |: and :| on bars and the repeated bars are written out on the keyboard, while the page shows them once.
-- Insert and delete bars, rename the song, clear the chart back to the keyboard's initial pattern.
-- Save songs on this device (SONGS tab in the left column) and load them back; loading sends the song to the keyboard. Saved songs keep their repeat signs.
-- Download the song as a CSV in the keyboard's own chord-pattern format (the CHORDnnn.CSV files of a USB backup), or upload one to load it and send it to the keyboard.
+- Repeats: set |: and :|. Repeats are auto detected in the source chord pattern, as repeats are not natively supported in the GO:KEYS format
+- Insert and delete bars, rename the song, clear the chart.
+- Save songs on your device
+- Download the song as a CSV in the keyboard's own chord-pattern format, or upload CSV.
 
 ## Setup
 
-The page needs a browser with Web MIDI, and the **Chords** tab needs SysEx (allow it when asked). It has no libraries and needs no network access. The GO:KEYS takes one Bluetooth MIDI connection at a time, so disconnect Chord Director or any other device first.
+The page needs a browser with Web MIDI, and the **Chords** tab needs SysEx (allow it when asked). It has no libraries and needs no network access.
 
 ### 1. Desktop computer with Chrome
 
@@ -55,7 +55,6 @@ python3 -m http.server 8000
 
 - Default channel 4: with firmware 1.12 the GO:KEYS only changes the UPPER tone from channel 4.
 - Ports: picks one named like `GO:KEYS`, `Roland` or `Bluetooth`, otherwise the first port
-- The keyboard doesn't report its controller values, so the sliders show what the page last sent (or received).  Double-tap a value to send its default.
-- Tones were retrieved from `tones.csv` posted on Roland GO:KEYS [Facebook forum](https://www.facebook.com/groups/8596326350405837)
+- The keyboard doesn't report its controller values, so the sliders on the **GLOBAL** tab show what the page last sent (or received). Double-tap a value to send its default.
 
 Not affiliated with Roland.

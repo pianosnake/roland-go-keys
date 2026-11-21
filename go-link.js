@@ -1,7 +1,7 @@
 // GoLink: the connection to the GO:KEYS. All MIDI traffic, no song logic.
 //   Output: messages go out through one queue, 30 ms apart, so several edits sent together don't interleave (each
 //   begin-edit / entry / end-edit triple stays together). start()/stop() and app mode go out at once.
-//   App mode (02 00 = 01): entered by engage() (the first use of a control on the Chords tab other than Play) and kept up
+//   App mode (02 00 = 01): entered by engage() (the first use of a control on the Chords tab, Play included: the play state and bar numbers only come in app mode) and kept up
 //   every 20 s like Chord Director (it times out after ~60 s: bar messages stop and the GO:KEYS shows "App
 //   disconnected"), until setActive(false) (leaving the tab) sends 02 00 = 00. Start/stop, dump requests and tone
 //   changes (bank select + program change, tested 2026-11-21) all work with or without it.

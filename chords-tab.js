@@ -71,6 +71,9 @@
   // (sel.bar is always a first-pass bar; the pass picked in the editor stays set from bar to bar).
   function togglePlay() {
     if (!link.ready) { setInfo(NO_OUTPUT); return; }
+    // App mode on first: without it the GO:KEYS sends no play state or bar numbers, so the chart couldn't follow
+    // (tested 2026-11-21, follow-test.js / follow-test2.js). Also covers the space bar, which isn't a click.
+    link.engage();
     const from = !player.playing && song.loaded && sel.open && !sel.section ? sel.bar : 0;
     player.toggle(from);
     if (player.playing && from > 0) setInfo(`Playing from bar ${song.passLabel(from)}.`);
@@ -685,7 +688,7 @@
   // ------------------------------------------------------------ setup
   // Runs before the control's own handler, so app mode is on by the time an edit is sent.
   function onControlUsed(e) {
-    if (e.target.closest('button, select, input') && !e.target.closest('#chords-play')) link.engage();
+    if (e.target.closest('button, select, input')) link.engage();
   }
   function setActive(on) {
     link.setActive(on);
