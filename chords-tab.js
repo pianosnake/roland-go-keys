@@ -17,7 +17,13 @@
   const NO_OUTPUT = 'No MIDI output, or Chrome refused SysEx access.';
 
   let status = () => {};
-  const song = new Song();
+  // What the page shows before anything is read or loaded: | FM9 | | Em9 | |. It's only on the page until something
+  // is sent (GoPlayer.synced): the first edit, setting or Play sends it whole to the GO:KEYS.
+  const STARTER = { name: DEFAULT_NAME, bars: 4, chords: [Object.assign({ bar: 0, beat: 0 }, ChordNames.parseChord('FM9')),
+    Object.assign({ bar: 2, beat: 0 }, ChordNames.parseChord('Em9'))] };
+  const song = new Song().load(STARTER);
+  const STARTER_JSON = JSON.stringify(song.toJSON());
+  const isStarter = () => JSON.stringify(song.toJSON()) === STARTER_JSON;
   const sel = new Selection();
   const link = new GoLink({
     playState: (playing, bar) => player.playState(playing, bar),
@@ -42,7 +48,7 @@
   }
   function onDump(pattern) {
     song.loadFromGo(pattern);
-    player.reset();
+    player.readFromGo();
     savedId = saved.matching(song.toJSON());
     render();
     setInfo('');
@@ -79,8 +85,9 @@
     const diff = {};
     Object.keys(changes).forEach((k) => { if (song.settings[k] !== changes[k]) diff[k] = changes[k]; });
     if (!Object.keys(diff).length) return;
-    link.settings(diff);
+    if (player.synced) link.settings(diff);
     song.setSettings(diff);
+    if (!player.synced) sendSong();                  // the GO:KEYS doesn't have this song yet: send all of it
     render();
     setInfo(player.playing ? 'Sent. The keyboard applies it on the next bar.' : 'Sent.');
   }
@@ -304,8 +311,10 @@
     render();
   }
   function putSectionChord(c) {
-    if (!link.sectionChord(sel.section, c)) { setInfo(NO_OUTPUT); return; }
+    if (!link.ready) { setInfo(NO_OUTPUT); return; }
+    if (player.synced) link.sectionChord(sel.section, c);
     song.setSectionChord(sel.section, c);
+    if (!player.synced) sendSong();
     render();
   }
 
@@ -375,7 +384,8 @@
     setInfo('Chart cleared.');
   }
 
-  function select(bar, beat) { sel.select(bar, beat); render(); }
+  // Tapping a beat closes the MIDI settings if they're open, so the editor shows.
+  function select(bar, beat) { gearOpen = false; sel.select(bar, beat); render(); }
 
   // The left column shows one of: the TONES / SONGS tabs, the MIDI settings (gear), or the chord editor while a beat
   // is selected on the Chords tab. The settings win over the editor; closing them brings the editor back.
@@ -448,7 +458,7 @@
     $('bars').addEventListener('click', (e) => {
       if (e.target.closest('#add-bar')) { applyStructure(song.insertBar(song.bars)); return; }
       const b = e.target.closest('button.beat');
-      if (b && b.dataset.section) { sel.selectSection(b.dataset.section); render(); }
+      if (b && b.dataset.section) { gearOpen = false; sel.selectSection(b.dataset.section); render(); }
       else if (b) select(+b.dataset.bar, +b.dataset.beat);
     });
     $('chord-editor').addEventListener('click', (e) => {
@@ -462,13 +472,13 @@
       else if (b.dataset.hold) { if (editedChord()) putChord(null); }
       else if (b.id === 'ed-prev') { if (sel.stepBeat(song, -1)) render(); }
       else if (b.id === 'ed-next') { if (sel.stepBeat(song, 1)) render(); }
+      else if (b.id === 'ed-close') { sel.open = false; render(); }
+      else if (b.id === 'ed-del-bar') applyStructure(song.deleteBar(sel.bar));
       else if (b.id === 'ed-prev-bar') { if (sel.stepBar(song, -1)) render(); }
       else if (b.id === 'ed-next-bar') { if (sel.stepBar(song, 1)) render(); }
-      else if (b.id === 'ed-close') { sel.open = false; render(); }
       else if (b.id === 'ed-rep-start' || b.id === 'ed-rep-end') applyStructure(song.toggleSign(b.id === 'ed-rep-start' ? 'start' : 'end', sel.bar));
       else if (b.id === 'ed-ins-before') applyStructure(song.insertBeside(sel.bar, false));
       else if (b.id === 'ed-ins-after') applyStructure(song.insertBeside(sel.bar, true));
-      else if (b.id === 'ed-del-bar') applyStructure(song.deleteBar(sel.bar));
       else if (b.id === 'ed-clear') clearChart();
     });
     $('ed-bass').addEventListener('change', (e) => changeChord('bass', +e.target.value));
@@ -562,7 +572,7 @@
   function loadSong(id) {
     const e = saved.get(id);
     if (!e) return;
-    if (song.loaded && !isSaved() && !saved.isArmed('load', id)) {
+    if (song.loaded && !isSaved() && !isStarter() && !saved.isArmed('load', id)) {
       saved.arm('load', id);
       setInfo('The song on the keyboard isn’t saved: loading replaces it. Tap again to load.');
       return;
@@ -742,6 +752,6 @@
     onSysEx: (d) => link.onSysEx(d),
     setActive,
     whileDisconnected: (fn) => link.whileReleased(fn),
-    setOutput: (fn) => link.setOutput(fn),
+    setOutput: (fn) => { link.setOutput(fn); player.outputChanged(); },
   };
 }());

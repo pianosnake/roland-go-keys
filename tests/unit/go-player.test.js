@@ -7,8 +7,10 @@ function lastPattern(link) {
   const a = link.sent.map(addr), end = a.lastIndexOf('01 00 02 0c'), begin = a.lastIndexOf('01 00 02 08', end);
   return parseTransfer(link.sent.slice(begin, end + 1));
 }
-function setup(s) {
+// synced: the GO:KEYS already holds the song (as after GET or a load), so edits go out one by one.
+function setup(s, unsynced) {
   const link = recordingLink(), player = new GoPlayer(s, link);
+  player.synced = !unsynced;
   link.on = { playState: (p, b) => player.playState(p, b), bar: (b) => player.barMessage(b) };
   return { link, player };
 }
@@ -80,4 +82,32 @@ test('bars inserted before the start bar move it; the song sent follows', () => 
   assert.equal(s.pinned('start'), 11);
   link.onSysEx(fromGo(0x02, [0, 1]));
   assert.equal(player.bar, 12);
+});
+
+test('before the GO:KEYS has the song, Play sends it first, then starts', () => {
+  const { link, player } = setup(song(['C', 'G']), true);
+  player.toggle(0); link.flush();
+  const a = link.sent.map(addr);
+  assert.equal(a[0], '01 00 02 08');
+  assert.equal(a[a.length - 1], '01 00 02 01');
+  assert.equal(player.synced, true);
+});
+
+test('before the GO:KEYS has the song, an edit sends the whole song; after that, single edits', () => {
+  const s = song(['C', 'G']);
+  const { link, player } = setup(s, true);
+  player.chordEdited(s.setChord(1, 0, C('Am')), 0, C('Am')); link.flush();
+  assert.equal(lastPattern(link).chords[1].root, C('Am').root);
+  assert.ok(!link.sent.some((m) => addr(m) === '01 00 02 14'));
+  link.sent.length = 0;
+  player.styleEdited(1, 3); link.flush();
+  assert.deepEqual(link.sent.map(addr), ['01 00 02 14', '01 00 03 41', '01 00 02 18']);
+});
+
+test('another output makes it unsynced again; GET makes it synced', () => {
+  const { player } = setup(song(['C']));
+  player.outputChanged();
+  assert.equal(player.synced, false);
+  player.readFromGo();
+  assert.equal(player.synced, true);
 });

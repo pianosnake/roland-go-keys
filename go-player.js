@@ -9,6 +9,9 @@
 //   chordEdited / styleEdited   send an edit to the GO:KEYS's bar for it (nothing for a bar cut off), and while playing
 //                    from a bar, the chord and variation carried onto its first beat.
 //   playState / barMessage      the GO:KEYS's messages (give them GoLink's handlers).
+//   synced           whether the GO:KEYS holds the page's song (it was sent, or read with GET). Until then (the starter
+//                    song on a fresh page, or after switching to another output) an edit or Play sends the whole song
+//                    first instead of a single edit, which would land on whatever song the GO:KEYS has.
 // Loaded as a classic script (window.GoKeys.GoPlayer) or with require() in Node (tests).
 (function () {
   'use strict';
@@ -23,23 +26,31 @@
       this.playing = false; this.bar = null;
       this.pattern = null;                          // what the GO:KEYS holds, as last sent (null: the song as it is)
       this.rotate = false;
+      this.synced = false;
     }
     get start() { return this.song.pinned(START) || 0; }
     // A new song on the page (read, loaded, cleared): its pins are gone, and so is the old mapping.
     reset() { this.pattern = null; }
+    // The song was just read from the GO:KEYS (GET).
+    readFromGo() { this.pattern = null; this.synced = true; }
+    // Another output (or none): what that device holds isn't known.
+    outputChanged() { this.synced = false; }
     firstBar() { return this.start ? this.start : this.song.loaded && this.song.settings.intro ? 'intro' : 0; }
     current() { return this.pattern || GoPattern.of(this.song); }
 
     sendSong() {
       if (!this.link.ready) return false;
       this.pattern = GoPattern.from(this.song, this.start, this.rotate);
-      return this.link.pattern(this.pattern);
+      if (this.link.pattern(this.pattern)) this.synced = true;
+      return this.synced;
     }
 
     toggle(fromBar) {
       if (!this.link.ready) return false;
       if (!this.playing && fromBar > 0) { this.playFrom(fromBar); return true; }
-      if (this.playing) this.link.stop(); else this.link.start(false);
+      if (this.playing) this.link.stop();
+      else if (!this.synced) { this.sendSong(); this.link.start(true); }   // after the transfer
+      else this.link.start(false);
       this.playing = !this.playing;
       this.bar = this.playing ? this.firstBar() : null;
       if (!this.playing) this.endPlayFrom();
@@ -77,6 +88,7 @@
     // ------------------------------------------------------------ edits (the Song is already changed)
     chordEdited(bars, beat, c) {
       if (!this.link.ready) return false;
+      if (!this.synced) return this.sendSong();
       const p = this.current();
       bars.forEach((b) => { const e = p.chordEntry(b, beat, c); if (e) this.link.edit(S.CHORDS, e); });
       this.syncStart();
@@ -84,6 +96,7 @@
     }
     styleEdited(bar, value) {
       if (!this.link.ready) return false;
+      if (!this.synced) return this.sendSong();
       const e = this.current().styleEntry(bar, value);
       if (e) this.link.edit(S.VARIATIONS, e);
       this.syncStart();
