@@ -135,7 +135,7 @@ body {
 .card.unknown .sval { color: #7c808b; }   /* not sent or received yet: showing the default */
 
 .btn {
-  -webkit-appearance: none; appearance: none; cursor: pointer; border: 1px solid #111; border-radius: 3px;
+  -webkit-appearance: none; appearance: none; cursor: pointer; border: 1px solid #111; border-radius: 3px; margin: 0;   /* iPad WebKit gives buttons a default margin */
   padding: 4px 10px; font: 700 12px var(--ui-font); color: #fff; -webkit-text-fill-color: #fff;
   background: linear-gradient(#5a5d66, #383a41); min-height: 30px;
 }
@@ -320,7 +320,8 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .chord-editor .ed-pill-row .btn.ed { border: 0; border-radius: 0; margin: 0; flex: 1 1 0; min-width: 0; }
 .chord-editor .ed-pill-row .btn.ed + .btn.ed { border-left: 1px solid #111; }
 .chord-editor .ed-acc-row { margin-top: 4px; }
-.chord-editor .ed-acc-row .btn.ed.acc { flex: 0 0 44px; margin: 0; }
+.chord-editor .ed-acc-row { flex: none; width: 92px; }   /* fixed: older WebKit sized it to one button and cut off the flat */
+.chord-editor .ed-acc-row .btn.ed.acc { flex: none; width: 45px; min-width: 0; margin: 0; }
 .chord-editor .ed-rep-row .ed-pill-row .btn.ed { flex: 0 0 84px; }   /* |: :| as a pill, each 84px wide */
 .chord-editor #ed-type-more { margin-top: 4px; }
 .chord-editor #ed-type-more, .chord-editor #ed-bass { flex: 0 0 calc(50% - 2px); min-width: 0; }
