@@ -171,11 +171,13 @@
     const html = {};
     pieces.forEach(([key, h]) => { html[key] = h; });
     if (drawn && drawn.layout === layout) {
+      const redrawn = [];
       pieces.forEach(([key, h]) => {
         if (drawn.html[key] === h) return;
         const el = $('bars').querySelector(`.bar[data-bar="${key}"]`);
-        if (el) el.outerHTML = h;
+        if (el) { el.outerHTML = h; redrawn.push(key); }
       });
+      fitChordNames(redrawn.map((key) => $('bars').querySelector(`.bar[data-bar="${key}"]`)));
     } else {
       // Intro and ending get rows of their own, above and below the song's bars.
       const row = (h) => `<div class="bars-grid">${h}</div>`;
@@ -183,9 +185,30 @@
         row(pieces.filter((p) => p[0] !== 'intro' && p[0] !== 'ending').map((p) => p[1]).join('') +
           '<button class="bar add-bar" type="button" id="add-bar" title="Add a bar at the end">+ bar</button>') +
         (st.ending ? row(html.ending) : '');
+      fitChordNames([$('bars')]);
     }
     drawn = { layout, html };
   }
+
+  // A chord name too wide for its beat gets a smaller font, just enough to fit (down to 9px), instead of being cut off
+  // with "…". All reads happen before all writes, so a full grid of 256 bars lays out once.
+  const BEAT_FONT = 16, BEAT_FONT_MIN = 9;
+  function fitChordNames(roots) {
+    const beats = [];
+    roots.forEach((r) => { if (r) r.querySelectorAll('.beat:not(.held)').forEach((b) => beats.push(b)); });
+    beats.forEach((b) => { b.style.fontSize = ''; });
+    const sizes = beats.map((b) => {
+      const room = b.clientWidth - 4, need = b.scrollWidth - 4;   // minus the button's padding (2px each side)
+      return need > room && room > 0 ? Math.max(BEAT_FONT_MIN, Math.floor((BEAT_FONT * room / need) * 10) / 10) : 0;
+    });
+    beats.forEach((b, i) => { if (sizes[i]) b.style.fontSize = `${sizes[i]}px`; });
+  }
+  // The beats change width with the window (and when the iPad turns), so fit them all again then.
+  let fitFrame = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(fitFrame);
+    fitFrame = requestAnimationFrame(() => fitChordNames([$('bars')]));
+  });
 
   function barHtml(bar, b, view, marks, styles) {
     const beats = [];
@@ -553,7 +576,8 @@
   // ------------------------------------------------------------ saved songs
   // On the SONGS tab of the left column. A saved song keeps everything the page shows, repeat signs included. Loading
   // one sends it to the GO:KEYS, replacing the song there, so the page keeps showing what the GO:KEYS has. That loses
-  // its song unless it's saved, so then a load takes a second tap within 3 s, like Clear chart. Delete takes one too.
+  // its song unless it's saved, so then a load takes a second tap within 3 s, like Clear chart. Deleting (⋯ menu,
+  // Delete song) takes one too.
   const isSaved = () => song.loaded && saved.same(savedId, song.toJSON());
 
   function saveSong(asNew) {
@@ -583,23 +607,29 @@
     if (!saved.isArmed('del', id)) { saved.arm('del', id); return; }
     if (savedId === id) savedId = null;
     saved.disarm();
+    const name = (saved.get(id) || {}).data;
     if (!saved.remove(id)) setInfo('Couldn’t save: this browser’s storage is full or blocked.');
+    else if (name) setInfo(`Deleted “${name.name || DEFAULT_NAME}” from this device.`);
     render();
   }
 
   function renderSongs() {
     const cur = isSaved() ? savedId : null;
     $('song-save-new').disabled = !song.loaded;
+    // ⋯ menu: delete the saved song the page's song came from (a second tap within 3 s).
+    const delArmed = !!savedId && saved.isArmed('del', savedId);
+    $('song-delete').disabled = !savedId || !saved.get(savedId);
+    $('song-delete').textContent = delArmed ? 'Tap again to delete' : 'Delete song';
+    $('song-delete').classList.toggle('armed', delArmed);
     $('song-save-quick').disabled = !!cur;           // greyed out: nothing changed since it was saved
     $('song-save-quick').title = cur ? 'Saved on this device' : 'Save the song on this device';
     const day = (ms) => new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     $('song-list').innerHTML = saved.list().map((e) => {
-      const d = e.data || {}, load = saved.isArmed('load', e.id), del = saved.isArmed('del', e.id);
+      const d = e.data || {}, load = saved.isArmed('load', e.id);
       return `<div class="row song-row${e.id === cur ? ' cur' : ''}${load ? ' arm' : ''}" data-id="${esc(e.id)}" ` +
         `title="${esc(d.name || DEFAULT_NAME)}: ${d.bars || 0} bars, saved ${esc(day(e.saved))}">` +
         `<span class="name">${esc(d.name || DEFAULT_NAME)}</span>` +
-        `<span class="song-meta">${load ? 'tap again' : `${d.bars || 0} bars`}</span>` +
-        `<span class="song-del${del ? ' armed' : ''}" role="button" aria-label="Delete">${del ? 'Delete?' : '✕'}</span></div>`;
+        `<span class="song-meta">${load ? 'tap again' : `${d.bars || 0} bars`}</span></div>`;
     }).join('') || '<div class="empty">No saved songs yet. GET the song from the keyboard, then tap the save icon next to its name.</div>';
   }
 
@@ -616,15 +646,20 @@
     // The ⋯ menu by the song name: Rename, Save as new, CSV, Transpose. Transpose keeps it open; the rest close it.
     const setMenu = (open) => { $('song-menu').hidden = !open; $('song-more').setAttribute('aria-expanded', String(open)); };
     $('song-more').onclick = () => setMenu($('song-menu').hidden);
-    $('song-menu').addEventListener('click', (e) => { if (e.target.closest('button.menu-item')) setMenu(false); });
+    // An item closes the menu, except Delete on its first tap (it waits for the second).
+    $('song-menu').addEventListener('click', (e) => {
+      if (e.target.closest('#song-delete') && saved.isArmed('del', savedId)) return;
+      if (e.target.closest('button.menu-item')) setMenu(false);
+    });
     document.addEventListener('click', (e) => { if (!$('song-menu').hidden && !e.target.closest('.menu-wrap')) setMenu(false); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
     $('song-save-new').onclick = () => saveSong(true);
+    $('song-delete').onclick = () => { if (savedId) deleteSong(savedId); };
     $('song-save-quick').onclick = () => saveSong(false);
     $('song-list').addEventListener('click', (e) => {
       const row = e.target.closest('.song-row');
       if (!row) return;
-      if (e.target.closest('.song-del')) deleteSong(row.dataset.id); else loadSong(row.dataset.id);
+      loadSong(row.dataset.id);                      // deleting is in the ⋯ menu (Delete song)
     });
   }
 
@@ -678,6 +713,7 @@
   function setActive(on) {
     link.setActive(on);
     layoutSide();                                   // the chord editor only shows on the Chords tab
+    if (on) requestAnimationFrame(() => fitChordNames([$('bars')]));   // hidden, the beats had no width to fit to
   }
 
   function init(opts) {

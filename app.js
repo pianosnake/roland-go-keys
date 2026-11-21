@@ -3,6 +3,8 @@
 // (iPad, iOS 15 WebKit: no class fields, no .at(), no container queries).
 (function () {
   'use strict';
+  // The favorite star in each tone row: an SVG, not the ★ character, which iPad's font draws much smaller.
+  const STAR_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3-4.7-4.4 6.4-.8z"/></svg>';
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const STORE = 'gokeys-tones';
@@ -98,7 +100,7 @@
       // The star is a text glyph, not an SVG button: 1228 rows, and the iPad Air 2 is slow. \uFE0E keeps iOS from drawing an emoji.
       const fav = state.favorites.indexOf(t.num) >= 0;
       html += `<div class="row" data-i="${t.i}"><span class="num">${esc(t.num)}</span><span class="name">${esc(t.name)}</span>` +
-        `<span class="row-star${fav ? ' on' : ''}" role="button" aria-label="Favorite" aria-pressed="${fav}">\u2605\uFE0E</span></div>`;
+        `<span class="row-star${fav ? ' on' : ''}" role="button" aria-label="Favorite" aria-pressed="${fav}">${STAR_SVG}</span></div>`;
     });
     $('list').innerHTML = html || '<div class="empty">No tones (tones.js is missing).</div>';
   }
