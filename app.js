@@ -278,13 +278,22 @@
   const NAMES = /go:?\s?keys|roland|bluetooth/i;
   // The PORT menu overrides that (needed when the keyboard sits behind a MIDI interface with generic port names).
   // The input is the port with the same name as the output.
+  // The ports of a MIDIInputMap / MIDIOutputMap. Walked with next() by hand: the iOS "Web MIDI Browser" app's maps give
+  // an iterator that isn't iterable, so Array.from(map.values()) came back empty there and the port list said (none).
+  function portsOf(map) {
+    const out = [];
+    if (!map) return out;
+    const it = map.values();
+    for (let o = it.next(); !o.done; o = it.next()) out.push(o.value);
+    return out;
+  }
   const pick = (map, name) => {
-    const list = Array.from(map.values());
+    const list = portsOf(map);
     return (name && list.find((p) => p.name === name)) || list.find((p) => NAMES.test(p.name)) || list[0] || null;
   };
 
   function renderPorts() {
-    const outs = Array.from(midi.access.outputs.values());
+    const outs = portsOf(midi.access.outputs);
     $('port').innerHTML = outs.length
       ? outs.map((p) => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('')
       : '<option value="">(none)</option>';

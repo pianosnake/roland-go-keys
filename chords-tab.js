@@ -297,7 +297,7 @@
   // The common types are buttons (major has no suffix, so its button is blank); the rest are in a menu.
   const TYPE_BUTTONS = [0x01, 0x02, 0x03, 0x13, 0x14, 0x05];
   const TYPE_MORE = TYPE_ORDER.filter((t) => TYPE_BUTTONS.indexOf(t) < 0);
-  const BAR_STYLES = [[0, '—'], [1, 'V1'], [2, 'V2'], [3, 'V3'], [4, 'V4'], [6, 'Fill Up'], [5, 'Fill Down']];
+  const BAR_STYLES = [[0, '0'], [1, '1'], [2, '2'], [3, '3'], [4, '4'], [6, 'Fill Up'], [5, 'Fill Down']];   // 0 = no change
   const editedChord = () => (sel.section ? song[`${sel.section}Chord`] : song.chordAt(sel.bar, sel.beat));
   const soundingPc = (letter, acc) => (ChordNames.notePc(letter, acc) + song.settings.transpose + 120) % 12;
   const storedNote = (pc) => ROOTS[(pc - song.settings.transpose + 120) % 12];
@@ -399,6 +399,8 @@
     $('pane-tones').hidden = other || tab !== 'tones';
     $('pane-songs').hidden = other || tab !== 'songs';
     $('side-gear').classList.toggle('on', gearOpen); $('side-gear').setAttribute('aria-pressed', String(gearOpen));
+    // The editor and the settings take over the whole column: no logo or gear (style.css, .side.takeover).
+    document.querySelector('.side').classList.toggle('takeover', other);
   }
 
   function renderEditor() {
@@ -412,7 +414,7 @@
     $('ed-pos').textContent = sec ? (sec === 'intro' ? 'Intro' : 'Ending') : `${song.passLabel(sel.styleBar(song))}:${sel.beat + 1}`;
     const bassPc = c ? (c.bass ? soundingPc(c.bass, c.bassAcc) : -1) : null;
     const btn = (attr, v, label, on) => `<button class="btn ed${on ? ' on' : ''}" type="button" data-${attr}="${v}">${esc(label)}</button>`;
-    // A repeated bar is played once per pass: 1, 2, 3... The BAR row edits the pass picked here.
+    // A repeated bar is played once per pass: 1, 2, 3... The VARIATION row edits the pass picked here.
     const rep = sec ? null : song.activeRepeatAt(sel.bar);
     $('ed-pass-col').hidden = !rep;
     if (rep) {
@@ -442,7 +444,7 @@
     $('ed-bass').value = String(bassPc == null ? -1 : bassPc);
     const styled = sel.styleBar(song), v = song.variations.find((x) => x.bar === styled);
     $('ed-style').innerHTML = BAR_STYLES.map(([val, label]) => btn('style', val, label, (v ? v.value : 0) === val)).join('')
-      .replace('data-style="0">', 'data-style="0" title="Default: no variation change" aria-label="Default">');
+      .replace('data-style="0">', 'data-style="0" title="0: no variation change" aria-label="No variation change">');
     $('ed-rep-start').classList.toggle('on', !!song.starts[sel.bar]);
     $('ed-rep-end').classList.toggle('on', !!song.ends[sel.bar]);
     $('ed-del-bar').disabled = song.bars <= 1;
@@ -536,7 +538,7 @@
       return;
     }
     if (k === 'l') { e.preventDefault(); link.engage(); toggleLoop(); return; }
-    if ('1234'.indexOf(k) >= 0 && k.length === 1) {               // as the BAR row's Var 1-4
+    if ('1234'.indexOf(k) >= 0 && k.length === 1) {               // as the VARIATION row's 1-4
       e.preventDefault();
       if (!sel.section) { link.engage(); setBarStyle(+k); }
       return;

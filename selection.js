@@ -1,5 +1,5 @@
 // Selection: the chord editor's cursor. bar/beat are a shown bar (the first pass of a repeat); pass is which pass of a
-// repeat the BAR row (variations) edits, and it stays set as the cursor moves; section is 'intro' / 'ending' while
+// repeat the VARIATION row edits, and it stays set as the cursor moves; section is 'intro' / 'ending' while
 // editing that chord. Play always starts on the first pass, whatever pass is picked.
 // Loaded as a classic script (window.GoKeys.Selection) or with require() in Node (tests).
 (function () {
@@ -17,7 +17,7 @@
       const r = song.activeRepeatAt(this.bar);
       return r ? Math.min(this.pass, r.times - 1) : 0;
     }
-    // The song bar the BAR row edits: the selected bar on the selected pass.
+    // The song bar the VARIATION row edits: the selected bar on the selected pass.
     styleBar(song) {
       const at = song.shownBar(this.bar);
       return at.r ? at.bar + this.editPass(song) * at.r.len : this.bar;
