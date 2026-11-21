@@ -73,7 +73,7 @@
     if (!link.ready) { setInfo(NO_OUTPUT); return; }
     const from = !player.playing && song.loaded && sel.open && !sel.section ? sel.bar : 0;
     player.toggle(from);
-    if (player.playing && from > 0) setInfo(`Playing from bar ${song.passLabel(from)}. Stop puts the song back in order on the keyboard.`);
+    if (player.playing && from > 0) setInfo(`Playing from bar ${song.passLabel(from)}.`);
   }
 
   // Song settings, changed live like Chord Director. Turning LOOP on turns the ending (short or long) off.
@@ -431,8 +431,9 @@
     // The blank button first (as major is on the TYPE row): no chord on this beat, the previous one continues
     // (in the intro or ending: no chord).
     const holdTitle = sec ? 'No chord' : 'Hold: no chord change on this beat, the previous chord continues';
-    $('ed-root').innerHTML = `<button class="btn ed hold${c ? '' : ' on'}" type="button" data-hold="1" title="${holdTitle}" aria-label="${holdTitle}"></button>` +
-      'CDEFGAB'.split('').map((l) => btn('root', PC[l], l, !!c && l === letter)).join('') +
+    // The hold button and the seven letters stay on one line (ed-root-row); sharp and flat go on the next.
+    $('ed-root').innerHTML = `<span class="ed-root-row"><button class="btn ed hold${c ? '' : ' on'}" type="button" data-hold="1" title="${holdTitle}" aria-label="${holdTitle}"></button>` +
+      'CDEFGAB'.split('').map((l) => btn('root', PC[l], l, !!c && l === letter)).join('') + '</span>' +
       accBtn(1, '♯', 'Sharp', letter === 'E' || letter === 'B') + accBtn(-1, '♭', 'Flat', letter === 'C' || letter === 'F');
     const more = !!c && TYPE_MORE.indexOf(c.type) >= 0;
     $('ed-type').innerHTML = TYPE_BUTTONS.map((t) => btn('type', t, TYPES[t][0], !!c && c.type === t)).join('')

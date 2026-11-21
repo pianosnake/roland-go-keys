@@ -45,20 +45,42 @@ test('Play from a bar with LOOP on sends the song rotated; bar numbers wrap back
   assert.equal(player.bar, 0);                            // the GO:KEYS's bar 2 is song bar 0 (3, 4, 0, 1, 2)
 });
 
-test('stopping puts the song back in order; a stop from the GO:KEYS does too, once', () => {
-  const s = song(['C', 'D', 'E', 'F']);
+test('stopping sends nothing back; the next Play from the top sends the whole song first', () => {
+  const s = song(['C', 'D', 'E', 'F'], { settings: { loop: false } });
   const { link, player } = setup(s);
   player.toggle(2); link.flush(); link.sent.length = 0;
-  player.toggle(0); link.flush();
-  assert.equal(addr(link.sent[0]), '01 00 02 01');
+  player.toggle(0); link.flush();                         // stop
+  assert.deepEqual(link.sent.map(addr), ['01 00 02 01']);
+  assert.equal(s.pinned('start'), 2);                      // the GO:KEYS still holds bars 3-4
+  link.onSysEx(fromGo(0x01, [0])); link.flush();           // a stop reported by the GO:KEYS: nothing sent either
+  assert.equal(link.sent.length, 1);
+  link.sent.length = 0;
+  player.toggle(0); link.flush();                         // play from the top
+  const a = link.sent.map(addr);
+  assert.equal(a[0], '01 00 02 08');
   assert.equal(lastPattern(link).bars, 4);
+  assert.equal(a[a.length - 1], '01 00 02 01');
   assert.equal(s.pinned('start'), undefined);
-  player.toggle(1); link.flush(); link.sent.length = 0;
-  link.onSysEx(fromGo(0x01, [0])); link.flush();
-  assert.equal(lastPattern(link).bars, 4);
-  const n = link.sent.length;
-  link.onSysEx(fromGo(0x01, [0])); link.flush();
-  assert.equal(link.sent.length, n);
+  player.toggle(0); link.flush(); link.sent.length = 0;    // stop, then play from the top again: just start
+  player.toggle(0); link.flush();
+  assert.deepEqual(link.sent.map(addr), ['01 00 02 01']);
+});
+
+test('edits made after stopping still go to the bars the GO:KEYS holds', () => {
+  const s = song(['C', 'D', 'E', 'F'], { settings: { loop: false } });
+  const { link, player } = setup(s);
+  player.toggle(2); player.toggle(0); link.flush(); link.sent.length = 0;
+  player.chordEdited(s.setChord(3, 0, C('Am')), 0, C('Am')); link.flush();
+  const bars = link.sent.filter((m) => addr(m) === '01 00 03 40').map((m) => m.slice(13, 15));
+  assert.deepEqual(bars[0], [0, 1]);                       // song bar 3 = the GO:KEYS's bar 1
+});
+
+test('playing again from the same bar sends nothing but start', () => {
+  const s = song(['C', 'D', 'E', 'F']);
+  const { link, player } = setup(s);
+  player.toggle(2); player.toggle(0); link.flush(); link.sent.length = 0;
+  player.toggle(2); link.flush();
+  assert.deepEqual(link.sent.map(addr), ['01 00 02 01']);
 });
 
 test('edits while playing from a bar go to the GO:KEYS bar, or nowhere when cut off', () => {

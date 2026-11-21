@@ -1,9 +1,9 @@
 // GoPlayer: playing the song on the GO:KEYS and following the bar it plays. Connects a Song, the GoPattern the GO:KEYS
 // holds, and a GoLink.
-//   toggle(fromBar)  Play / Stop. From bar 0 a plain start (with the intro). From a later bar the GO:KEYS gets the song
-//                    from there (GoPattern.from; rotated if LOOP is on when Play is pressed), then starts. The start bar
-//                    is a pin in the Song, so bars inserted or deleted meanwhile move it along. Stopping (here or on the
-//                    GO:KEYS) puts the song back in order.
+//   toggle(fromBar)  Play / Stop. From a later bar the GO:KEYS gets the song from there (GoPattern.from; rotated if LOOP
+//                    is on when Play is pressed), then starts. The start bar is a pin in the Song, so bars inserted or
+//                    deleted meanwhile move it along. Stopping sends nothing: the GO:KEYS keeps the song from that bar
+//                    (and edits keep going to its bars) until Play from bar 0, which sends the whole song first.
 //   playing, bar     state for the page; bar is a song bar, 'intro', 'ending' or null.
 //   sendSong()       the whole song (as the GO:KEYS should hold it now), after bars move, a load, a rename...
 //   chordEdited / styleEdited   send an edit to the GO:KEYS's bar for it (nothing for a bar cut off), and while playing
@@ -47,28 +47,37 @@
 
     toggle(fromBar) {
       if (!this.link.ready) return false;
-      if (!this.playing && fromBar > 0) { this.playFrom(fromBar); return true; }
-      if (this.playing) this.link.stop();
-      else if (!this.synced) { this.sendSong(); this.link.start(true); }   // after the transfer
-      else this.link.start(false);
-      this.playing = !this.playing;
-      this.bar = this.playing ? this.firstBar() : null;
-      if (!this.playing) this.endPlayFrom();
+      if (this.playing) {                           // stop; the GO:KEYS keeps what it has (see playFromStart)
+        this.link.stop();
+        this.playing = false; this.bar = null;
+      } else if (fromBar > 0) {
+        this.playFrom(fromBar);
+      } else {
+        this.playFromStart();
+      }
       this.onChange();
       return true;
     }
+    // From a bar: the GO:KEYS gets the song from there (GoPattern.from), unless it already starts there.
     playFrom(bar) {
+      const rotate = !!this.song.settings.loop;
+      const same = this.synced && this.start === bar && this.rotate === rotate && this.pattern;
       this.song.pin(START, bar);
-      this.rotate = !!this.song.settings.loop;
-      this.sendSong();
-      this.link.start(true);                        // after the transfer
+      this.rotate = rotate;
+      if (same) this.link.start(false);
+      else { this.sendSong(); this.link.start(true); }   // after the transfer
       this.playing = true; this.bar = this.firstBar();
-      this.onChange();
     }
-    endPlayFrom() {
-      if (!this.start) return;
-      this.song.unpin(START);
-      this.sendSong();
+    // From the top: after playing from a bar the GO:KEYS still holds the song from that bar, so the whole song goes
+    // first (nothing is sent back on stop: edits made meanwhile still go to the GO:KEYS's bars). Same when it doesn't
+    // have the page's song at all.
+    playFromStart() {
+      if (this.start || !this.synced) {
+        this.song.unpin(START);
+        this.sendSong();
+        this.link.start(true);
+      } else this.link.start(false);
+      this.playing = true; this.bar = this.firstBar();
     }
 
     // ------------------------------------------------------------ from the GO:KEYS
@@ -76,7 +85,6 @@
     playState(playing, goBar) {
       this.playing = playing;
       this.bar = !playing ? null : goBar != null ? this.toSong(goBar) : this.firstBar();
-      if (!playing) this.endPlayFrom();
       this.onChange();
     }
     // The GO:KEYS also sends the bar while stopped, whenever a song setting changes, so only the play state decides playing.

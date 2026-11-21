@@ -309,6 +309,9 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .chord-editor .ed-pass-col { flex: 1; }
 .chord-editor .ed-col .ed-btns { flex-wrap: nowrap; }
 .chord-editor .ed-btns .btn.ed.acc { flex: 0 0 44px; }
+.chord-editor .ed-root-row { display: flex; flex-wrap: nowrap; gap: 4px; width: 100%; }   /* hold + C-B: never split */
+.chord-editor .ed-root-row .btn.ed { flex: 1 1 0; min-width: 0; }
+.chord-editor .ed-root-row + .btn.ed.acc { margin-left: 0; }
 .chord-editor #ed-type-more, .chord-editor #ed-bass { flex: 0 0 calc(50% - 2px); min-width: 0; }
 .chord-editor .pill.ed-style-pill .btn { padding: 0 2px; min-height: 36px; border-top: 1px solid #111; }
 .ed-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
