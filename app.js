@@ -183,8 +183,7 @@
       out.send([0xB0 | ch, 32, t.lsb]);            // bank select LSB
       out.send([0xC0 | ch, t.pc - 1]);             // program change (1-based in the list)
     };
-    // On the Chords tab the keyboard is in app mode, which ignores program changes: go-link.js (whileReleased) steps out of it.
-    if (CHORDS) CHORDS.whileDisconnected(sendTone); else sendTone();
+    sendTone();                                     // program changes work in app mode too (tested 2026-11-21, fw 1.12)
     setStatus(`Sent ${t.num} ${t.name}.`);
   }
 

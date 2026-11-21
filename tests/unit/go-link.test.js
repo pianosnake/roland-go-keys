@@ -104,3 +104,4 @@ test('leaving the tab ends app mode', () => {
   assert.equal(link.sent[link.sent.length - 1][11], 0);
   assert.equal(link.aliveTimer, 0);
 });
+

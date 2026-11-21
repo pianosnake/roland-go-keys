@@ -3,8 +3,8 @@
 //   begin-edit / entry / end-edit triple stays together). start()/stop() and app mode go out at once.
 //   App mode (02 00 = 01): entered by engage() (the first use of a control on the Chords tab other than Play) and kept up
 //   every 20 s like Chord Director (it times out after ~60 s: bar messages stop and the GO:KEYS shows "App
-//   disconnected"), until setActive(false) (leaving the tab) sends 02 00 = 00. While in app mode the GO:KEYS ignores
-//   program changes, so a tone change goes through whileReleased(). Start/stop and dump requests work without it.
+//   disconnected"), until setActive(false) (leaving the tab) sends 02 00 = 00. Start/stop, dump requests and tone
+//   changes (bank select + program change, tested 2026-11-21) all work with or without it.
 //   Input: onSysEx(bytes) decodes what the GO:KEYS sends and calls the handlers given to the constructor:
 //     playState(playing, goBar)   goBar: a bar index, 'intro', 'ending', or null (the first bar sends none)
 //     bar(goBar)                  on each downbeat
@@ -70,12 +70,6 @@
     }
     // Backs up the 20 s timer, which Chrome slows down in background windows.
     keepAlive() { if (this.engaged && now() - this.lastAlive > 15000) this.connect(); }
-    // Runs fn (a tone change) with app mode briefly off, so the GO:KEYS accepts the program change.
-    whileReleased(fn) {
-      if (!this.connected || !this.out) { fn(); return; }
-      this.sendNow(S.dt1(S.ADDR.app, [0])); this.connected = false;
-      setTimeout(() => { fn(); setTimeout(() => { if (this.engaged) this.connect(); }, 100); }, 30);
-    }
 
     // ------------------------------------------------------------ commands (false: no output)
     // One edit, like Chord Director: 02 14 / 03 lo = 00 01 + entry / 02 18.

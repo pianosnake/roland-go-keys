@@ -757,7 +757,6 @@
     init,
     onSysEx: (d) => link.onSysEx(d),
     setActive,
-    whileDisconnected: (fn) => link.whileReleased(fn),
     setOutput: (fn) => { link.setOutput(fn); player.outputChanged(); },
   };
 }());
