@@ -1,0 +1,25 @@
+FORMAT,2
+NAME,Lomir Alle in Enyem
+INTRO_SW,On
+ENDING_SW,Off
+LOOP,On
+TRANSPOSE,0
+
+DIVISION,Intro,Short
+CHORD,1,C
+
+DIVISION,Variation,2
+CHORD,4,Gm,,: : A7,D
+CHORD,1,Gm : A7
+
+DIVISION,FillIn,Up
+CHORD,3,D,Gm,
+CHORD,4,: : A7,D,Gm : A7,D
+DIVISION,Variation,4
+CHORD,3,Gm : A7,D : Gm,Cm : D
+
+DIVISION,FillIn,Down
+CHORD,1,
+DIVISION,Variation,4
+CHORD,4,Gm : A7,D : Gm,Cm : D,
+

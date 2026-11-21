@@ -1,0 +1,12 @@
+FORMAT,2
+NAME,Knitial Pattern
+INTRO_SW,On
+ENDING_SW,Off
+LOOP,On
+TRANSPOSE,0
+
+DIVISION,Intro,Short
+CHORD,1,G
+
+CHORD,4,G,,,
+
