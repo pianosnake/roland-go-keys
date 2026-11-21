@@ -131,6 +131,11 @@
       `data-section="${key}" aria-label="${label} chord">${c ? esc(chordName(c)) : '·'}</button></div></div>`;
   }
 
+  // The grid is redrawn bar by bar: each piece's HTML is built (cheap), compared with what was drawn last time, and only
+  // the pieces that changed are replaced, so selecting a beat or editing a chord touches one or two bars instead of
+  // the whole grid. When the layout changes (bars added, removed, hidden or shown; intro or ending on or off) the grid
+  // is rebuilt. markBar() runs after either and puts the playing-bar marks back.
+  let drawn = null;                                 // { layout, html: { key: html } } of what's in #bars now
   function render() {
     renderSettings();
     renderSongs();
@@ -140,40 +145,64 @@
     if (!song.loaded) $('name-form').hidden = true;
     $('dl-txt').disabled = !song.loaded || !song.chords.length;
     $('chords-send').disabled = !song.loaded || !song.bars;
-    if (!song.loaded) { $('bars').innerHTML = ''; return; }
-    if (!song.bars) { $('bars').innerHTML = '<div class="fav-empty">The song on the keyboard has no bars.</div>'; return; }
-    const st = song.settings, view = song.view();
-    // Intro and ending get rows of their own, above and below the song's bars.
-    const row = (html) => `<div class="bars-grid">${html}</div>`;
-    const marks = repeatMarks(view.repeats), styles = song.barStyles();
-    $('bars').innerHTML = (st.intro ? row(sectionBox('intro', 'INTRO', st.introLong)) : '') + row(byBar().map((bar, b) => {
-      if (view.hidden[b]) return '';
-      const beats = [];
-      for (let k = 0; k < BEATS; k++) {
-        const c = bar.chords.find((x) => x.beat === k);
-        const on = sel.open && !sel.section && sel.bar === b && sel.beat === k ? ' sel' : '';
-        beats.push(`<button class="beat${c ? '' : ' held'}${on}" type="button" data-bar="${b}" data-beat="${k}">${c ? esc(c.name) : '·'}</button>`);
-      }
-      const mk = marks[b] || {};
-      const num = view.number[b];
-      const r = song.activeRepeatAt(b) || view.repeats.find((x) => x.start === b) || null;   // includes a pair with no copy yet
-      // The repeat signs are drawn on the bar's left and right edges (rep-open, rep-close in style.css).
-      // A sign with no partner is grey.
-      const loneOpen = !!mk.start && !view.repeats.some((x) => x.start === b);
-      const loneClose = mk.end != null && !view.repeats.some((x) => x.start + x.len - 1 === b);
-      const signs = (mk.start ? ' rep-open' : '') + (mk.end != null ? ' rep-close' : '') +
-        (loneOpen ? ' lone-open' : '') + (loneClose ? ' lone-close' : '');
-      // Upper right: the bar's variation (bars in a repeat list theirs per pass, beside the number), the times played
-      // and the pass being played.
-      const right = (bar.variation && !r && !sameAsBarBefore(styles, b) ? `<span class="bar-var">${esc(bar.variation)}</span>` : '') +
-        (mk.end != null ? `<span class="rep-end">${mk.end ? `<span class="rep-mark">${mk.end}</span>` : ''}<span class="rep-pass" data-end="${b}"></span></span>` : '');
-      return `<div class="bar${signs}" data-bar="${b}"${loneOpen || loneClose ? ' title="This repeat sign has no partner"' : ''}><div class="bar-head"><span class="bar-num">${num}</span>` +
-        `${r ? passStyles(b, r, styles) : ''}<span class="bar-right">${right}</span></div>` +
-        `<div class="beats">${beats.join('')}</div></div>`;
-    }).join('') + '<button class="bar add-bar" type="button" id="add-bar" title="Add a bar at the end">+ bar</button>') +
-      (st.ending ? row(sectionBox('ending', 'ENDING', st.endingLong)) : '');
+    if (!song.loaded) { drawn = null; $('bars').innerHTML = ''; return; }
+    if (!song.bars) { drawn = null; $('bars').innerHTML = '<div class="fav-empty">The song on the keyboard has no bars.</div>'; return; }
+    drawGrid();
     markBar();
     renderEditor();
+  }
+
+  function drawGrid() {
+    const st = song.settings, view = song.view();
+    const marks = repeatMarks(view.repeats), styles = song.barStyles(), bars = byBar();
+    // The pieces in order: [key, html]. Keys are what data-bar holds: 'intro', a bar index, 'ending'.
+    const pieces = [];
+    if (st.intro) pieces.push(['intro', sectionBox('intro', 'INTRO', st.introLong)]);
+    bars.forEach((bar, b) => { if (!view.hidden[b]) pieces.push([String(b), barHtml(bar, b, view, marks, styles)]); });
+    if (st.ending) pieces.push(['ending', sectionBox('ending', 'ENDING', st.endingLong)]);
+    const layout = pieces.map((p) => p[0]).join(',');
+    const html = {};
+    pieces.forEach(([key, h]) => { html[key] = h; });
+    if (drawn && drawn.layout === layout) {
+      pieces.forEach(([key, h]) => {
+        if (drawn.html[key] === h) return;
+        const el = $('bars').querySelector(`.bar[data-bar="${key}"]`);
+        if (el) el.outerHTML = h;
+      });
+    } else {
+      // Intro and ending get rows of their own, above and below the song's bars.
+      const row = (h) => `<div class="bars-grid">${h}</div>`;
+      $('bars').innerHTML = (st.intro ? row(html.intro) : '') +
+        row(pieces.filter((p) => p[0] !== 'intro' && p[0] !== 'ending').map((p) => p[1]).join('') +
+          '<button class="bar add-bar" type="button" id="add-bar" title="Add a bar at the end">+ bar</button>') +
+        (st.ending ? row(html.ending) : '');
+    }
+    drawn = { layout, html };
+  }
+
+  function barHtml(bar, b, view, marks, styles) {
+    const beats = [];
+    for (let k = 0; k < BEATS; k++) {
+      const c = bar.chords.find((x) => x.beat === k);
+      const on = sel.open && !sel.section && sel.bar === b && sel.beat === k ? ' sel' : '';
+      beats.push(`<button class="beat${c ? '' : ' held'}${on}" type="button" data-bar="${b}" data-beat="${k}">${c ? esc(c.name) : '·'}</button>`);
+    }
+    const mk = marks[b] || {};
+    const num = view.number[b];
+    const r = song.activeRepeatAt(b) || view.repeats.find((x) => x.start === b) || null;   // includes a pair with no copy yet
+    // The repeat signs are drawn on the bar's left and right edges (rep-open, rep-close in style.css).
+    // A sign with no partner is grey.
+    const loneOpen = !!mk.start && !view.repeats.some((x) => x.start === b);
+    const loneClose = mk.end != null && !view.repeats.some((x) => x.start + x.len - 1 === b);
+    const signs = (mk.start ? ' rep-open' : '') + (mk.end != null ? ' rep-close' : '') +
+      (loneOpen ? ' lone-open' : '') + (loneClose ? ' lone-close' : '');
+    // Upper right: the bar's variation (bars in a repeat list theirs per pass, beside the number), the times played
+    // and the pass being played.
+    const right = (bar.variation && !r && !sameAsBarBefore(styles, b) ? `<span class="bar-var">${esc(bar.variation)}</span>` : '') +
+      (mk.end != null ? `<span class="rep-end">${mk.end ? `<span class="rep-mark">${mk.end}</span>` : ''}<span class="rep-pass" data-end="${b}"></span></span>` : '');
+    return `<div class="bar${signs}" data-bar="${b}"${loneOpen || loneClose ? ' title="This repeat sign has no partner"' : ''}><div class="bar-head"><span class="bar-num">${num}</span>` +
+      `${r ? passStyles(b, r, styles) : ''}<span class="bar-right">${right}</span></div>` +
+      `<div class="beats">${beats.join('')}</div></div>`;
   }
 
   // The bar plays the same variation as the bar before it, so its label can be left out. A fill is never the same:

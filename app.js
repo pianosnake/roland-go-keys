@@ -181,7 +181,7 @@
       out.send([0xB0 | ch, 32, t.lsb]);            // bank select LSB
       out.send([0xC0 | ch, t.pc - 1]);             // program change (1-based in the list)
     };
-    // On the Chords tab the keyboard is in app mode, which ignores program changes: chords.js steps out of it.
+    // On the Chords tab the keyboard is in app mode, which ignores program changes: go-link.js (whileReleased) steps out of it.
     if (CHORDS) CHORDS.whileDisconnected(sendTone); else sendTone();
     setStatus(`Sent ${t.num} ${t.name}.`);
   }
@@ -400,7 +400,7 @@
 
     $('port').onchange = (e) => { state.port = e.target.value || null; save(); if (midi.access) connect(); };
 
-    // Tabs: TONE (tone details + CCs) and CHORDS (chords.js).
+    // Tabs: TONE (tone details + CCs) and CHORDS (chords-tab.js).
     $('tabs').onclick = (e) => {
       const b = e.target.closest('.tab');
       if (!b) return;
