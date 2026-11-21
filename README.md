@@ -15,6 +15,7 @@ A Web MIDI page for the Roland GO:KEYS 3/5. It lists the keyboard's thousand+ to
 - **GET** reads the chord progression stored on the keyboard (the song Chord Director edits) and **SEND** writes it back. Chrome asks for SysEx permission.
 - The song is shown bar by bar, 4 beats per bar. Play / stop the style from the page; the bar being played is highlighted and the view follows it.
 - Tap a beat to edit it. Use computer keyboard to type chords.
+- Play song starting on selected measure
 - Repeats: set |: and :| on bars and the repeated bars are written out on the keyboard, while the page shows them once.
 - Insert and delete bars, rename the song, clear the chart back to the keyboard's initial pattern.
 - Save songs on this device (SONGS tab in the left column) and load them back; loading sends the song to the keyboard. Saved songs keep their repeat signs.

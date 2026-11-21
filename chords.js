@@ -114,6 +114,7 @@
     if (a2 === 0x01 && a3 === 0x01) {                           // play state [+ bar]; no bar message comes for the first bar
       play.playing = data[0] === 1;
       play.bar = !play.playing ? null : data.length >= 3 ? section(data[1], data[2]) : firstBar();
+      if (!play.playing) endPlayFrom();
       markBar(); markPlay(); keepAlive(); return true;
     }
     if (a2 === 0x01 && a3 === 0x02 && data.length >= 2) { onBar(section(data[0], data[1])); return true; }
@@ -156,6 +157,7 @@
       const lastBar = song.chords.reduce((m, c) => Math.max(m, c.bar + 1), 0);
       song.bars = Math.max(incoming.bars, lastBar);
       song.loaded = true;
+      playFrom = 0;
       markersFromSong();
       incoming = null;
       savedId = matchingSaved();
@@ -169,8 +171,10 @@
   const sectionChord = (e) => (e.length >= 6 && e[0] ? { root: e[0], acc: e[1], type: w14(e[2], e[3]), bass: e[4], bassAcc: e[5] } : null);
 
   // Bar number from the keyboard: 'intro', 'ending' or the bar index.
-  function section(hi, lo) { return hi & 0x40 ? 'ending' : hi & 0x20 ? 'intro' : w14(hi, lo); }
-  function firstBar() { return song.loaded && song.settings.intro ? 'intro' : 0; }
+  // While playing from a bar, the keyboard holds the song rotated to start there (see kbSong), so its bar numbers are
+  // turned back to song bars.
+  function section(hi, lo) { return hi & 0x40 ? 'ending' : hi & 0x20 ? 'intro' : songBar(w14(hi, lo)); }
+  function firstBar() { return playFrom ? playFrom : song.loaded && song.settings.intro ? 'intro' : 0; }
 
   // Bar counter: highlight the bar being played. The keyboard also sends it while stopped, whenever a song setting
   // changes (00 00, then 20 00 if there's an intro: back to the start), so only the play state decides playing.
@@ -181,13 +185,56 @@
   }
 
   // Play/Stop button. The keyboard's play-state messages keep it in step with the panel's START/STOP button.
+  // With the editor open on a bar after the first, Play starts from that bar (on a repeat's first pass).
   function togglePlay() {
     if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
+    // edit.bar is the bar on the first pass of a repeat, so the repeat still plays all its passes from there. (The pass
+    // picked in the editor stays set from bar to bar, so starting on it skipped the earlier passes.)
+    if (!play.playing && song.loaded && edit.open && !edit.section && edit.bar > 0) { playFromBar(edit.bar); return; }
     const wasPlaying = play.playing;
     send(dt1([0x01, 0x00, 0x02, 0x01], [wasPlaying ? 0 : 1]));
     play.playing = !play.playing;
     play.bar = play.playing ? firstBar() : null;
+    if (!play.playing) endPlayFrom();
     markPlay(); markBar();
+  }
+
+  // Play from the selected bar. The keyboard always starts a song at its first bar (song position is ignored by START),
+  // so it gets the song from the selected bar on: with LOOP off just the bars to the end; with LOOP on the whole song
+  // rotated (the bars to the end, then the bars before), so it plays on into bar 1 and round again, like the song does.
+  // Which one is decided at Play (playRotated), so toggling LOOP while it plays doesn't confuse the bar numbers. The
+  // chord and variation already sounding at the selected bar go on its first beat, and the intro is left out. Edits made
+  // meanwhile go to the keyboard's bar (kbBar; none for a bar cut off), and the bar numbers it sends back are turned
+  // back (songBar). Stopping puts the whole song back in order.
+  let playFrom = 0, playRotated = false;
+  function playFromBar(bar) {
+    playFrom = bar; playRotated = !!song.settings.loop;
+    sendSong();
+    enqueue([dt1([0x01, 0x00, 0x02, 0x01], [1])]);                 // after the transfer
+    play.playing = true; play.bar = firstBar();
+    markPlay(); markBar();
+    setInfo(`Playing from bar ${passLabel(playFrom)}. Stop puts the song back in order on the keyboard.`);
+  }
+  function endPlayFrom() {
+    if (!playFrom) return;
+    playFrom = 0;
+    if (send) sendSong();
+  }
+  // < 0: the bar isn't on the keyboard (cut off before the start).
+  const kbBar = (bar) => (!playFrom ? bar : playRotated ? (bar - playFrom + song.bars) % song.bars : bar - playFrom);
+  const songBar = (kb) => (!playFrom ? kb : playRotated ? (kb + playFrom) % song.bars : kb + playFrom);
+  // What the keyboard should have on its first beat while playing from a bar: the chord sounding and the variation playing.
+  function kbStart() {
+    const st = barStyles()[playFrom];
+    return { chord: chordInEffect(playFrom, 0), variation: st ? st.value : 0 };
+  }
+  // After an edit, the start chord or variation may have changed (an edit before the start bar, or of the bar itself).
+  // (Rotated, song bar 1 comes round without anything added, so nothing else needs fixing.)
+  function syncStart() {
+    if (!playFrom) return;
+    const k = kbStart(), c = k.chord;
+    sendEdit(0x40, [0, 0, 0].concat(chordBytes(c)));               // bar 0, beat 0; no chord = delete the entry
+    sendEdit(0x41, [0, 0, k.variation]);
   }
 
   // App mode, entered by engage() and kept up until the user leaves the Chords tab. The 20 s timer is backed up by the
@@ -631,13 +678,15 @@
     if (edit.section) { putSectionChord(c); return; }
     const beat = edit.beat;
     for (const bar of passesOf(edit.bar)) {
-      const entry = c ? [bar >> 7, bar & 0x7F, beat, c.root, c.acc, c.type >> 7, c.type & 0x7F, c.bass, c.bassAcc]
-        : [bar >> 7, bar & 0x7F, beat, 0x00, 0x40, 0x00, 0x01, 0x00, 0x40];
-      if (!sendEdit(0x40, entry)) return;
+      const kb = kbBar(bar);
+      const entry = c ? [kb >> 7, kb & 0x7F, beat, c.root, c.acc, c.type >> 7, c.type & 0x7F, c.bass, c.bassAcc]
+        : [kb >> 7, kb & 0x7F, beat, 0x00, 0x40, 0x00, 0x01, 0x00, 0x40];
+      if (kb >= 0 ? !sendEdit(0x40, entry) : !send) { if (!send) setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
       song.chords = song.chords.filter((x) => !(x.bar === bar && x.beat === beat));
       if (c) song.chords.push({ bar, beat, root: c.root, acc: c.acc, type: c.type, bass: c.bass, bassAcc: c.bassAcc });
     }
     song.chords.sort((x, y) => x.bar - y.bar || x.beat - y.beat);
+    syncStart();
     render();
   }
 
@@ -687,10 +736,12 @@
         return;
       }
     }
-    if (!sendEdit(0x41, [bar >> 7, bar & 0x7F, value])) return;
+    const kb = kbBar(bar);
+    if (kb >= 0 ? !sendEdit(0x41, [kb >> 7, kb & 0x7F, value]) : !send) { if (!send) setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
     song.variations = song.variations.filter((v) => v.bar !== bar);
     if (value) song.variations.push({ bar, value });
     song.variations.sort((x, y) => x.bar - y.bar);
+    syncStart();
     render();
   }
 
@@ -716,26 +767,44 @@
         k += size;
       } while (k < items.length);
     };
-    stream(0x40, song.chords, 13, (c) => [c.bar >> 7, c.bar & 0x7F, c.beat].concat(chordBytes(c)));
-    if (song.variations.length) stream(0x41, song.variations, 13, (v) => [v.bar >> 7, v.bar & 0x7F, v.value]);
+    const kb = kbSong();
+    stream(0x40, kb.chords, 13, (c) => [c.bar >> 7, c.bar & 0x7F, c.beat].concat(chordBytes(c)));
+    if (kb.variations.length) stream(0x41, kb.variations, 13, (v) => [v.bar >> 7, v.bar & 0x7F, v.value]);
     const name = ((song.name || DEFAULT_NAME) + ' '.repeat(32)).slice(0, 32).split('').map((ch) => ch.charCodeAt(0) & 0x7F);
-    msgs.push(dt1(A(0x00), name), dt1(A(0x22), [0x40 + st.transpose]), dt1(A(0x24), [st.intro ? 1 : 0]),
+    msgs.push(dt1(A(0x00), name), dt1(A(0x22), [0x40 + st.transpose]), dt1(A(0x24), [kb.intro ? 1 : 0]),
       dt1(A(0x42), chordBytes(song.introChord)), dt1(A(0x25), [st.introLong ? 1 : 0]), dt1(A(0x26), [st.ending ? 1 : 0]),
       dt1(A(0x43), chordBytes(song.endingChord)), dt1(A(0x27), [st.endingLong ? 1 : 0]), dt1(A(0x23), [st.loop ? 1 : 0]),
-      dt1(A(0x20), [song.bars >> 7, song.bars & 0x7F]), dt1([0x01, 0x00, 0x02, 0x0C], [0, 0, 0, 0]));
+      dt1(A(0x20), [kb.bars >> 7, kb.bars & 0x7F]), dt1([0x01, 0x00, 0x02, 0x0C], [0, 0, 0, 0]));
     enqueue(msgs);
     lastAlive = performance.now();
     return true;
   }
 
+  // The song as the keyboard gets it: as it is, or while playing from a bar, from that bar on (see playFromBar). Rotated,
+  // bar 1 needs nothing added where it comes round: the chord and variation held into it are the song's last ones, as
+  // when the song loops.
+  function kbSong() {
+    if (!playFrom) return { chords: song.chords, variations: song.variations, bars: song.bars, intro: song.settings.intro };
+    const k = kbStart(), byPos = (x, y) => x.bar - y.bar || (x.beat || 0) - (y.beat || 0), on = (x) => x.bar >= 0;
+    const chords = song.chords.map((c) => Object.assign({}, c, { bar: kbBar(c.bar) })).filter(on);
+    if (k.chord && !chords.some((c) => c.bar === 0 && c.beat === 0)) chords.push(Object.assign({}, k.chord, { bar: 0, beat: 0 }));
+    const variations = song.variations.map((v) => ({ bar: kbBar(v.bar), value: v.value })).filter(on);
+    if (k.variation && !variations.some((v) => v.bar === 0)) variations.push({ bar: 0, value: k.variation });
+    return { chords: chords.sort(byPos), variations: variations.sort(byPos),
+      bars: playRotated ? song.bars : song.bars - playFrom, intro: false };
+  }
+
   // Insert an empty bar at index at (the chord before it keeps sounding), or delete bar at.
+  // While playing from a bar, the start bar moves with the bars before it.
   function addBarAt(at) {
+    if (playFrom && at <= playFrom) playFrom += 1;
     shiftMarkers(at, 1);
     const shift = (x) => { if (x.bar >= at) x.bar += 1; };
     song.chords.forEach(shift); song.variations.forEach(shift);
     song.bars += 1;
   }
   function removeBarAt(at) {
+    if (playFrom && at < playFrom) playFrom -= 1;
     shiftMarkers(at, -1);
     song.chords = song.chords.filter((c) => c.bar !== at);
     song.variations = song.variations.filter((v) => v.bar !== at);
@@ -808,6 +877,7 @@
     if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
     song.name = DEFAULT_NAME; song.variations = []; song.settings = defaults();
     song.bars = 4;
+    playFrom = 0;
     song.chords = [{ bar: 0, beat: 0, root: 3, acc: 0x40, type: 1, bass: 0, bassAcc: 0x40 }];   // bars 2-4 hold the C
     song.introChord = null; song.endingChord = null;
     starts = {}; ends = {};
@@ -844,6 +914,7 @@
   }
   // Rebuild the song from the old bars listed in order. The signs of repeat r, and any others inside it, are dropped.
   function reorderBars(order, r) {
+    if (playFrom) { const k = order.findIndex((old) => old >= playFrom); playFrom = k < 0 ? 0 : k; }
     const oldEnd = r.start + r.times * r.len;
     const oldStyles = barStyles(), chords = [], variations = [];
     let style = null;
@@ -921,6 +992,7 @@
     const after = r.start + r.len;
     const move = (x) => { if (x.bar >= after) x.bar += r.len; };
     song.chords.forEach(move); song.variations.forEach(move);
+    if (playFrom >= after) playFrom += r.len;
     shiftMarkers(after, r.len);
     const copy = (list) => list.filter((x) => x.bar >= r.start && x.bar < after).map((x) => Object.assign({}, x, { bar: x.bar + r.len }));
     song.chords = song.chords.concat(copy(song.chords)).sort((x, y) => x.bar - y.bar || x.beat - y.beat);
@@ -1189,6 +1261,7 @@
     song.settings = Object.assign(defaults(), d.settings);
     song.introChord = d.introChord; song.endingChord = d.endingChord;
     song.loaded = true;
+    playFrom = 0;
     starts = d.starts || {}; ends = d.ends || {};
     savedId = id;
     edit.open = false; edit.section = null; edit.pass = 0; edit.bar = 0; edit.beat = 0;
