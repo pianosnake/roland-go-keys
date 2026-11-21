@@ -12,7 +12,7 @@ A Web MIDI page for the Roland GO:KEYS 3/5. It lists the keyboard's thousand+ to
 - Sliders for the controllers (CCs), in six sections.
 
 **Chords**
-- **GET** reads the chord progression stored on the keyboard (the song Chord Director edits) and **SEND** writes it back, over undocumented SysEx. Chrome asks for SysEx permission.
+- **GET** reads the chord progression stored on the keyboard (the song Chord Director edits) and **SEND** writes it back. Chrome asks for SysEx permission.
 - The song is shown bar by bar, 4 beats per bar. Play / stop the style from the page; the bar being played is highlighted and the view follows it.
 - Tap a beat to edit it. Use computer keyboard to type chords.
 - Repeats: set |: and :| on bars and the repeated bars are written out on the keyboard, while the page shows them once.

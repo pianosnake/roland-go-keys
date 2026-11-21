@@ -118,7 +118,10 @@
     }
     if (a2 === 0x01 && a3 === 0x02 && data.length >= 2) { onBar(section(data[0], data[1])); return true; }
 
-    if (a2 === 0x02 && a3 === 0x08) { incoming = newDump(); return true; }
+    // A dump only counts after GET asked for one (incoming is set until it ends or times out). The keyboard never sends
+    // one unasked, but a loopback port (IAC Driver) echoes the page's own song transfers back, and taking those as
+    // dumps put an older copy of the song on screen and re-ran repeat detection on it.
+    if (a2 === 0x02 && a3 === 0x08) { if (incoming) incoming = newDump(); return true; }
     if (!incoming) return true;
     if (a2 === 0x03 && a3 < 0x40) {                             // name / settings block
       for (let k = 0; k < data.length; k++) {
@@ -224,6 +227,8 @@
   }
 
   // Change song settings the way Chord Director does: begin edit, write, end edit. Writes need "app connected".
+  // Turning LOOP on turns the ending (short or long) off.
+  function toggleLoop() { const loop = !song.settings.loop; setSettings(loop ? { loop, ending: false } : { loop }); }
   function setSetting(key, value) { const c = {}; c[key] = value; setSettings(c); }
   function setSettings(changes) {
     if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return; }
@@ -293,8 +298,7 @@
     $('tr-up').disabled = off || st.transpose >= TRANSPOSE_MAX;
     const loop = !off && st.loop;
     $('set-loop').classList.toggle('on', loop); $('set-loop').setAttribute('aria-pressed', loop ? 'true' : 'false');
-    $('set-loop').disabled = off || st.ending;                    // a song with an ending doesn't loop
-    $('set-loop').title = st.ending ? 'Turn the ending off to loop the song' : '';
+    $('set-loop').title = st.ending && !loop ? 'Loop the song (turns the ending off)' : '';
     ['intro', 'ending'].forEach((sec) => {
       const v = off || !st[sec] ? null : length(st[`${sec}Long`]);
       $(`seg-${sec}`).querySelectorAll('button').forEach((b) => {
@@ -694,7 +698,8 @@
   // Same order as Chord Director: 02 08 begin, 03 40 chords (13 entries per packet), 03 41 variations, 03 00 name,
   // 03 22 transpose, 24 intro, 42 intro chord, 25 intro long, 26 ending, 43 ending chord, 27 ending long, 23 loop,
   // 03 20 bars, 02 0C end.
-  const MAX_BARS = 999;
+  const MAX_BARS = 256;                            // the most measures a GO:KEYS chord pattern holds, repeat passes included
+  const tooLong = (more) => { setInfo(`The keyboard holds at most ${MAX_BARS} measures (repeats count every pass): no room for ${more} more.`); };
   const chordBytes = (c) => (c ? [c.root, c.acc, c.type >> 7, c.type & 0x7F, c.bass, c.bassAcc] : [0x00, 0x40, 0x00, 0x01, 0x00, 0x40]);
   function sendSong() {
     if (!send) { setInfo('No MIDI output, or Chrome refused SysEx access.'); return false; }
@@ -724,16 +729,50 @@
   }
 
   // Insert an empty bar at index at (the chord before it keeps sounding), or delete bar at.
-  function insertBar(at) {
-    if (song.bars >= MAX_BARS) return;
+  function addBarAt(at) {
     shiftMarkers(at, 1);
     const shift = (x) => { if (x.bar >= at) x.bar += 1; };
     song.chords.forEach(shift); song.variations.forEach(shift);
     song.bars += 1;
-    if (sendSong()) { edit.open = true; edit.bar = at; edit.beat = 0; render(); }
+  }
+  function removeBarAt(at) {
+    shiftMarkers(at, -1);
+    song.chords = song.chords.filter((c) => c.bar !== at);
+    song.variations = song.variations.filter((v) => v.bar !== at);
+    const shift = (x) => { if (x.bar > at) x.bar -= 1; };
+    song.chords.forEach(shift); song.variations.forEach(shift);
+    song.bars -= 1;
+  }
+  function insertBar(at) {
+    if (song.bars >= MAX_BARS) { tooLong(1); return; }
+    addBarAt(at);
+    sendSong();                                     // with no MIDI output the page still updates; Send catches up
+    edit.open = true; edit.bar = at; edit.beat = 0; render();
+  }
+  // <+ / +> beside a shown bar. A repeat counts as one block: next to its |: or :| the bar goes before the first pass or
+  // after the last, and inside it the bar goes into every pass, so the passes still match and stay one repeat.
+  // (Inserting after the first pass only made the hidden passes differ, and they showed up as plain bars.)
+  function insertBeside(bar, after) {
+    const r = activeRepeatAt(bar);
+    if (!r) { insertBar(after ? bar + 1 : bar); return; }
+    const off = shownBar(bar).bar - r.start + (after ? 1 : 0);
+    if (off <= 0) { insertBar(r.start); return; }
+    if (off >= r.len) { insertBar(r.start + r.times * r.len); return; }
+    if (song.bars + r.times > MAX_BARS) { tooLong(r.times); return; }
+    for (let k = r.times - 1; k >= 0; k--) addBarAt(r.start + k * r.len + off);   // last pass first: earlier ones don't move
+    sendSong();
+    edit.open = true; edit.bar = r.start + off; edit.beat = 0; render();
   }
   function deleteBar(at) {
     if (song.bars <= 1) return;
+    // A bar between the signs of a repeat goes from every pass, like insertBeside.
+    const r = activeRepeatAt(at), off = r ? shownBar(at).bar - r.start : -1;
+    if (r && off > 0 && off < r.len - 1) {
+      for (let k = r.times - 1; k >= 0; k--) removeBarAt(r.start + k * r.len + off);
+      sendSong();
+      edit.bar = Math.min(r.start + off, r.start + r.len - 2); edit.beat = 0; render();
+      return;
+    }
     // A repeat that loses a sign also loses its written-out copies; the other sign stays, grey.
     const pair = markedRepeats().find((r) => r.start === at || r.start + r.len - 1 === at);
     if (pair && pair.times >= 2) {
@@ -741,17 +780,13 @@
       if (pair.start === at) ends[pair.start + pair.len - 1] = true;
       if (pair.start + pair.len - 1 === at) starts[pair.start] = true;
     }
-    shiftMarkers(at, -1);
-    song.chords = song.chords.filter((c) => c.bar !== at);
-    song.variations = song.variations.filter((v) => v.bar !== at);
-    const shift = (x) => { if (x.bar > at) x.bar -= 1; };
-    song.chords.forEach(shift); song.variations.forEach(shift);
-    song.bars -= 1;
+    removeBarAt(at);
     // The sign left behind may now pair with a grey sign: that new repeat needs its copy on the keyboard.
     const lostStart = !!pair && pair.start === at, kept = pair && (lostStart ? pair.start + pair.len - 2 : pair.start);
     const formed = pair && pair.len > 1 && markedRepeats().find((x) => (lostStart ? x.start + x.len - 1 === kept : x.start === kept));
     if (formed) writeOutNewRepeat(formed);
-    if (formed ? send : sendSong()) { edit.bar = Math.min(at, song.bars - 1); edit.beat = 0; render(); }
+    if (!formed) sendSong();
+    edit.bar = Math.min(at, song.bars - 1); edit.beat = 0; render();
   }
 
   // Clear chart: back to the keyboard's initial pattern, 4 bars of C titled Initial Pattern with default settings. It replaces
@@ -882,7 +917,7 @@
     writeOutRepeat(r);
   }
   function writeOutRepeat(r) {
-    if (song.bars + r.len > MAX_BARS) return;
+    if (song.bars + r.len > MAX_BARS) { tooLong(r.len); return; }
     const after = r.start + r.len;
     const move = (x) => { if (x.bar >= after) x.bar += r.len; };
     song.chords.forEach(move); song.variations.forEach(move);
@@ -1016,8 +1051,8 @@
       else if (b.id === 'ed-next-bar') stepBar(1);
       else if (b.id === 'ed-close') { edit.open = false; render(); }
       else if (b.id === 'ed-rep-start' || b.id === 'ed-rep-end') toggleMarker(b.id === 'ed-rep-start' ? starts : ends);
-      else if (b.id === 'ed-ins-before') insertBar(edit.bar);
-      else if (b.id === 'ed-ins-after') insertBar(edit.bar + 1);
+      else if (b.id === 'ed-ins-before') insertBeside(edit.bar, false);
+      else if (b.id === 'ed-ins-after') insertBeside(edit.bar, true);
       else if (b.id === 'ed-del-bar') deleteBar(edit.bar);
       else if (b.id === 'ed-clear') clearChart();
     });
@@ -1075,7 +1110,7 @@
       if (!edit.section) { engage(); toggleMarker(e.key === '[' || e.key === '{' ? starts : ends); }
       return;
     }
-    if (k === 'l') { e.preventDefault(); engage(); setSetting('loop', !song.settings.loop); return; }
+    if (k === 'l') { e.preventDefault(); engage(); toggleLoop(); return; }
     if ('1234'.indexOf(k) >= 0 && k.length === 1) {               // as the BAR row's Var 1-4
       e.preventDefault();
       if (!edit.section) { engage(); setBarStyle(+k); }
@@ -1452,7 +1487,7 @@
     $('ul-file').onchange = (e) => { const f = e.target.files && e.target.files[0]; if (f) uploadCsv(f); };
     $('tr-down').onclick = () => setSetting('transpose', Math.max(TRANSPOSE_MIN, song.settings.transpose - 1));
     $('tr-up').onclick = () => setSetting('transpose', Math.min(TRANSPOSE_MAX, song.settings.transpose + 1));
-    $('set-loop').onclick = () => setSetting('loop', !song.settings.loop);
+    $('set-loop').onclick = toggleLoop;
     // SHORT / LONG: tapping the one that's lit turns the section off. On/off is 03 24 / 26, the length 03 25 / 27.
     ['intro', 'ending'].forEach((sec) => {
       $(`seg-${sec}`).onclick = (e) => {
@@ -1461,7 +1496,7 @@
         const st = song.settings, c = {};
         c[sec] = !(st[sec] && length(st[`${sec}Long`]) === b.dataset.v);
         if (c[sec]) c[`${sec}Long`] = b.dataset.v === 'long';
-        if (sec === 'ending') c.loop = !c.ending;                  // a song with an ending doesn't loop; without one it does
+        if (sec === 'ending') c.loop = !c.ending;   // SHORT or LONG turns LOOP off; no ending turns it back on
         setSettings(c);
       };
     });
