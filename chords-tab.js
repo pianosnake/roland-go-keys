@@ -449,11 +449,6 @@
     $('ed-rep-end').classList.toggle('on', !!song.ends[sel.bar]);
     $('ed-del-bar').disabled = song.bars <= 1;
     $('ed-ins-before').disabled = $('ed-ins-after').disabled = song.bars >= MAX_BARS;
-    const lastShown = song.lastShownBar();
-    $('ed-prev').disabled = sel.bar === 0 && sel.beat === 0;
-    $('ed-next').disabled = sel.bar === lastShown && sel.beat === BEATS - 1;
-    $('ed-prev-bar').disabled = sel.bar === 0;
-    $('ed-next-bar').disabled = sel.bar === lastShown;
   }
 
   function initEditor() {
@@ -472,12 +467,8 @@
       else if (b.dataset.type != null) changeChord('type', +b.dataset.type);
       else if (b.dataset.style != null) setBarStyle(+b.dataset.style);
       else if (b.dataset.hold) { if (editedChord()) putChord(null); }
-      else if (b.id === 'ed-prev') { if (sel.stepBeat(song, -1)) render(); }
-      else if (b.id === 'ed-next') { if (sel.stepBeat(song, 1)) render(); }
       else if (b.id === 'ed-close') { sel.open = false; render(); }
       else if (b.id === 'ed-del-bar') applyStructure(song.deleteBar(sel.bar));
-      else if (b.id === 'ed-prev-bar') { if (sel.stepBar(song, -1)) render(); }
-      else if (b.id === 'ed-next-bar') { if (sel.stepBar(song, 1)) render(); }
       else if (b.id === 'ed-rep-start' || b.id === 'ed-rep-end') applyStructure(song.toggleSign(b.id === 'ed-rep-start' ? 'start' : 'end', sel.bar));
       else if (b.id === 'ed-ins-before') applyStructure(song.insertBeside(sel.bar, false));
       else if (b.id === 'ed-ins-after') applyStructure(song.insertBeside(sel.bar, true));
@@ -637,7 +628,7 @@
   }
 
   // ------------------------------------------------------------ files
-  // Upload chords: replaces the song on the page and on the GO:KEYS, like loading a saved song.
+  // Upload song: replaces the song on the page and on the GO:KEYS, like loading a saved song.
   function uploadCsv(file) {
     const reader = new FileReader();
     reader.onload = () => {
@@ -654,7 +645,7 @@
     reader.onerror = () => setInfo(`Couldn’t read ${file.name}.`);
     reader.readAsText(file);
   }
-  // Download all saved songs: one CSV each, in a zip.
+  // Download all songs: one CSV each, in a zip.
   function downloadAll() {
     const list = saved.list().filter((e) => e && e.data);
     if (!list.length) { setInfo('No saved songs to download.'); return; }

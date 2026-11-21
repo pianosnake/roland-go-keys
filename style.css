@@ -303,6 +303,7 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .chord-editor .pill.ed-style-pill .btn { grid-column: span 2; }                  /* — (default) V1 V2 V3 V4 on one line */
 .chord-editor .pill.ed-style-pill .btn:nth-child(n+6) { grid-column: span 5; }   /* Fill Up, Fill Down below */
 .chord-editor #ed-rep-start, .chord-editor #ed-rep-end, .chord-editor .ed-pass .btn.ed { flex: 0 1 56px; min-width: 32px; }
+.chord-editor #ed-rep-start, .chord-editor #ed-rep-end { flex-basis: 84px; min-width: 48px; }   /* |: :| half as wide again */
 .chord-editor .ed-rep-row { flex-direction: row; gap: 12px; }   /* REPEAT and PASS side by side, each label over its buttons */
 .chord-editor .ed-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .chord-editor .ed-pass-col { flex: 1; }

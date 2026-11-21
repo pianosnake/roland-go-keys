@@ -65,7 +65,7 @@
     return lines.join('\r\n') + '\r\n';
   }
 
-  // Reading one back (Upload chords). Returns plain song data; throws an Error with a message for the user when the
+  // Reading one back (Upload song). Returns plain song data; throws an Error with a message for the user when the
   // file isn't one of these.
   function parseCsv(text) {
     const out = { name: '', bars: 0, chords: [], variations: [], settings: Song.defaults(), introChord: null, endingChord: null };

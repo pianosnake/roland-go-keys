@@ -5,7 +5,7 @@
   <title>GO:KEYS Tones &amp; Chords</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=114">
+  <link rel="stylesheet" href="style.css?v=118">
 </head>
 <body>
   <aside class="side">
@@ -50,13 +50,9 @@
         </button>
         <button id="ed-close" class="btn ed-nav" type="button" aria-label="Close the editor" title="Close the editor">✕</button>
       </div>
-      <span class="pill ed-pill" role="group" aria-label="Move through the bars">
+      <span class="pill ed-pill" role="group" aria-label="Add bars">
         <button id="ed-ins-before" class="btn ed-nav bar-only" type="button" aria-label="Insert a bar before this one" title="Insert a bar before this one">&lt;+</button>
-        <button id="ed-prev-bar" class="btn ed-nav bar-only" type="button" aria-label="Previous bar" title="Previous bar">«</button>
-        <button id="ed-prev" class="btn ed-nav bar-only" type="button" aria-label="Previous beat">◀</button>
         <span class="ed-pos" id="ed-pos" title="Measure : beat"></span>
-        <button id="ed-next" class="btn ed-nav bar-only" type="button" aria-label="Next beat">▶</button>
-        <button id="ed-next-bar" class="btn ed-nav bar-only" type="button" aria-label="Next bar" title="Next bar">»</button>
         <button id="ed-ins-after" class="btn ed-nav bar-only" type="button" aria-label="Insert a bar after this one" title="Insert a bar after this one">+&gt;</button>
       </span>
       <div class="ed-group bar-only" id="ed-bar-group">
@@ -121,10 +117,10 @@
             <button id="name-edit" class="menu-item" type="button" role="menuitem">Rename…</button>
             <button id="song-save-new" class="menu-item" type="button" role="menuitem">Save as new</button>
             <div class="menu-sep"></div>
-            <button id="dl-txt" class="menu-item" type="button" role="menuitem">Download chords (.csv)</button>
-            <button id="dl-all" class="menu-item" type="button" role="menuitem">Download all saved songs (.zip)</button>
-            <button id="ul-txt" class="menu-item" type="button" role="menuitem">Upload chords (.csv)…</button>
+            <button id="ul-txt" class="menu-item" type="button" role="menuitem">Upload song (.csv)</button>
             <input id="ul-file" type="file" accept=".csv,.CSV,text/csv" hidden>
+            <button id="dl-txt" class="menu-item" type="button" role="menuitem">Download song (.csv)</button>
+            <button id="dl-all" class="menu-item" type="button" role="menuitem">Download all songs (.zip)</button>
             <div class="menu-item menu-tr"><span>Transpose</span>
               <span class="pill" role="group" aria-label="Transpose"><button id="tr-down" class="btn" type="button" aria-label="Transpose down">−</button><span class="set-val" id="tr-val">--</span><button id="tr-up" class="btn" type="button" aria-label="Transpose up">+</button></span></div>
           </div>
@@ -141,16 +137,16 @@
   </main>
 
   <script src="tones.js"></script>
-  <script src="chord-names.js?v=114"></script>
-  <script src="go-sysex.js?v=114"></script>
-  <script src="song.js?v=114"></script>
-  <script src="go-pattern.js?v=114"></script>
-  <script src="go-link.js?v=114"></script>
-  <script src="go-player.js?v=114"></script>
-  <script src="selection.js?v=114"></script>
-  <script src="saved-songs.js?v=114"></script>
-  <script src="song-files.js?v=114"></script>
-  <script src="chords-tab.js?v=114"></script>
-  <script src="app.js?v=114"></script>
+  <script src="chord-names.js?v=118"></script>
+  <script src="go-sysex.js?v=118"></script>
+  <script src="song.js?v=118"></script>
+  <script src="go-pattern.js?v=118"></script>
+  <script src="go-link.js?v=118"></script>
+  <script src="go-player.js?v=118"></script>
+  <script src="selection.js?v=118"></script>
+  <script src="saved-songs.js?v=118"></script>
+  <script src="song-files.js?v=118"></script>
+  <script src="chords-tab.js?v=118"></script>
+  <script src="app.js?v=118"></script>
 </body>
 </html>
