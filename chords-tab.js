@@ -432,12 +432,12 @@
     // (in the intro or ending: no chord).
     const holdTitle = sec ? 'No chord' : 'Hold: no chord change on this beat, the previous chord continues';
     // The hold button and the seven letters stay on one line (ed-root-row); sharp and flat go on the next.
-    $('ed-root').innerHTML = `<span class="ed-root-row"><button class="btn ed hold${c ? '' : ' on'}" type="button" data-hold="1" title="${holdTitle}" aria-label="${holdTitle}"></button>` +
+    $('ed-root').innerHTML = `<span class="ed-root-row ed-pill-row"><button class="btn ed hold${c ? '' : ' on'}" type="button" data-hold="1" title="${holdTitle}" aria-label="${holdTitle}"></button>` +
       'CDEFGAB'.split('').map((l) => btn('root', PC[l], l, !!c && l === letter)).join('') + '</span>' +
-      accBtn(1, '♯', 'Sharp', letter === 'E' || letter === 'B') + accBtn(-1, '♭', 'Flat', letter === 'C' || letter === 'F');
+      '<span class="ed-pill-row ed-acc-row">' + accBtn(1, '♯', 'Sharp', letter === 'E' || letter === 'B') + accBtn(-1, '♭', 'Flat', letter === 'C' || letter === 'F') + '</span>';
     const more = !!c && TYPE_MORE.indexOf(c.type) >= 0;
-    $('ed-type').innerHTML = TYPE_BUTTONS.map((t) => btn('type', t, TYPES[t][0], !!c && c.type === t)).join('')
-        .replace('data-type="1">', 'data-type="1" title="Major" aria-label="Major">') +
+    $('ed-type').innerHTML = '<span class="ed-pill-row">' + TYPE_BUTTONS.map((t) => btn('type', t, TYPES[t][0], !!c && c.type === t)).join('')
+        .replace('data-type="1">', 'data-type="1" title="Major" aria-label="Major">') + '</span>' +
       `<select id="ed-type-more" class="ed-select${more ? ' on' : ''}" aria-label="Other chord types"><option value="">more…</option>` +
       TYPE_MORE.map((t) => `<option value="${t}">${esc(TYPES[t][0])}</option>`).join('') + '</select>';
     $('ed-type-more').value = more ? String(c.type) : '';
