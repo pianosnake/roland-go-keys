@@ -241,7 +241,11 @@ body {
 .bar.now .pass-var { color: var(--on-accent); }
 .bar.now .pass-var b { color: inherit; }
 .bar.now .pass-var.play { color: var(--accent-soft); }
-.beats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; margin-top: 4px; }
+.beats { display: flex; gap: 3px; margin-top: 4px; }
+/* A beat with a chord takes the width its name needs; empty (held) beats share what's left, down to 18px each.
+   Only when the names don't fit even then is one cut off with "…". */
+.beats .beat { flex: 1 1 0; min-width: 18px; }
+.beats .beat:not(.held) { flex: 1 1 auto; min-width: 0; }
 .beat { font: 16px/26px var(--lcd-font); color: var(--lcd-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Beat cells are buttons, big enough to tap on the iPad. */
 button.beat {
@@ -270,7 +274,6 @@ button.beat.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(-
 .chords-settings .set-label:first-child { transform: rotate(180deg); }
 .set-val { min-width: 3ch; text-align: center; font: 16px/30px var(--lcd-font); color: var(--lcd-text); background: var(--lcd); border: 1px solid var(--border); padding: 0 6px; }
 .bar.section { border-top-color: var(--accent-soft); }
-.beats.one { grid-template-columns: 1fr; }
 .chord-editor.section .bar-only { display: none; }   /* the intro and ending only have a chord */
 /* Intro, loop and ending as one long pill: SHORT|LONG||LOOP||SHORT|LONG. */
 .set.form { flex-wrap: wrap; }
