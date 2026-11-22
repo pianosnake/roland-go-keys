@@ -72,7 +72,7 @@
     keepAlive() { if (this.engaged && now() - this.lastAlive > 15000) this.connect(); }
 
     // ------------------------------------------------------------ commands (false: no output)
-    // One edit, like Chord Director: 02 14 / 03 lo = 00 01 + entry / 02 18.
+    // One edit: 02 14 / 03 lo = 00 01 + entry / 02 18.
     edit(lo, entry) {
       if (!this.out) return false;
       if (!this.connected) this.connect();
@@ -89,7 +89,7 @@
       this.lastAlive = now();
       return true;
     }
-    // Song settings { key: value }, changed live like Chord Director (applied on the next bar).
+    // Song settings { key: value }, changed live (applied on the next bar).
     settings(changes) {
       if (!this.out) return false;
       if (!this.connected) this.connect();

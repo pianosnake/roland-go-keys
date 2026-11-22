@@ -73,19 +73,23 @@
   const state = {
     channel: saved.channel || 4,
     port: saved.port || null,      // output port name picked by hand (null = automatic)   // firmware 1.11 only changes the UPPER tone from channel 4
+    portId: saved.portId || null,  // the same port's id (names can repeat: "Bluetooth" on iOS)
+    controlPort: saved.controlPort || null,   // input port of a controller (foot pedal), by name; null = none
+    controlPortId: saved.controlPortId || null,
+    playCC: saved.playCC == null ? null : saved.playCC,   // the CC on the control port that toggles play/stop; null = none
     current: null,                 // tone index the keyboard is on (last sent or received)
     values: saved.values || {},    // cc -> last value sent or received
     bank: { msb: null, lsb: null },// last bank select received from the keyboard
     favOnly: !!saved.favOnly,      // the list shows only the favorites (star next to the search field)
     favorites: (saved.favorites || []).filter((num) => TONES.some((t) => t.num === num)), // tone numbers, in the order added
   };
-  const midi = { access: null, input: null, output: null, sysex: false };
+  const midi = { access: null, input: null, output: null, control: null, sysex: false, identified: false };
 
   function load() { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch (e) { return {}; } }
   function save() {
     try {
       const tone = state.current == null ? null : TONES[state.current].num;
-      localStorage.setItem(STORE, JSON.stringify({ channel: state.channel, port: state.port, tone, values: state.values, favorites: state.favorites, favOnly: state.favOnly }));
+      localStorage.setItem(STORE, JSON.stringify({ channel: state.channel, port: state.port, portId: state.portId, controlPort: state.controlPort, controlPortId: state.controlPortId, playCC: state.playCC, tone, values: state.values, favorites: state.favorites, favOnly: state.favOnly }));
     } catch (e) { /* private mode */ }
   }
 
@@ -276,35 +280,124 @@
 
   // ------------------------------------------------------------ MIDI
   // By name on a desktop; inside an AUv3 host the ports have the host's names, so fall back to the first one.
-  const NAMES = /go:?\s?keys|roland|bluetooth/i;
-  // The PORT menu overrides that (needed when the keyboard sits behind a MIDI interface with generic port names).
-  // The input is the port with the same name as the output.
+  const NAMES = /go:?\s?keys|roland|bluetooth/i, GO_NAMES = /go:?\s?keys|roland/i;
+  // The GO:KEYS PORT menu overrides that (needed when the keyboard sits behind a MIDI interface with generic port names).
   // The ports of a MIDIInputMap / MIDIOutputMap. Walked with next() by hand: the iOS "Web MIDI Browser" app's maps give
   // an iterator that isn't iterable, so Array.from(map.values()) came back empty there and the port list said (none).
   function portsOf(map) {
     const out = [];
     if (!map) return out;
     const it = map.values();
-    for (let o = it.next(); !o.done; o = it.next()) out.push(o.value);
+    // Chrome keeps a port that went away in the map, as 'disconnected' (a Bluetooth port that came back as
+    // "GO:KEYS 3 MIDI 1" left the old "MIDI 2" there, and the saved choice kept picking it): those are skipped.
+    for (let o = it.next(); !o.done; o = it.next()) if (o.value.state !== 'disconnected') out.push(o.value);
     return out;
   }
-  const pick = (map, name) => {
-    const list = portsOf(map);
-    return (name && list.find((p) => p.name === name)) || list.find((p) => NAMES.test(p.name)) || list[0] || null;
-  };
+  // Ports are kept apart by id: two can share a name (in the iOS Web MIDI Browser app every Bluetooth device's port is
+  // just "Bluetooth"). A name shared by several ports is shown with a number, in port order ("Bluetooth 1", "Bluetooth 2").
+  const byId = (list, id) => (id && list.find((p) => p.id === id)) || null;
+  const byName = (list, name) => { const same = list.filter((p) => p.name === name); return same.length === 1 ? same[0] : null; };
+  function labelOf(list, p) {
+    const same = list.filter((q) => q.name === p.name);
+    return same.length > 1 ? `${p.name} ${same.indexOf(p) + 1}` : p.name;
+  }
+
+  // Asks one output "who are you" (the MIDI identity request) and resolves with the input a Roland answers on, or null
+  // after 600 ms. The inputs' handlers are borrowed meanwhile (other messages still reach them) and put back after.
+  const IDENTITY_REQUEST = [0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7];
+  const isRolandIdentity = (d) => d.length > 5 && d[0] === 0xF0 && d[1] === 0x7E && d[3] === 0x06 && d[4] === 0x02 && d[5] === 0x41;
+  function askIdentity(output) {
+    return new Promise((resolve) => {
+      const ins = portsOf(midi.access.inputs), kept = ins.map((p) => p.onmidimessage);
+      let done = false;
+      const finish = (inp) => {
+        if (done) return;
+        done = true;
+        ins.forEach((p, k) => { p.onmidimessage = kept[k]; });
+        resolve(inp);
+      };
+      ins.forEach((p, k) => {
+        p.onmidimessage = (ev) => { if (isRolandIdentity(ev.data)) finish(p); else if (kept[k]) kept[k].call(p, ev); };
+      });
+      try { output.send(IDENTITY_REQUEST); } catch (e) { finish(null); return; }
+      setTimeout(() => finish(null), 600);
+    });
+  }
 
   function renderPorts() {
-    const outs = portsOf(midi.access.outputs);
+    const outs = portsOf(midi.access.outputs), ins = portsOf(midi.access.inputs);
+    const goTag = (p) => (midi.identified && (p === midi.output || p === midi.input) ? ' (GO:KEYS)' : '');
     $('port').innerHTML = outs.length
-      ? outs.map((p) => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('')
+      ? outs.map((p) => `<option value="${esc(p.id)}">${esc(labelOf(outs, p))}${goTag(p)}</option>`).join('')
       : '<option value="">(none)</option>';
-    $('port').value = midi.output ? midi.output.name : '';
+    $('port').value = midi.output ? midi.output.id : '';
+    // The control port: any connected input, or none. A saved one that isn't connected now isn't listed (the menu shows
+    // none), but it stays saved and is picked up again when it comes back (connectControl runs on every port change).
+    $('control-port').innerHTML = '<option value="">none</option>' +
+      ins.map((p) => `<option value="${esc(p.id)}">${esc(labelOf(ins, p))}${goTag(p)}</option>`).join('');
+    $('control-port').value = midi.control ? midi.control.id : '';
+  }
+
+  // ------------------------------------------------------------ control port (a foot pedal)
+  // A press of the play/stop CC (value above 0, any channel) starts or stops the style, as the Play button does.
+  // Pedals send 127 on press and 0 on release; repeats within 250 ms are ignored.
+  let lastControlAt = 0;
+  // While the PLAY/STOP CC list is open (focused), a CC picks that CC instead ("learn"), and the port it came from
+  // becomes the control port: every input is heard meanwhile, so the pedal's port needn't be found by name. The list
+  // closes on it and that press doesn't start the style. Any port counts, the GO:KEYS's own too (when the GO:KEYS PORT
+  // is set to the pedal by mistake, the press still shows which port the pedal is).
+  function onControl(d, port) {
+    if ((d[0] & 0xF0) !== 0xB0 || d.length < 3) return;
+    const list = $('control-cc');
+    if (document.activeElement === list) {
+      state.playCC = d[1]; list.value = String(d[1]);
+      state.controlPortId = port.id; state.controlPort = port.name;
+      save(); connectControl(); renderPorts();
+      list.blur();
+      lastControlAt = performance.now();
+      setStatus(`Play/stop: CC ${d[1]} from ${labelOf(portsOf(midi.access.inputs), port)}.`);
+      return;
+    }
+    if (port !== midi.control || state.playCC == null || d[1] !== state.playCC || d[2] === 0) return;
+    const now = performance.now();
+    if (now - lastControlAt < 250) return;
+    lastControlAt = now;
+    if (CHORDS) CHORDS.togglePlay();
+  }
+  // Learning: a handler on every input that has none, taken off again when the list closes.
+  let learning = [];
+  function startLearn() {
+    stopLearn();
+    if (!midi.access) return;
+    portsOf(midi.access.inputs).forEach((p) => {
+      if (p === midi.input || p === midi.control) return;
+      p.onmidimessage = (ev) => onControl(ev.data, p);
+      learning.push(p);
+    });
+  }
+  function stopLearn() {
+    learning.forEach((p) => { if (p !== midi.input && p !== midi.control) p.onmidimessage = null; });
+    learning = [];
+  }
+  // The control port's input: by id, else by name (when several share it, not the GO:KEYS's one). If it's the
+  // GO:KEYS's own port, onMessage passes its messages on instead (an input has one onmidimessage).
+  function connectControl() {
+    const ins = portsOf(midi.access.inputs);
+    let inp = null;
+    if (state.controlPort) {
+      inp = byId(ins, state.controlPortId);
+      if (!inp) { const same = ins.filter((p) => p.name === state.controlPort); inp = same.find((p) => p !== midi.input) || same[0] || null; }
+    }
+    if (midi.control && midi.control !== inp && midi.control !== midi.input) midi.control.onmidimessage = null;
+    midi.control = inp;
+    if (inp && inp !== midi.input) inp.onmidimessage = (ev) => onControl(ev.data, inp);
   }
 
   const CHORDS = window.GOKEYS_CHORDS;
 
   function onMessage(ev) {
     const d = ev.data;
+    onControl(d, midi.input);                       // the pedal on the GO:KEYS's own port, or learning
     if (d[0] === 0xF0) { if (CHORDS) CHORDS.onSysEx(d); return; }
     const type = d[0] & 0xF0, ch = (d[0] & 0x0F) + 1;
     if (ch !== state.channel) return;
@@ -319,17 +412,55 @@
     }
   }
 
-  function connect() {
-    const output = pick(midi.access.outputs, state.port);
-    const input = pick(midi.access.inputs, output ? output.name : state.port);
+  // The GO:KEYS's output and input.
+  //   Output: the one picked in GO:KEYS PORT (by id, or by name when the name is unique); else the one output named
+  //   like the keyboard (NAMES), or the only one. When several could be it (all called "Bluetooth", or an AUv3 host's
+  //   ports), each is asked who it is in turn, and the one a Roland answers wins; none answering: the first.
+  //   Input: the one input with the output's name; else the one the GO:KEYS answers the identity request on; else the
+  //   same-named input in the same position.
+  let connectRun = 0;
+  async function connect() {
+    const run = ++connectRun;
+    const outs = portsOf(midi.access.outputs), ins = portsOf(midi.access.inputs);
+    let output = byId(outs, state.portId) || (state.port && byName(outs, state.port)) || null, input = null, identified = false;
+    if (!output) {
+      // Named for the keyboard first, then any Bluetooth port (a pedal is "Bluetooth" too), then all.
+      const keys = outs.filter((p) => GO_NAMES.test(p.name)), named = outs.filter((p) => NAMES.test(p.name));
+      const cands = keys.length ? keys : named.length ? named : outs;
+      if (cands.length > 1 && midi.sysex) {
+        setStatus('Looking for the GO:KEYS…');
+        for (const o of cands) {
+          const i = await askIdentity(o);
+          if (run !== connectRun) return;
+          if (i) { output = o; input = i; identified = true; break; }
+        }
+      }
+      if (!output) output = cands[0] || null;
+    }
+    if (output && !input) {
+      input = byName(ins, output.name);
+      if (!input && midi.sysex) {
+        input = await askIdentity(output);
+        if (run !== connectRun) return;
+        identified = !!input;
+      }
+      if (!input) {
+        const sameIn = ins.filter((p) => p.name === output.name), sameOut = outs.filter((p) => p.name === output.name);
+        input = sameIn[sameOut.indexOf(output)] || sameIn[0] || ins.find((p) => NAMES.test(p.name)) || ins[0] || null;
+      }
+    }
     if (midi.input && midi.input !== input) midi.input.onmidimessage = null;
-    midi.input = input; midi.output = output;
+    midi.input = input; midi.output = output; midi.identified = identified;
     if (input) input.onmidimessage = onMessage;
+    connectControl();
     renderPorts();
     if (CHORDS) CHORDS.setOutput(output && midi.sysex ? (bytes) => output.send(bytes) : null);
     if (output) {
-      setConn(NAMES.test(output.name) ? 'GO:KEYS' : 'MIDI out', 'on', `Out: ${output.name}${input ? ` · In: ${input.name}` : ''}`);
-      setStatus(input ? '' : 'No MIDI input: the page won\'t follow the keyboard.');
+      setConn(identified || NAMES.test(output.name) ? 'GO:KEYS' : 'MIDI out', 'on',
+        `Out: ${labelOf(outs, output)}${input ? ` · In: ${labelOf(ins, input)}` : ''}`);
+      const asked = (outs.some((p) => GO_NAMES.test(p.name)) ? outs.filter((p) => GO_NAMES.test(p.name)) : outs.filter((p) => NAMES.test(p.name))).length > 1 || (!byName(ins, output.name) && ins.length > 1);
+      setStatus(!input ? 'No MIDI input: the page won\'t follow the keyboard.'
+        : asked && !identified ? `No port answered as a GO:KEYS; using ${labelOf(outs, output)}. If the keyboard doesn't respond, pick another GO:KEYS PORT.` : '');
     } else {
       setConn('Not connected', 'off');
       setStatus('No MIDI output. Connect the GO:KEYS (Bluetooth: Audio MIDI Setup on a Mac).');
@@ -358,6 +489,17 @@
     $('channel').innerHTML = Array.from({ length: 16 }, (_, k) => `<option value="${k + 1}">${k + 1}</option>`).join('');
     $('channel').value = String(state.channel);
     $('channel').onchange = (e) => { state.channel = +e.target.value; markCurrent(); save(); };
+    $('control-cc').innerHTML = '<option value="">none</option>' + Array.from({ length: 128 }, (_, k) => `<option value="${k}">CC ${k}</option>`).join('');
+    $('control-cc').value = state.playCC == null ? '' : String(state.playCC);
+    $('control-cc').onchange = (e) => { state.playCC = e.target.value === '' ? null : +e.target.value; save(); };
+    $('control-port').onchange = (e) => {
+      if (!midi.access) return;
+      const p = byId(portsOf(midi.access.inputs), e.target.value);
+      state.controlPortId = p ? p.id : null; state.controlPort = p ? p.name : null;
+      save(); connectControl(); renderPorts();
+    };
+    $('control-cc').onfocus = startLearn;
+    $('control-cc').onblur = stopLearn;
 
     renderList();
     renderGrid();
@@ -408,7 +550,12 @@
       else lastTap = { cc, at: now };
     });
 
-    $('port').onchange = (e) => { state.port = e.target.value || null; save(); if (midi.access) connect(); };
+    $('port').onchange = (e) => {
+      if (!midi.access) return;
+      const p = byId(portsOf(midi.access.outputs), e.target.value);
+      state.portId = p ? p.id : null; state.port = p ? p.name : null;
+      save(); connect();
+    };
 
     // Tabs: TONE (tone details + CCs) and CHORDS (chords-tab.js).
     $('tabs').onclick = (e) => {

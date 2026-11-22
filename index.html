@@ -5,7 +5,7 @@
   <title>GO:KEYS Tones &amp; Chords</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=139">
+  <link rel="stylesheet" href="style.css?v=146">
 </head>
 <body>
   <aside class="side">
@@ -35,13 +35,21 @@
     </div>
     <div class="side-pane settings-pane" id="pane-settings" hidden>
       <div class="settings-head"><span>MIDI SETTINGS</span><button id="settings-close" class="btn ed-nav" type="button" aria-label="Close the settings">✕</button></div>
-      <label class="port" title="The MIDI port the keyboard is on.">PORT
+      <label class="port" title="The MIDI port the keyboard is on.">GO:KEYS PORT
         <select id="port"></select>
       </label>
-      <label class="chan" title="MIDI channel. Firmware 1.11 only changes the UPPER tone from channel 4.">CHANNEL
+      <label class="chan" title="MIDI channel. Firmware 1.11 only changes the UPPER tone from channel 4.">GO:KEYS CHANNEL
         <select id="channel"></select>
       </label>
-      <p class="settings-note">Channel 4: the GO:KEYS only changes the UPPER tone from channel 4.</p>
+      <p class="settings-note">GO:KEYS only accepts messages on channel 4 and only the UPPER tone can be changed.</p>
+      <label class="port" title="A MIDI controller (a foot pedal such as the iRig BlueBoard) that can start and stop the style.">CONTROL PORT
+        <select id="control-port"></select>
+      </label>
+      <p class="settings-note">Use another MIDI device to control song Play/Stop.</p>
+      <label class="chan" title="The control change from the control port that starts and stops the style (any channel; a press = value above 0). Open this list and press the pedal: it picks that CC and the pedal's port.">PLAY/STOP CC
+        <select id="control-cc"></select>
+      </label>
+      <p class="settings-note">Open this dropdown and send the message from your pedal controller. It should automatically select.</p>
     </div>
     <div class="side-pane chord-editor" id="chord-editor" hidden>
       <div class="ed-top">
@@ -105,7 +113,7 @@
             <button class="btn" type="button" data-v="short" aria-label="Short ending" title="Tap again to turn the ending off">SHORT</button><button class="btn" type="button" data-v="long" aria-label="Long ending" title="Tap again to turn the ending off">LONG</button></span></span>
           <span class="set-label">ENDING</span></div>      </div>
       </div>
-      <div class="chords-info" id="chords-info">GET reads the chord progression stored on the keyboard (the song Chord Director edits). SEND writes it back.</div>
+      <div class="chords-info" id="chords-info">GET reads the chord progression stored on the keyboard. SEND writes it back.</div>
       <div class="chords-title" id="chords-title" hidden>
         <span class="chords-name" id="chords-name-text"></span>
         <button id="song-save-quick" class="btn name-edit" type="button" aria-label="Save the song on this device" title="Save the song on this device">
@@ -138,16 +146,16 @@
   </main>
 
   <script src="tones.js"></script>
-  <script src="chord-names.js?v=139"></script>
-  <script src="go-sysex.js?v=139"></script>
-  <script src="song.js?v=139"></script>
-  <script src="go-pattern.js?v=139"></script>
-  <script src="go-link.js?v=139"></script>
-  <script src="go-player.js?v=139"></script>
-  <script src="selection.js?v=139"></script>
-  <script src="saved-songs.js?v=139"></script>
-  <script src="song-files.js?v=139"></script>
-  <script src="chords-tab.js?v=139"></script>
-  <script src="app.js?v=139"></script>
+  <script src="chord-names.js?v=148"></script>
+  <script src="go-sysex.js?v=146"></script>
+  <script src="song.js?v=149"></script>
+  <script src="go-pattern.js?v=146"></script>
+  <script src="go-link.js?v=149"></script>
+  <script src="go-player.js?v=146"></script>
+  <script src="selection.js?v=146"></script>
+  <script src="saved-songs.js?v=146"></script>
+  <script src="song-files.js?v=146"></script>
+  <script src="chords-tab.js?v=149"></script>
+  <script src="app.js?v=148"></script>
 </body>
 </html>

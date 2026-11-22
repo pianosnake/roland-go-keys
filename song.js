@@ -14,13 +14,13 @@
   'use strict';
   const isNode = typeof module !== 'undefined' && module.exports;
   const GoSysEx = isNode ? require('./go-sysex.js') : window.GoKeys.GoSysEx;
+  const { copyChord, majorChord, chordKey } = isNode ? require('./chord-names.js') : window.GoKeys.ChordNames;
 
-  const BEATS = 4;                                  // Chord Director songs are 4/4 (beat byte 0-3)
+  const BEATS = 4;                                  // GO:KEYS chord patterns are 4/4 (beat byte 0-3)
   const MAX_BARS = GoSysEx.MAX_BARS;
   const MIN_REPEAT = 4, MAX_REPEAT = 32;            // repeats found when a song is read
   const TRANSPOSE_MIN = -6, TRANSPOSE_MAX = 5;      // Roland's usual transpose range; not checked on the GO:KEYS
   const byPos = (x, y) => x.bar - y.bar || x.beat - y.beat;
-  const chordSound = (c) => [c.root, c.acc, c.type, c.bass, c.bass ? c.bassAcc : 0].join('.');
   const copy = (x) => (x == null ? x : JSON.parse(JSON.stringify(x)));
   const tooLong = (more) => `The keyboard holds at most ${MAX_BARS} measures (repeats count every pass): no room for ${more} more.`;
 
@@ -101,7 +101,7 @@
       const out = [];
       for (let b = 0; b < this.bars; b++) out.push('');
       this.chords.forEach((c) => {
-        if (c.bar < this.bars) out[c.bar] += `${[c.beat, c.root, c.acc, c.type, c.bass, c.bass ? c.bassAcc : 0].join('.')}|`;
+        if (c.bar < this.bars) out[c.bar] += `${c.beat}.${chordKey(c)}|`;
       });
       return out;
     }
@@ -112,7 +112,7 @@
       for (let b = 0; b < this.bars; b++) {
         const beats = [];
         for (let beat = 0; beat < BEATS; beat++) {
-          while (k < chords.length && (chords[k].bar < b || (chords[k].bar === b && chords[k].beat <= beat))) cur = chordSound(chords[k++]);
+          while (k < chords.length && (chords[k].bar < b || (chords[k].bar === b && chords[k].beat <= beat))) cur = chordKey(chords[k++]);
           beats.push(cur);
         }
         sigs.push(beats.join('|'));
@@ -216,14 +216,14 @@
       const bars = this.passesOf(bar);
       bars.forEach((b) => {
         this.chords = this.chords.filter((x) => !(x.bar === b && x.beat === beat));
-        if (c) this.chords.push({ bar: b, beat, root: c.root, acc: c.acc, type: c.type, bass: c.bass, bassAcc: c.bassAcc });
+        if (c) this.chords.push(Object.assign({ bar: b, beat }, copyChord(c)));
       });
       this.chords.sort(byPos);
       this.changed();
       return bars;
     }
     setSectionChord(which, c) {
-      this[`${which}Chord`] = c ? { root: c.root, acc: c.acc, type: c.type, bass: c.bass, bassAcc: c.bassAcc } : null;
+      this[`${which}Chord`] = copyChord(c);
     }
     // The variation or fill on one song bar (0 = none). Only that bar: each pass of a repeat keeps its own.
     setStyle(bar, value) {
@@ -241,7 +241,7 @@
     setName(name) { this.name = name; }
     // Back to the GO:KEYS's initial pattern: 4 bars of C with default settings.
     clear(name) {
-      this.set({ name, bars: 4, chords: [{ bar: 0, beat: 0, root: 3, acc: 0x40, type: 1, bass: 0, bassAcc: 0x40 }] });
+      this.set({ name, bars: 4, chords: [Object.assign({ bar: 0, beat: 0 }, majorChord())] });
       this.loaded = true;
     }
 
@@ -413,7 +413,7 @@
         const here = this.chords.filter((c) => c.bar === old);
         if (!here.some((c) => c.beat === 0)) {
           const held = this.chordInEffect(old, 0), before = chords[chords.length - 1];
-          if (held && (!before || chordSound(held) !== chordSound(before))) chords.push(Object.assign({}, held, { bar, beat: 0 }));
+          if (held && (!before || chordKey(held) !== chordKey(before))) chords.push(Object.assign({}, held, { bar, beat: 0 }));
         }
         here.forEach((c) => chords.push(Object.assign({}, c, { bar })));
         const v = this.variations.find((x) => x.bar === old && x.value), want = oldStyles[old];

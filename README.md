@@ -55,6 +55,7 @@ python3 -m http.server 8000
 
 - Default channel 4: with firmware 1.12 the GO:KEYS only changes the UPPER tone from channel 4.
 - Ports: picks one named like `GO:KEYS`, `Roland` or `Bluetooth`, otherwise the first port
+- Foot pedal: in the MIDI settings (gear), set CONTROL PORT to a MIDI controller such as an iRig BlueBoard and PLAY/STOP CC to the control change one of its switches sends (momentary mode); pressing it starts and stops the style.
 - The keyboard doesn't report its controller values, so the sliders on the **GLOBAL** tab show what the page last sent (or received). Double-tap a value to send its default.
 
 Not affiliated with Roland.

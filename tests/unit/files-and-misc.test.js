@@ -15,6 +15,18 @@ test('chord names both ways, with transpose spelling', () => {
   assert.throws(() => C('H7'), /Unknown chord/);
 });
 
+test('chord helpers: copy only the chord fields, a default major chord, a key that ignores an unused bass accidental', () => {
+  const placed = Object.assign({ bar: 3, beat: 2 }, C('Am7/G'));
+  const c = ChordNames.copyChord(placed);
+  assert.deepEqual(Object.keys(c), ['root', 'acc', 'type', 'bass', 'bassAcc']);
+  assert.notEqual(c, placed);
+  assert.equal(ChordNames.copyChord(null), null);
+  assert.deepEqual(ChordNames.majorChord(), C('C'));
+  assert.equal(ChordNames.chordName(ChordNames.majorChord(7, 0x3F), 0), 'Gb');
+  assert.equal(ChordNames.chordKey(Object.assign(C('F'), { bassAcc: 0x41 })), ChordNames.chordKey(C('F')));
+  assert.notEqual(ChordNames.chordKey(C('F/A')), ChordNames.chordKey(C('F')));
+});
+
 ['CHORD001.CSV', 'CHORD002.CSV', 'CHORD003.CSV', 'CHORD004.CSV'].forEach((f) => {
   test(`${f} from a GO:KEYS USB backup reads, and writing it reads back the same`, () => {
     const d = SongFiles.parseCsv(fixture(f));

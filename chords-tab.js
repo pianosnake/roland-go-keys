@@ -1,4 +1,4 @@
-// Chords tab: the page side of the GO:KEYS 3/5 chord pattern (the song Chord Director edits). Reads it, shows it bar by
+// Chords tab: the page side of the GO:KEYS 3/5 chord pattern. Reads it, shows it bar by
 // bar with its settings, follows the bar being played, edits it live, saves songs in the browser, and reads/writes the
 // GO:KEYS's CSV files. This file is only the UI: it renders and turns clicks and keys into calls on
 //   Song (song.js)               the song as edited          GoPattern (go-pattern.js)   what the GO:KEYS holds
@@ -79,7 +79,7 @@
     if (player.playing && from > 0) setInfo(`Playing from bar ${song.passLabel(from)}.`);
   }
 
-  // Song settings, changed live like Chord Director. Turning LOOP on turns the ending (short or long) off.
+  // Song settings, changed live. Turning LOOP on turns the ending (short or long) off.
   function toggleLoop() { const loop = !song.settings.loop; setSettings(loop ? { loop, ending: false } : { loop }); }
   function setSetting(key, value) { const c = {}; c[key] = value; setSettings(c); }
   function setSettings(changes) {
@@ -325,8 +325,8 @@
   // of the chord sounding there until a root is picked.
   function changeChord(part, value) {
     const held = sel.section ? null : song.chordInEffect(sel.bar, sel.beat);
-    const base = editedChord() || { root: held ? held.root : 3, acc: held ? held.acc : 0x40, type: 1, bass: 0, bassAcc: 0x40 };
-    const c = { root: base.root, acc: base.acc, type: base.type, bass: base.bass, bassAcc: base.bassAcc };
+    const base = editedChord() || (held ? ChordNames.majorChord(held.root, held.acc) : ChordNames.majorChord());
+    const c = ChordNames.copyChord(base);
     if (part === 'root') { const n = storedNote(value); c.root = n[0]; c.acc = n[1]; }
     if (part === 'acc') {                                          // sharp / flat on the root's letter; again = natural
       const name = spell(base.root, base.acc), sign = name[1] === '#' ? 1 : name[1] === 'b' ? -1 : 0;
@@ -439,10 +439,10 @@
       'CDEFGAB'.split('').map((l) => btn('root', PC[l], l, !!c && l === letter)).join('') + '</span>' +
       '<span class="ed-pill-row ed-acc-row">' + accBtn(1, '♯', 'Sharp', letter === 'E' || letter === 'B') + accBtn(-1, '♭', 'Flat', letter === 'C' || letter === 'F') + '</span>';
     const more = !!c && TYPE_MORE.indexOf(c.type) >= 0;
-    $('ed-type').innerHTML = '<span class="ed-pill-row">' + TYPE_BUTTONS.map((t) => btn('type', t, TYPES[t][0], !!c && c.type === t)).join('')
+    $('ed-type').innerHTML = '<span class="ed-pill-row">' + TYPE_BUTTONS.map((t) => btn('type', t, TYPES[t], !!c && c.type === t)).join('')
         .replace('data-type="1">', 'data-type="1" title="Major" aria-label="Major">') + '</span>' +
       `<select id="ed-type-more" class="ed-select${more ? ' on' : ''}" aria-label="Other chord types"><option value="">more…</option>` +
-      TYPE_MORE.map((t) => `<option value="${t}">${esc(TYPES[t][0])}</option>`).join('') + '</select>';
+      TYPE_MORE.map((t) => `<option value="${t}">${esc(TYPES[t])}</option>`).join('') + '</select>';
     $('ed-type-more').value = more ? String(c.type) : '';
     $('ed-bass').innerHTML = '<option value="-1">none</option>' + ROOT_NAMES.map((n, pc) => `<option value="${pc}">/${n}</option>`).join('');
     $('ed-bass').value = String(bassPc == null ? -1 : bassPc);
@@ -761,5 +761,6 @@
     onSysEx: (d) => link.onSysEx(d),
     setActive,
     setOutput: (fn) => { link.setOutput(fn); player.outputChanged(); },
+    togglePlay,                                     // for the control port (app.js): a pedal's play/stop CC
   };
 }());
