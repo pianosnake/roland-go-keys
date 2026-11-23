@@ -1,7 +1,6 @@
 // SongFiles: songs as files. Pure functions, no DOM.
 //   csv(data) / parseCsv(text)   the GO:KEYS's own chord-pattern format (ROLAND/CHORD_PTN/CHORDnnn.CSV on a USB backup)
 //   fileBase(name)               a file name for a song
-//   zip(files)                   [{ name, data: Uint8Array, date }] -> Uint8Array, stored entries (no library needed)
 // The CSV format, CRLF line ends:
 //   FORMAT,2 / NAME / INTRO_SW / ENDING_SW / LOOP / TRANSPOSE, a blank line, then
 //   DIVISION,Intro,Short + CHORD,1,<intro chord>, and the song as rows of CHORD,<bars in row>,<bar>,<bar>,...
@@ -111,49 +110,7 @@
     return out;
   }
 
-  const CRC_TABLE = (() => {
-    const t = new Uint32Array(256);
-    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
-    return t;
-  })();
-  function crc32(bytes) {
-    let c = 0xFFFFFFFF;
-    for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
-    return (c ^ 0xFFFFFFFF) >>> 0;
-  }
-  function zip(files) {
-    const enc = new TextEncoder(), parts = [], central = [];
-    let offset = 0;
-    files.forEach((f) => {
-      const name = enc.encode(f.name), d = f.date;
-      const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
-      const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
-      const crc = crc32(f.data), size = f.data.length;
-      const local = new DataView(new ArrayBuffer(30));
-      local.setUint32(0, 0x04034B50, true); local.setUint16(4, 20, true); local.setUint16(6, 0x0800, true);   // UTF-8 names
-      local.setUint16(10, time, true); local.setUint16(12, date, true); local.setUint32(14, crc, true);
-      local.setUint32(18, size, true); local.setUint32(22, size, true); local.setUint16(26, name.length, true);
-      const cen = new DataView(new ArrayBuffer(46));
-      cen.setUint32(0, 0x02014B50, true); cen.setUint16(4, 20, true); cen.setUint16(6, 20, true); cen.setUint16(8, 0x0800, true);
-      cen.setUint16(12, time, true); cen.setUint16(14, date, true); cen.setUint32(16, crc, true);
-      cen.setUint32(20, size, true); cen.setUint32(24, size, true); cen.setUint16(28, name.length, true);
-      cen.setUint32(42, offset, true);
-      parts.push(new Uint8Array(local.buffer), name, f.data);
-      central.push(new Uint8Array(cen.buffer), name);
-      offset += 30 + name.length + size;
-    });
-    const cenSize = central.reduce((n, p) => n + p.length, 0);
-    const end = new DataView(new ArrayBuffer(22));
-    end.setUint32(0, 0x06054B50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
-    end.setUint32(12, cenSize, true); end.setUint32(16, offset, true);
-    const all = parts.concat(central, [new Uint8Array(end.buffer)]);
-    const out = new Uint8Array(all.reduce((n, p) => n + p.length, 0));
-    let at = 0;
-    all.forEach((p) => { out.set(p, at); at += p.length; });
-    return out;
-  }
-
-  const SongFiles = { fileBase, csv, parseCsv, crc32, zip };
+  const SongFiles = { fileBase, csv, parseCsv };
   if (isNode) module.exports = SongFiles;
   else (window.GoKeys = window.GoKeys || {}).SongFiles = SongFiles;
 }());

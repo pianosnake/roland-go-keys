@@ -4,11 +4,12 @@
 //   Song (song.js)               the song as edited          GoPattern (go-pattern.js)   what the GO:KEYS holds
 //   GoLink (go-link.js)          MIDI to/from the GO:KEYS    GoPlayer (go-player.js)     play, stop, play from a bar
 //   Selection (selection.js)     the editor cursor           SavedSongs (saved-songs.js) songs saved in the browser
-//   SongFiles (song-files.js)    CSV and zip                 ChordNames / GoSysEx        names and the SysEx format
+//   SongFiles (song-files.js)    CSV files                   ChordNames / GoSysEx        names and the SysEx format
+//   Zip (zip.js)                 zip files
 // Plain JS for iOS 15 WebKit (see app.js). Exposes window.GOKEYS_CHORDS for app.js.
 (function () {
   'use strict';
-  const { ChordNames, GoSysEx, Song, GoLink, GoPlayer, Selection, SavedSongs, SongFiles } = window.GoKeys;
+  const { ChordNames, GoSysEx, Song, GoLink, GoPlayer, Selection, SavedSongs, SongFiles, Zip } = window.GoKeys;
   const { TYPES, LETTERS, PC, VARIATIONS } = ChordNames;
   const { BEATS, MAX_BARS, TRANSPOSE_MIN, TRANSPOSE_MAX } = Song;
   const DEFAULT_NAME = GoSysEx.DEFAULT_NAME;
@@ -604,7 +605,10 @@
     $('song-save-quick').disabled = !!cur;           // greyed out: nothing changed since it was saved
     $('song-save-quick').title = cur ? 'Saved on this device' : 'Save the song on this device';
     const day = (ms) => new Date(ms).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    $('song-list').innerHTML = saved.list().map((e) => {
+    // A to Z by name (numbers in order: Song 2 before Song 10); storage stays newest first.
+    const nameOf = (e) => (e.data && e.data.name) || DEFAULT_NAME;
+    const byName = saved.list().slice().sort((x, y) => nameOf(x).localeCompare(nameOf(y), undefined, { numeric: true, sensitivity: 'base' }) || y.saved - x.saved);
+    $('song-list').innerHTML = byName.map((e) => {
       const d = e.data || {}, load = saved.isArmed('load', e.id);
       return `<div class="row song-row${e.id === cur ? ' cur' : ''}${load ? ' arm' : ''}" data-id="${esc(e.id)}" ` +
         `title="${esc(d.name || DEFAULT_NAME)}: ${d.bars || 0} bars, saved ${esc(day(e.saved))}">` +
@@ -646,6 +650,7 @@
   // ------------------------------------------------------------ files
   // Upload song: replaces the song on the page and on the GO:KEYS, like loading a saved song.
   function uploadCsv(file) {
+    if (/\.zip$/i.test(file.name)) { uploadZip(file); return; }
     const reader = new FileReader();
     reader.onload = () => {
       let d;
@@ -653,13 +658,46 @@
       song.load(d);
       song.detectRepeats();
       player.reset();
-      savedId = saved.matching(song.toJSON());
+      // Already saved with the same name and chords: Save updates that one instead of adding a copy.
+      savedId = saved.matching(song.toJSON()) || saved.like(song.toJSON(), Song.likeKey);
       sel.reset();
       render();
-      if (sendSong()) setInfo(`Loaded ${file.name} and sent it to the keyboard.`);
+      const was = savedId ? ` It’s already in SONGS as “${saved.get(savedId).data.name || DEFAULT_NAME}”${isSaved() ? '' : '; Save updates that one'}.` : '';
+      if (sendSong()) setInfo(`Loaded ${file.name} and sent it to the keyboard.${was}`);
     };
     reader.onerror = () => setInfo(`Couldn’t read ${file.name}.`);
     reader.readAsText(file);
+  }
+  // A zip of CSVs (Download all songs, e.g. from another computer): every song is added to the saved songs. The song on
+  // the page and the keyboard stay as they are. Songs already saved (same name and chords) are skipped. Added in reverse so the list keeps the
+  // zip's order (it was written newest first).
+  function uploadZip(file) {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      let entries;
+      try { entries = await Zip.unzip(new Uint8Array(reader.result)); } catch (e) { setInfo(`Couldn’t read ${file.name}: ${e.message}`); return; }
+      const dec = new TextDecoder(), csvs = entries.filter((x) => /\.csv$/i.test(x.name));
+      let added = 0, same = 0, full = false;
+      const bad = [];
+      csvs.slice().reverse().forEach((x) => {
+        let d;
+        try { d = SongFiles.parseCsv(dec.decode(x.data)); } catch (e) { bad.unshift(x.name.replace(/^.*\//, '')); return; }
+        const s = new Song().load(d);
+        s.detectRepeats();
+        const json = s.toJSON();
+        if (saved.like(json, Song.likeKey)) { same++; return; }
+        if (saved.save(json, null).ok) added++; else full = true;
+      });
+      renderSongs();
+      const parts = [`Added ${added} song${added === 1 ? '' : 's'} from ${file.name} to SONGS.`];
+      if (same) parts.push(`${same} ${same === 1 ? 'was' : 'were'} already saved.`);
+      if (bad.length) parts.push(`Couldn’t read ${bad.join(', ')}.`);
+      if (full) parts.push('This device’s storage is full; some songs weren’t saved.');
+      if (!csvs.length) parts.splice(0, parts.length, `${file.name} has no .csv songs in it.`);
+      setInfo(parts.join(' '));
+    };
+    reader.onerror = () => setInfo(`Couldn’t read ${file.name}.`);
+    reader.readAsArrayBuffer(file);
   }
   // Download all songs: one CSV each, in a zip.
   function downloadAll() {
@@ -673,7 +711,7 @@
       used[name.toLowerCase()] = true;
       return { name, data: enc.encode(SongFiles.csv(e.data)), date: new Date(e.saved || Date.now()) };
     });
-    download('gokeys-songs.zip', 'application/zip', SongFiles.zip(files));
+    download('gokeys-songs.zip', 'application/zip', Zip.zip(files));
     setInfo(`Downloaded ${files.length} song${files.length === 1 ? '' : 's'} in gokeys-songs.zip.`);
   }
   // a[download] works in Chrome (the MIDI Charmer plugin's web view has no downloads).

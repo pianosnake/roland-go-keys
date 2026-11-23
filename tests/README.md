@@ -16,7 +16,8 @@ the tests load the same files the page does.
 | `unit/go-link.test.js` | `GoLink`: message bytes and checksums, play-state and bar messages, dumps only after a request (the IAC loopback bug), queue order, app mode |
 | `unit/go-player.test.js` | `GoPlayer`: play from a bar with LOOP off and on, bar numbers from the GO:KEYS, edits while playing, stopping |
 | `unit/chord-director.test.js` | Fixtures sniffed from Chord Director: its song transfers rebuilt byte for byte, GO:KEYS dumps read back, single edits reproduced |
-| `unit/files-and-misc.test.js` | Chord names, CSV files (including real ones from a GO:KEYS USB backup), zip, saved songs, the editor cursor |
+| `unit/zip.test.js` | `Zip`: writing, CRC, reading the page's own zips and Finder-style deflated ones |
+| `unit/files-and-misc.test.js` | Chord names, CSV files (including real ones from a GO:KEYS USB backup), saved songs, the editor cursor |
 
 ## Fixtures
 

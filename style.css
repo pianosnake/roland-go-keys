@@ -22,7 +22,9 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 input, textarea { -webkit-user-select: text; user-select: text; }
+/* No zooming on the iPad: pan-x pan-y leaves out pinch zoom and double-tap zoom (app.js also blocks Safari's pinch gesture). */
 html, body { height: 100%; }
+html { touch-action: pan-x pan-y; }
 body {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
   margin: 0; display: flex; font-family: var(--ui-font); font-size: 13px; background: var(--bg); color: var(--text);

@@ -91,14 +91,7 @@ test('parseCsv refuses what is not a chord pattern, and more than 256 bars', () 
   assert.throws(() => SongFiles.parseCsv(`FORMAT,2\r\nNAME,x\r\n${rows.join('\r\n')}`), /260 bars/);
 });
 
-test('zip: valid headers and CRC', () => {
-  const data = new TextEncoder().encode('hello');
-  assert.equal(SongFiles.crc32(data), 0x3610A686);
-  const z = SongFiles.zip([{ name: 'a.csv', data, date: new Date(2026, 10, 20, 12, 0, 0) }]);
-  const v = new DataView(z.buffer);
-  assert.equal(v.getUint32(0, true), 0x04034B50);
-  assert.equal(v.getUint32(14, true), 0x3610A686);
-  assert.equal(v.getUint32(z.length - 22, true), 0x06054B50);
+test('file names for songs', () => {
   assert.equal(SongFiles.fileBase('A Train / take 2'), 'A_Train_take_2');
 });
 
@@ -131,4 +124,22 @@ test('selection: stepping skips hidden passes; the BAR row edits the picked pass
   sel.select(9, 3);
   assert.equal(sel.atLastBeat(s), true);
   assert.equal(sel.stepBeat(s, 1), false);
+});
+
+test('uploads: same name and chords count as already saved, whatever the settings', () => {
+  const store = { data: {}, getItem(k) { return this.data[k] || null; }, setItem(k, v) { this.data[k] = v; } };
+  const saved = new SavedSongs(store);
+  const a = new Song().load(SongFiles.parseCsv(fixture('CHORD001.CSV')));
+  a.detectRepeats();
+  const id = saved.save(a.toJSON(), null).entry.id;
+  const b = new Song().load(SongFiles.parseCsv(fixture('CHORD001.CSV')));
+  b.setSettings({ transpose: 2, loop: false });
+  b.setName('  wonder ');
+  assert.equal(saved.like(b.toJSON(), Song.likeKey), id);
+  const c = new Song().load(SongFiles.parseCsv(fixture('CHORD001.CSV')));
+  c.setChord(0, 0, C('D'));
+  assert.equal(saved.like(c.toJSON(), Song.likeKey), null);
+  const d = new Song().load(SongFiles.parseCsv(fixture('CHORD001.CSV')));
+  d.setName('Wonder 2');
+  assert.equal(saved.like(d.toJSON(), Song.likeKey), null);
 });

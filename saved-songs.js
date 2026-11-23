@@ -33,6 +33,8 @@
     }
     remove(id) { this.items = this.list().filter((e) => e.id !== id); return this.store(); }
     same(id, data) { const e = this.get(id); return !!e && JSON.stringify(e.data) === JSON.stringify(data); }
+    // The saved song whose key (keyOf(data)) equals data's, e.g. the same name and chords (Song.likeKey).
+    like(data, keyOf) { const k = keyOf(data), e = this.list().find((x) => x.data && keyOf(x.data) === k); return e ? e.id : null; }
     matching(data) { const s = JSON.stringify(data), e = this.list().find((x) => JSON.stringify(x.data) === s); return e ? e.id : null; }
 
     arm(kind, id) {

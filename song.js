@@ -60,6 +60,11 @@
       return this;
     }
     static fromJSON(d) { return new Song().load(d); }
+    // Name (case and spaces at the ends ignored) and what sounds on each beat: two songs with the same key count as the
+    // same song when one is uploaded, whatever their settings, variations or repeat signs.
+    static likeKey(d) {
+      return `${String(d.name || '').trim().toLowerCase()}\n${new Song(d).barSignatures().join('/')}`;
+    }
     // What a saved song stores (the order of the fields matters: saved songs are compared as JSON text).
     toJSON() {
       return { name: this.name, bars: this.bars, chords: this.chords, variations: this.variations, settings: this.settings,
