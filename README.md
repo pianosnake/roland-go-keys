@@ -2,6 +2,14 @@
 
 Live at https://pianosnake.github.io/roland-go-keys/
 
+<p>
+<img src="screenshots/chord-editor.png" alt="Chord editor with the chord picker open" width="49%">
+<img src="screenshots/global-controls.png" alt="Tone list and the GLOBAL controller sliders" width="49%">
+</p>
+<p>
+<img src="screenshots/chords-playing.png" alt="Chords tab following along while the style plays" width="49%">
+</p>
+
 A Web MIDI page for the Roland GO:KEYS 3/5. It lists the keyboard's thousand+ tones and lets you keep many more favorites than the 5 the keyboard allows. The **Chords** tab edits the chord progression, like the [Chord Director](https://www.roland.com/us/products/roland_chord_director/) app, with a smoother interface and more features: repeats, following along while the style plays, typing chords from a computer keyboard and downloading the chord pattern as a CSV file.
 
 ## Features
