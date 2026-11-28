@@ -13,7 +13,7 @@
 (function () {
   'use strict';
   const isNode = typeof module !== 'undefined' && module.exports;
-  const GoSysEx = isNode ? require('./go-sysex.js') : window.GoKeys.GoSysEx;
+  const GoSysEx = isNode ? require('../midi/go-sysex.js') : window.GoKeys.GoSysEx;
   const { copyChord, majorChord, chordKey } = isNode ? require('./chord-names.js') : window.GoKeys.ChordNames;
 
   const BEATS = 4;                                  // GO:KEYS chord patterns are 4/4 (beat byte 0-3)

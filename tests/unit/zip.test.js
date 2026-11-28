@@ -3,8 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-const Zip = require('../../zip.js');
-const SongFiles = require('../../song-files.js');
+const Zip = require('../../song/zip.js');
+const SongFiles = require('../../song/song-files.js');
 const fixture = (f) => fs.readFileSync(path.join(__dirname, '../fixtures', f), 'utf8');
 
 test('zip: valid headers and CRC', () => {

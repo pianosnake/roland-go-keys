@@ -571,6 +571,7 @@
 
     // No zooming on the iPad: Safari ignores user-scalable=no for pinches, so its gesture events are cancelled, and so is
     // any move with two fingers down (double-tap zoom is off through touch-action in style.css).
+    document.addEventListener('dragstart', (e) => e.preventDefault()); // no iPadOS drag-and-drop preview (see style.css)
     ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => document.addEventListener(t, (e) => e.preventDefault(), { passive: false }));
     document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 

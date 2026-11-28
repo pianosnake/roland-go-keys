@@ -13,7 +13,7 @@
 (function () {
   'use strict';
   const isNode = typeof module !== 'undefined' && module.exports;
-  const G = isNode ? { ChordNames: require('./chord-names.js'), Song: require('./song.js'), GoSysEx: require('./go-sysex.js') } : window.GoKeys;
+  const G = isNode ? { ChordNames: require('./chord-names.js'), Song: require('./song.js'), GoSysEx: require('../midi/go-sysex.js') } : window.GoKeys;
   const { chordName, parseChord } = G.ChordNames, Song = G.Song, DEFAULT_NAME = G.GoSysEx.DEFAULT_NAME;
 
   function fileBase(name) {

@@ -20,10 +20,19 @@
   --ui-font: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
+/* No iPadOS drag-and-drop: a long press then a move (a slow slider drag) lifted a preview of what was under the finger. */
+* { -webkit-user-drag: none; }
 [hidden] { display: none !important; }
 input, textarea { -webkit-user-select: text; user-select: text; }
 /* No zooming on the iPad: pan-x pan-y leaves out pinch zoom and double-tap zoom (app.js also blocks Safari's pinch gesture). */
 html, body { height: 100%; }
+/* The page itself never scrolls: only the side list and the details panel do, inside it. Browsers such as the iOS
+   Web MIDI Browser app show their toolbars when the page scrolls (a finger moving a slider nudged it); an inner scroll
+   doesn't count. Narrow windows (the tone list on top) still scroll the page. */
+@media (min-width: 641px) {
+  html, body { overflow: hidden; }
+  body { position: fixed; top: 0; left: 0; right: 0; bottom: 0; } /* iOS: no page scroll or bounce */
+}
 html { touch-action: pan-x pan-y; }
 body {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
@@ -32,7 +41,7 @@ body {
 
 /* ---------- left column: tones ---------- */
 .side {
-  width: 260px; flex: none; height: 100vh;   /* narrow enough for 4 bars on the right on an iPad in landscape (1024px) */ display: flex; flex-direction: column; gap: 6px;
+  width: 260px; flex: none; height: 100%;   /* narrow enough for 4 bars on the right on an iPad in landscape (1024px) */ display: flex; flex-direction: column; gap: 6px;
   background: var(--side); padding: 10px 8px 6px; border-right: 4px solid var(--side-dark);
 }
 .brand { display: flex; align-items: flex-start; gap: 12px; }
@@ -104,7 +113,7 @@ body {
 .empty { color: var(--text-dim); padding: 18px; font-size: 13px; line-height: 1.4; }
 
 /* ---------- right: current tone + CC grid ---------- */
-.details { flex: 1; min-width: 0; height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px; }
+.details { flex: 1; min-width: 0; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px; }
 .details.on-tones { background: #16171a; }   /* TONE tab: darker so the sections stand out */
 /* Favorites filter star: outline when off, filled green when on. Padding = bigger tap target. */
 .star { -webkit-appearance: none; appearance: none; flex: none; border: 0; background: none; padding: 4px; margin: -4px 0; cursor: pointer; line-height: 0; }

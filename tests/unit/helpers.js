@@ -1,9 +1,9 @@
 // Shared helpers for the unit tests: small songs and a GoLink whose output is recorded.
 const path = require('path');
 const lib = (f) => require(path.join(__dirname, '../..', f));
-const ChordNames = lib('chord-names.js'), GoSysEx = lib('go-sysex.js'), Song = lib('song.js'), GoPattern = lib('go-pattern.js');
-const GoLink = lib('go-link.js'), GoPlayer = lib('go-player.js'), Selection = lib('selection.js');
-const SavedSongs = lib('saved-songs.js'), SongFiles = lib('song-files.js');
+const ChordNames = lib('song/chord-names.js'), GoSysEx = lib('midi/go-sysex.js'), Song = lib('song/song.js'), GoPattern = lib('midi/go-pattern.js');
+const GoLink = lib('midi/go-link.js'), GoPlayer = lib('midi/go-player.js'), Selection = lib('ui/selection.js');
+const SavedSongs = lib('song/saved-songs.js'), SongFiles = lib('song/song-files.js');
 
 // A chord from its name, e.g. C('Am7') or C('D/F#').
 const C = (name) => ChordNames.parseChord(name);
